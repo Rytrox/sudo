@@ -2,3 +2,10 @@
 
 # Decide if this plugin runs on a proxy (BungeeCord)
 bungeecord: true
+
+# commands which require sudo (only necessary when bungeecord is disabled)
+required:
+- 'op'
+- 'end'
+- 'stop'
+- 'gamemode'
