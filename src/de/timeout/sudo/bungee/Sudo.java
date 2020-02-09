@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import javax.annotation.Nullable;
 
+import de.timeout.sudo.bungee.groups.GroupManager;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.plugin.Plugin;
@@ -16,6 +17,8 @@ public class Sudo extends Plugin {
 
 	private static Sudo instance;
 	
+	private GroupManager groupManager;
+	
 	private Configuration config;
 
 	/**
@@ -24,14 +27,32 @@ public class Sudo extends Plugin {
 	 * 
 	 * @return the instance or null if the plugin is not loaded
 	 */
+	@Nullable
 	public static Sudo getInstance() {
 		return instance;
+	}
+	
+	/**
+	 * Returns the group manager. <br>
+	 * Returns null if the GroupManager is not loaded. Be sure to call {@link Sudo#initializeManager()} first.
+	 * 
+	 * @return the groupmanager or null
+	 */
+	@Nullable
+	public GroupManager getGroupManager() {
+		return groupManager;
 	}
 	
 	@Override
 	public void onEnable() {
 		// initialize instance
 		instance = this;
+		// initialize manager
+		initializeManager();
+	}
+
+	private void initializeManager() {
+		groupManager = new GroupManager();
 	}
 
 	@Override

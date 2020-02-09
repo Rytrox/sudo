@@ -1,6 +1,5 @@
 package de.timeout.sudo.bungee.groups;
 
-import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -22,6 +21,11 @@ public class ProxyUser implements User {
 	
 	private Group group;
 	private UUID playerID;
+	
+	@Override
+	public int compareTo(User o) {
+		return playerID.compareTo(o.getUniqueID());
+	}
 
 	@Override
 	public Group getGroup() {
@@ -75,7 +79,7 @@ public class ProxyUser implements User {
 	}
 
 	@Override
-	public Collection<String> getPermissions() {
+	public Set<String> getPermissions() {
 		// create a copy of permissions
 		Set<String> copy = new TreeSet<>(permissions);
 		// add all group permissions to copy
@@ -98,5 +102,10 @@ public class ProxyUser implements User {
 	@Nullable
 	public ProxiedPlayer getOnlinePlayer() {
 		return main.getProxy().getPlayer(playerID);
+	}
+
+	@Override
+	public UUID getUniqueID() {
+		return playerID;
 	}
 }

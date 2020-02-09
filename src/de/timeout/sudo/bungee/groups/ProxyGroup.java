@@ -1,7 +1,6 @@
 package de.timeout.sudo.bungee.groups;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -15,7 +14,7 @@ import net.md_5.bungee.config.Configuration;
 public class ProxyGroup implements Group {
 	
 	private final SortedSet<String> permissions = new TreeSet<>();
-	private final Collection<User> members = new ArrayList<>();
+	private final SortedSet<User> members = new TreeSet<>();
 	
 	private ProxyGroup superGroup;
 	private String name;
@@ -38,7 +37,7 @@ public class ProxyGroup implements Group {
 		this.defaultGroup = defaultGroup;
 	}
 
-	public ProxyGroup getSuperGroup() {
+	public List<Group> getSuperGroups() {
 		return null;
 	}
 	
@@ -88,7 +87,7 @@ public class ProxyGroup implements Group {
 	}
 
 	@Override
-	public Collection<String> getPermissions() {
+	public Set<String> getPermissions() {
 		// create new SortedSet
 		Set<String> copy = new TreeSet<>(permissions);
 		// add all permissions of supergroup in this set

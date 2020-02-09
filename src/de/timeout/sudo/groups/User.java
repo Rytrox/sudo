@@ -1,6 +1,6 @@
 package de.timeout.sudo.groups;
 
-import java.util.Collection;
+import java.util.UUID;
 
 import javax.annotation.Nonnull;
 
@@ -9,7 +9,7 @@ import javax.annotation.Nonnull;
  * @author Timeout
  *
  */
-public interface User {
+public interface User extends Comparable<User>, PermissibleBase {
 
 	/**
 	 * Returns the highest group of this object
@@ -34,33 +34,6 @@ public interface User {
 	public boolean kick();
 	
 	/**
-	 * Add permission to the user
-	 * @param permission the new permission
-	 * @return if it succeed
-	 */
-	public boolean addPermission(String permission);
-	
-	/**
-	 * Removes permission from the user
-	 * @param permission the permission to remove
-	 * @return if it succeed
-	 */
-	public boolean removePermission(String permission);
-	
-	/**
-	 * Returns a collection with all permissions of the user including his group permission
-	 * @return a set of all permissions
-	 */
-	public Collection<String> getPermissions();
-	
-	/**
-	 * Check if user has permission
-	 * @param permission the permission
-	 * @return check if user has permission
-	 */
-	public boolean hasPermission(String permission);
-	
-	/**
 	 * Checks if the user is sudoer and can use sudo
 	 * @return if the user is sudoer
 	 */
@@ -71,4 +44,11 @@ public interface User {
 	 * @return true if the user is online otherwise false
 	 */
 	public boolean isOnline();
+	
+	/**
+	 * Returns the unique id of the player
+	 * @return the unique id of the player
+	 */
+	@Nonnull
+	public UUID getUniqueID();
 }
