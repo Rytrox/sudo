@@ -1,0 +1,6 @@
+name: sudo
+author: Timeout
+version: 0.1
+description: A Permission System for BungeeCord / Bukkit which is inspired by Linux
+
+main: de.timeout.sudo.bukkit.Sudo

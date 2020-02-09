@@ -1,0 +1,4 @@
+# Default Configuration-File for Sudo 
+
+# Decide if this plugin runs on a proxy (BungeeCord)
+bungeecord: true
