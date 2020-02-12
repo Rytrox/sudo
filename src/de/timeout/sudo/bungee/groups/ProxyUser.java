@@ -18,9 +18,14 @@ public class ProxyUser implements User {
 	private static final Sudo main = Sudo.getInstance();
 	
 	private final Set<String> permissions = new TreeSet<>();
+	private final Set<Group> groups = new TreeSet<>();
 	
-	private Group group;
 	private UUID playerID;
+	
+	@Override
+	public boolean isMember(Group element) {
+		return groups.contains(element);
+	}
 	
 	@Override
 	public int compareTo(User o) {
@@ -28,33 +33,25 @@ public class ProxyUser implements User {
 	}
 
 	@Override
-	public Group getGroup() {
-		return group;
-	}
-
-	@Override
 	public boolean join(Group group) {
 		// check if group is not null
 		Validate.notNull(group, "Group cannot be null");
-		// set group
-		this.group = group;
 		// add user to group
 		group.join(this);
 		// return success
-		return true;
+		return groups.add(group);
 	}
 
 	@Override
-	public boolean kick() {
-		// check if group is not null
+	public boolean kick(Group group) {
+		// Validate
 		if(group != null) {
 			// kick from group
 			group.kick(this);
-			// unlink group
-			group = null;
-			// return true
-			return true;
+			// remove and return
+			return groups.remove(group);
 		}
+		// group is null
 		return false;
 	}
 
@@ -83,7 +80,10 @@ public class ProxyUser implements User {
 		// create a copy of permissions
 		Set<String> copy = new TreeSet<>(permissions);
 		// add all group permissions to copy
-		copy.addAll(group.getPermissions());
+		groups.forEach(group -> 
+			// if group is not this group
+			copy.addAll(group.getPermissions())
+		);
 		// return copy
 		return copy;
 	}

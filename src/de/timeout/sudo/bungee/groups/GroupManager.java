@@ -2,7 +2,7 @@ package de.timeout.sudo.bungee.groups;
 
 import org.apache.commons.lang.Validate;
 
-import com.google.gson.JsonObject;
+import com.google.gson.JsonArray;
 
 public class GroupManager {
 
@@ -23,7 +23,7 @@ public class GroupManager {
 		return sudo.isMember(user);
 	}
 	
-	private static JsonObject loadSudoers() {
+	private static JsonArray loadSudoers() {
 		return null;
 	}
 }
