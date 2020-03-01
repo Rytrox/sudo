@@ -11,7 +11,6 @@ import org.bukkit.plugin.messaging.PluginMessageListener;
 
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 
 import de.timeout.sudo.bukkit.Sudo;

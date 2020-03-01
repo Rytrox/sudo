@@ -39,7 +39,8 @@ public interface PermissibleBase {
 	public boolean hasPermission(@Nonnull String permission);
 	
 	/**
-	 * Returns a sorted set of all permissions of this group
+	 * Returns a sorted set of all permissions of this group.
+	 * 
 	 * @return a set containing all permissions of this group
 	 */
 	@Nonnull

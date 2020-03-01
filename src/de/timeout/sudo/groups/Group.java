@@ -1,6 +1,7 @@
 package de.timeout.sudo.groups;
 
 import java.util.Collection;
+import java.util.Set;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -19,7 +20,16 @@ public interface Group extends PermissibleBase, Collectable<User> {
 	 * @return the super group or null
 	 */
 	@Nonnull
-	public Collection<Group> getSuperGroups();
+	public Collection<Group> getExtendedGroups();
+	
+	/**
+	 * Returns a Set of all permissions of the group
+	 * @author Timeout
+	 * 
+	 * @return a set containing all permissions of the group and his inheritances
+	 */
+	@Nonnull
+	public Set<String> getAllPermissions();
 	
 	/**
 	 * Returns the name of this group

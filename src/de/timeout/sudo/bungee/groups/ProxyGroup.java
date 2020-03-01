@@ -1,22 +1,26 @@
 package de.timeout.sudo.bungee.groups;
 
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 import org.apache.commons.lang.Validate;
 
 import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.groups.User;
+import de.timeout.sudo.utils.PermissionTree;
+
 import net.md_5.bungee.config.Configuration;
 
 public class ProxyGroup implements Group {
 	
-	private final SortedSet<String> permissions = new TreeSet<>();
-	private final SortedSet<User> members = new TreeSet<>();
+	private final PermissionTree permissions = new PermissionTree();
+	private final PermissionTree allPermissions = new PermissionTree();
 	
-	private ProxyGroup superGroup;
+	private final Set<User> members = new HashSet<>();
+	private final Set<Group> inheritance = new HashSet<>();
+	
 	private String name;
 	private String prefix;
 	private String suffix;
@@ -29,16 +33,11 @@ public class ProxyGroup implements Group {
 	/**
 	 * Constructor for inheritances
 	 */
-	protected ProxyGroup(String name, ProxyGroup proxyGroup, String prefix, String suffix, boolean defaultGroup) {
+	protected ProxyGroup(String name, String prefix, String suffix, boolean defaultGroup) {
 		this.name = name;
-		this.superGroup = proxyGroup;
 		this.prefix = prefix;
 		this.suffix = suffix;
 		this.defaultGroup = defaultGroup;
-	}
-
-	public List<Group> getSuperGroups() {
-		return null;
 	}
 	
 	@Override
@@ -83,17 +82,23 @@ public class ProxyGroup implements Group {
 		// validate
 		Validate.notNull(permission, "permission cannot be null");
 		// check in list and in super group
-		return permissions.contains(permission) || (superGroup != null && superGroup.hasPermission(permission));
+		boolean search = permissions.contains(permission);
+		// run trough supergroups
+		for (Group group : inheritance) {
+			// break if permission is found
+			if(!search) {
+				// search in this group
+				search = group.hasPermission(permission);
+			} else break;
+		}
+		// return search
+		return search;
 	}
 
 	@Override
 	public Set<String> getPermissions() {
-		// create new SortedSet
-		Set<String> copy = new TreeSet<>(permissions);
-		// add all permissions of supergroup in this set
-		if(superGroup != null) copy.addAll(superGroup.getPermissions());
 		// return list
-		return copy;
+		return permissions.toSet();
 	}
 
 	@Override
@@ -114,5 +119,15 @@ public class ProxyGroup implements Group {
 	@Override
 	public boolean isDefault() {
 		return defaultGroup;
+	}
+
+	@Override
+	public Set<String> getAllPermissions() {
+		return allPermissions.toSet();
+	}
+
+	@Override
+	public Collection<Group> getExtendedGroups() {
+		return new ArrayList<>(inheritance);
 	}
 }
