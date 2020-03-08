@@ -26,6 +26,19 @@ public class PermissionTree {
 		/* EMPTY. IT IS NOT NECESSARY */
 	}
 	
+	/**
+	 * Creates a clone of a permission tree
+	 * @author Timeout
+	 *
+	 * @param clone the clone of this tree
+	 */
+	public PermissionTree(PermissionTree clone) {
+		asterisk = clone.asterisk;
+		clone.children.entrySet().forEach(subtree -> 
+			this.children.put(subtree.getKey(), new PermissionTree(subtree.getValue()))
+		);
+	}
+	
 	private PermissionTree(PermissionTree parent, String name) {
 		// Validate
 		Validate.notEmpty(name, "Permissionname cannot be empty");

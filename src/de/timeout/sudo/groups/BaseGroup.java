@@ -1,39 +1,30 @@
-package de.timeout.sudo.bungee.groups;
+package de.timeout.sudo.groups;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
-import org.apache.commons.lang.Validate;
-
-import de.timeout.sudo.groups.Group;
-import de.timeout.sudo.groups.User;
 import de.timeout.sudo.utils.PermissionTree;
 
-import net.md_5.bungee.config.Configuration;
-
-public class ProxyGroup implements Group {
+public class BaseGroup implements Group, Comparable<Group> {
 	
-	private final PermissionTree permissions = new PermissionTree();
-	private final PermissionTree allPermissions = new PermissionTree();
+	protected final PermissionTree permissions = new PermissionTree();
+	protected final PermissionTree allPermissions = new PermissionTree();
 	
-	private final Set<User> members = new HashSet<>();
-	private final Set<Group> inheritance = new HashSet<>();
+	protected final Set<User> members = new HashSet<>();
+	protected final Set<Group> inheritance = new HashSet<>();
 	
-	private String name;
-	private String prefix;
-	private String suffix;
-	private boolean defaultGroup;
-	
-	public ProxyGroup(Configuration groupSection) {
-		
-	}
+	protected String name;
+	protected String prefix;
+	protected String suffix;
+	protected boolean defaultGroup;
 	
 	/**
 	 * Constructor for inheritances
 	 */
-	protected ProxyGroup(String name, String prefix, String suffix, boolean defaultGroup) {
+	protected BaseGroup(String name, String prefix, String suffix, boolean defaultGroup) {
 		this.name = name;
 		this.prefix = prefix;
 		this.suffix = suffix;
@@ -47,12 +38,12 @@ public class ProxyGroup implements Group {
 
 	@Override
 	public boolean join(User user) {
-		return user != null ? members.add(user) : false;
+		return members.add(user);
 	}
 
 	@Override
 	public boolean kick(User user) {
-		return user != null ? members.remove(user) : false;
+		return members.remove(user);
 	}
 
 	@Override
@@ -60,7 +51,7 @@ public class ProxyGroup implements Group {
 		// if permission is not null or empty
 		if(permission != null && !permission.isEmpty()) {
 			// add permission to list
-			return permissions.add(permission);
+			return permissions.add(permission) && allPermissions.add(permission);
 		}
 		// return false
 		return false;
@@ -71,7 +62,7 @@ public class ProxyGroup implements Group {
 		// if permission is not null
 		if(permission != null) {
 			// remove permission from collection
-			return permissions.remove(permission);
+			return permissions.remove(permission) && allPermissions.remove(permission);
 		}
 		// return false
 		return false;
@@ -79,20 +70,8 @@ public class ProxyGroup implements Group {
 
 	@Override
 	public boolean hasPermission(String permission) {
-		// validate
-		Validate.notNull(permission, "permission cannot be null");
-		// check in list and in super group
-		boolean search = permissions.contains(permission);
-		// run trough supergroups
-		for (Group group : inheritance) {
-			// break if permission is found
-			if(!search) {
-				// search in this group
-				search = group.hasPermission(permission);
-			} else break;
-		}
 		// return search
-		return search;
+		return allPermissions.contains(permission);
 	}
 
 	@Override
@@ -130,4 +109,27 @@ public class ProxyGroup implements Group {
 	public Collection<Group> getExtendedGroups() {
 		return new ArrayList<>(inheritance);
 	}
+
+	@Override
+	public int compareTo(Group o) {
+		return this.name.compareTo(o.getName());
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(allPermissions, defaultGroup, inheritance, members, name, permissions, prefix, suffix);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		BaseGroup other = (BaseGroup) obj;
+		return Objects.equals(name, other.name) && Objects.equals(permissions, other.permissions);
+	}
+
 }

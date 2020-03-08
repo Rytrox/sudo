@@ -1,7 +1,8 @@
-package de.timeout.sudo.bungee.groups;
+package de.timeout.sudo.bungee.permissions;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -11,16 +12,22 @@ import org.apache.commons.lang.Validate;
 import de.timeout.sudo.bungee.Sudo;
 import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.groups.User;
+import de.timeout.sudo.utils.PermissionTree;
+
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
 public class ProxyUser implements User {
 	
 	private static final Sudo main = Sudo.getInstance();
 	
-	private final Set<String> permissions = new TreeSet<>();
-	private final Set<Group> groups = new TreeSet<>();
+	private final PermissionTree permissions = new PermissionTree();
+	private final List<Group> groups = new ArrayList<>();
 	
 	private UUID playerID;
+	
+	public ProxyUser(UUID uuid) {
+		this.playerID = uuid;
+	}
 	
 	@Override
 	public boolean isMember(Group element) {
@@ -36,38 +43,40 @@ public class ProxyUser implements User {
 	public boolean join(Group group) {
 		// check if group is not null
 		Validate.notNull(group, "Group cannot be null");
+		// remove from old group
+		
 		// add user to group
 		group.join(this);
+		// add group to list
+		groups.add(group);
 		// return success
-		return groups.add(group);
+		return true;
 	}
-
+	
 	@Override
-	public boolean kick(Group group) {
-		// Validate
-		if(group != null) {
-			// kick from group
-			group.kick(this);
-			// remove and return
-			return groups.remove(group);
-		}
-		// group is null
+	public boolean kick(Group element) {
 		return false;
 	}
 
 	@Override
 	public boolean addPermission(String permission) {
-		return false;
+		return permissions.add(permission);
 	}
 
 	@Override
 	public boolean removePermission(String permission) {
-		return false;
+		return permissions.remove(permission);
 	}
 
 	@Override
 	public boolean hasPermission(String permission) {
-		return false;
+		// check for own permission
+		if(!permissions.contains(permission)) {
+			// search in group
+			for(Group group : groups) if(group.hasPermission(permission)) return true;
+			// return false for not found
+			return false;
+		} else return true;
 	}
 
 	@Override
@@ -77,15 +86,7 @@ public class ProxyUser implements User {
 
 	@Override
 	public Set<String> getPermissions() {
-		// create a copy of permissions
-		Set<String> copy = new TreeSet<>(permissions);
-		// add all group permissions to copy
-		groups.forEach(group -> 
-			// if group is not this group
-			copy.addAll(group.getPermissions())
-		);
-		// return copy
-		return copy;
+		return permissions.toSet();
 	}
 
 	@Override

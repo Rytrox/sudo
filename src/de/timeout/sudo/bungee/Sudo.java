@@ -2,10 +2,15 @@ package de.timeout.sudo.bungee;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import de.timeout.sudo.bungee.groups.GroupManager;
+import de.timeout.libs.config.ColoredLogger;
+import de.timeout.libs.config.ConfigCreator;
+import de.timeout.sudo.bungee.permissions.GroupManager;
+
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.plugin.Plugin;
@@ -14,12 +19,18 @@ import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
 
 public class Sudo extends Plugin {
+	
+	private static final ConfigurationProvider PROVIDER = ConfigurationProvider.getProvider(YamlConfiguration.class);
+	private static final ColoredLogger LOG = new ColoredLogger("&8[&6Sudo&8] ");
+	private static final String CONFIG_YML = "config.yml";
+	private static final String GROUPS_YML = "groups.yml";
 
 	private static Sudo instance;
 	
 	private GroupManager groupManager;
 	
 	private Configuration config;
+	private Configuration groups;
 
 	/**
 	 * Returns the Main-Instance of the Plugin. <br>
@@ -31,6 +42,18 @@ public class Sudo extends Plugin {
 	public static Sudo getInstance() {
 		return instance;
 	}
+	
+	/**
+	 * Returns the colored logger of the plugin
+	 * @author Timeout
+	 * 
+	 * @return the colored logger of the plugin
+	 */
+	@Nonnull
+	public static ColoredLogger log() {
+		return LOG;
+	}
+	
 	
 	/**
 	 * Returns the group manager. <br>
@@ -47,6 +70,11 @@ public class Sudo extends Plugin {
 	public void onEnable() {
 		// initialize instance
 		instance = this;
+		// load configurations
+		loadConfigurations();
+		// reload configs
+		reloadConfig();
+		reloadGroupConfig();
 		// initialize manager
 		initializeManager();
 	}
@@ -60,12 +88,24 @@ public class Sudo extends Plugin {
 		
 	}
 	
+	private void loadConfigurations() {
+		// load ConfigCreator
+		ConfigCreator creator = new ConfigCreator(getDataFolder(), "assets/sudo/bungee");
+		// create configs
+		try {
+			creator.loadRessource(CONFIG_YML);
+			creator.loadRessource(GROUPS_YML);
+		} catch (IOException e) {
+			LOG.log(Level.WARNING, "&cCannot load configurations from Plugin.");
+		}
+	}
+	
 	/**
 	 * Loads the configuration file from data folder
 	 */
 	public void reloadConfig() {
 		try {
-			config = ConfigurationProvider.getProvider(YamlConfiguration.class).load(new File(getDataFolder(), "config.yml"));
+			config = PROVIDER.load(new File(getDataFolder(), CONFIG_YML));
 		} catch (IOException e) {
 			getProxy().getConsole().sendMessage(new TextComponent(ChatColor.translateAlternateColorCodes('&', "&8[&6Sudo&8] &cUnable to load config.yml from datafolder. IO-Exception: " + e)));
 		}
@@ -84,9 +124,30 @@ public class Sudo extends Plugin {
 	
 	public void saveConfig() {
 		try {
-			ConfigurationProvider.getProvider(YamlConfiguration.class).save(config, new File(getDataFolder(), "config.yml"));
+			PROVIDER.save(config, new File(getDataFolder(), CONFIG_YML));
 		} catch (IOException e) {
-			getProxy().getConsole().sendMessage(new TextComponent(ChatColor.translateAlternateColorCodes('&', "&8[&6Sudo&8] &cUnable to write config.yml. IO-Exception: " + e)));
+			getProxy().getConsole().sendMessage(new TextComponent(ChatColor.translateAlternateColorCodes('&', "&8[&6Sudo&8] &cUnable to write config.yml. IO-Exception: " + e.toString())));
+		}
+	}
+	
+	public void reloadGroupConfig() {
+		try {
+			PROVIDER.load(new File(getDataFolder(), GROUPS_YML));
+		} catch (IOException e) {
+			getProxy().getConsole().sendMessage(new TextComponent(ChatColor.translateAlternateColorCodes('&', "&8[&6Sudo&8] &cUnable to read groups.yml. IO-Exception: " + e.toString())));
+		}
+	}
+	
+	@Nullable
+	public Configuration getGroupConfig() {
+		return groups;
+	}
+	
+	public void saveGroupConfig() {
+		try {
+			PROVIDER.save(config, new File(getDataFolder(), GROUPS_YML));
+		} catch (IOException e) {
+			getProxy().getConsole().sendMessage(new TextComponent(ChatColor.translateAlternateColorCodes('&', "&8[&6Sudo&8] &cUnable to save groups.yml. IO-Exception: " + e.toString())));
 		}
 	}
 }

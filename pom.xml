@@ -66,7 +66,7 @@
   	<dependency>
   		<groupId>de.timeout</groupId>
   		<artifactId>Libs</artifactId>
-  		<version>1.5.0_1152-PRE</version>
+  		<version>1.5.2_1152-TEST</version>
   	</dependency>
   	
   	<dependency>
@@ -80,7 +80,7 @@
     <dependency>
        	<groupId>net.md-5</groupId>
     	<artifactId>bungeecord-api</artifactId>
-        <version>1.14-SNAPSHOT</version>
+        <version>1.15-SNAPSHOT</version>
         <type>jar</type>
         <scope>provided</scope>
     </dependency>
@@ -88,7 +88,7 @@
     <dependency>
         <groupId>net.md-5</groupId>
         <artifactId>bungeecord-api</artifactId>
-        <version>1.14-SNAPSHOT</version>
+        <version>1.15-SNAPSHOT</version>
         <type>javadoc</type>
         <scope>provided</scope>
   	</dependency>
