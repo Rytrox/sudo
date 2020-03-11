@@ -1,7 +1,10 @@
 # Default Configuration-File for Sudo 
 
 # Decide if this plugin runs on a proxy (BungeeCord)
-bungeecord: true
+bungeecord:
+  # If enabled enter the stats uuid from bungeecords config.yml
+  uuid: 
+
 
 # commands which require sudo (only necessary when bungeecord is disabled)
 required:

@@ -3,15 +3,21 @@ package de.timeout.sudo.bukkit;
 import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
+import java.util.logging.Level;
 
 import javax.annotation.Nonnull;
 
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import de.timeout.libs.config.ColoredLogger;
 import de.timeout.libs.config.ConfigCreator;
 import de.timeout.libs.config.UTFConfig;
 import de.timeout.sudo.bukkit.connectors.ProxyMessageHandler;
+import de.timeout.sudo.bukkit.permissions.BukkitGroupManager;
+import de.timeout.sudo.permissions.GroupConfigurable;
+import de.timeout.sudo.permissions.GroupManager;
+
 import net.md_5.bungee.api.ChatColor;
 
 /**
@@ -19,13 +25,18 @@ import net.md_5.bungee.api.ChatColor;
  * @author Timeout
  *
  */
-public class Sudo extends JavaPlugin {
+public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 	
+	private static final ColoredLogger LOG = new ColoredLogger("&8[&6Sudo&8] ");
 	private static final String CONFIG_YML = "config.yml";
+	private static final String GROUPS_YML = "groups.yml";
 
 	private static Sudo instance;
 	
 	private UTFConfig config;
+	private UTFConfig groups;
+	
+	private GroupManager groupManager;
 
 	/**
 	 * This method returns the instance of the plugin
@@ -34,6 +45,17 @@ public class Sudo extends JavaPlugin {
 	@Nonnull
 	public static Sudo getInstance() {
 		return instance;
+	}
+	
+	/**
+	 * Returns the ColoredLogger of this plugin. Cannot be null
+	 * @author Timeout
+	 * 
+	 * @return the colored logger. Cannot be null
+	 */
+	@Nonnull
+	public static ColoredLogger log() {
+		return LOG;
 	}
 	
 	@Override
@@ -54,15 +76,23 @@ public class Sudo extends JavaPlugin {
 		createConfiguration();
 		reloadConfig();
 		
-		// check default settings
-		// if bungeecord is enabled
-		if(config.getBoolean("bungeecord", true)) {
-			// log message in console
-			log("Bungeecord is &aenabled&7. Wait for Bungeecord Settings...");
-			// register plugin-message channel
-			Bukkit.getMessenger().registerIncomingPluginChannel(instance, "sudo", new ProxyMessageHandler());
-			Bukkit.getMessenger().unregisterOutgoingPluginChannel(instance, "sudo");
-		}
+		// load groupsmanager
+		groupManager = new BukkitGroupManager(!bungeecordEnabled());
+	}
+	
+	/**
+	 * Checks in server's spigot.yml if bungeecord is enabled. <br>
+	 * Returns false if the spigot.yml cannot be found
+	 * 
+	 * @author Timeout
+	 * 
+	 * @return if bungeecord is enabled or false for not found
+	 */
+	private boolean bungeecordEnabled() {
+		// get spigot.yml
+		UTFConfig spigot = new UTFConfig(new File(getDataFolder().getParentFile(), "spigot.yml"));
+		// check if bungeecord is enabled. Return false for not found
+		return spigot.getBoolean("bungeecord", false);
 	}
 	
 	private void createConfiguration() {
@@ -107,5 +137,24 @@ public class Sudo extends JavaPlugin {
 	
 	public void log(String message) {
 		Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', String.format(Locale.ENGLISH, "&8[&6Sudo&8] &7%s", (message != null ? message : ""))));
+	}
+
+	@Override
+	public void reloadGroupConfig() {
+		this.groups = new UTFConfig(new File(getDataFolder(), GROUPS_YML));
+	}
+
+	@Override
+	public UTFConfig getGroupConfig() {
+		return groups;
+	}
+
+	@Override
+	public void saveGroupConfig() {
+		try {
+			this.groups.save(new File(getDataFolder(), GROUPS_YML));
+		} catch (IOException e) {
+			LOG.log(Level.WARNING, "&cCannot save groups.yml", e);
+		}
 	}
 }

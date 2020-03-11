@@ -1,5 +1,7 @@
 package de.timeout.sudo.bukkit.permissions;
 
+import org.bukkit.configuration.ConfigurationSection;
+
 import de.timeout.sudo.groups.BaseGroup;
 
 public class BukkitGroup extends BaseGroup {

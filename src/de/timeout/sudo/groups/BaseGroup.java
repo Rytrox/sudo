@@ -132,4 +132,14 @@ public class BaseGroup implements Group, Comparable<Group> {
 		return Objects.equals(name, other.name) && Objects.equals(permissions, other.permissions);
 	}
 
+	@Override
+	public Set<Group> getAllExtendedGroups() {
+		// create new set
+		Set<Group> copy = new HashSet<>(inheritance);
+		// run through inheritances and add every extended group
+		inheritance.forEach(group -> copy.addAll(group.getAllExtendedGroups()));
+		// return set
+		return copy;
+	}
+
 }

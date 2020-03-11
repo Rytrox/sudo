@@ -9,7 +9,8 @@ import javax.annotation.Nullable;
 
 import de.timeout.libs.config.ColoredLogger;
 import de.timeout.libs.config.ConfigCreator;
-import de.timeout.sudo.bungee.permissions.GroupManager;
+import de.timeout.sudo.bungee.permissions.ProxyGroupManager;
+import de.timeout.sudo.permissions.GroupManager;
 
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -80,7 +81,7 @@ public class Sudo extends Plugin {
 	}
 
 	private void initializeManager() {
-		groupManager = new GroupManager();
+		groupManager = new ProxyGroupManager();
 	}
 
 	@Override

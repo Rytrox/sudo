@@ -4,12 +4,14 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.Locale;
+import java.util.logging.Level;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 
 import com.google.common.io.ByteArrayDataOutput;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -31,6 +33,15 @@ public class ProxyMessageHandler implements PluginMessageListener {
 			case "initialize":
 				// read Json-Data
 				JsonObject obj = new JsonParser().parse(in.readUTF()).getAsJsonObject();
+				JsonElement error = obj.get("error");
+				// result cannot be an error
+				if(error == null) {
+					// run through groups
+					
+				} else {
+					// error handling
+					Sudo.log().log(Level.SEVERE, error.getAsJsonObject().get("message").getAsString());
+				}
 			}
 		} catch (IOException e) {
 			main.error("Unable to receive information from proxy", e);

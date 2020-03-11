@@ -2,33 +2,29 @@ package de.timeout.sudo.bungee.permissions;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 
-import javax.annotation.Nullable;
 
 import de.timeout.sudo.bungee.Sudo;
 import de.timeout.sudo.groups.Group;
+import de.timeout.sudo.permissions.GroupManager;
 
 import net.md_5.bungee.config.Configuration;
 
-public class GroupManager {
+public class ProxyGroupManager implements GroupManager {
 
 	private static final Sudo main = Sudo.getInstance();
 	
 	private final List<Group> loadedGroups = new ArrayList<>();
-	
-	public GroupManager() {
+
+	public ProxyGroupManager() {
 		// load groups.yml
 		main.getGroupConfig().getKeys().forEach(this::getGroup);
+		// log data
+		Sudo.log().log(Level.FINE, "&6groups.yml &asuccessfully loaded&7.");
 	}
 	
-	/**
-	 * Gets a group by its name
-	 * @author Timeout
-	 * 
-	 * @param name the name of the group
-	 * @return the group if the group is in groups.yml or loaded. Else null
-	 */
-	@Nullable
+	@Override
 	public Group getGroup(String name) {
 		// search in loadedGroups
 		for(Group group : loadedGroups) {
