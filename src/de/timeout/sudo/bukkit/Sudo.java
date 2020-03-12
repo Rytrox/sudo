@@ -13,10 +13,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import de.timeout.libs.config.ColoredLogger;
 import de.timeout.libs.config.ConfigCreator;
 import de.timeout.libs.config.UTFConfig;
-import de.timeout.sudo.bukkit.connectors.ProxyMessageHandler;
 import de.timeout.sudo.bukkit.permissions.BukkitGroupManager;
 import de.timeout.sudo.permissions.GroupConfigurable;
-import de.timeout.sudo.permissions.GroupManager;
 
 import net.md_5.bungee.api.ChatColor;
 
@@ -36,7 +34,7 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 	private UTFConfig config;
 	private UTFConfig groups;
 	
-	private GroupManager groupManager;
+	private BukkitGroupManager groupManager;
 
 	/**
 	 * This method returns the instance of the plugin
