@@ -10,7 +10,6 @@ import javax.annotation.Nullable;
 import de.timeout.libs.config.ColoredLogger;
 import de.timeout.libs.config.ConfigCreator;
 import de.timeout.sudo.bungee.permissions.ProxyGroupManager;
-import de.timeout.sudo.permissions.GroupManager;
 
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -28,7 +27,7 @@ public class Sudo extends Plugin {
 
 	private static Sudo instance;
 	
-	private GroupManager groupManager;
+	private ProxyGroupManager groupManager;
 	
 	private Configuration config;
 	private Configuration groups;
@@ -63,7 +62,7 @@ public class Sudo extends Plugin {
 	 * @return the groupmanager or null
 	 */
 	@Nullable
-	public GroupManager getGroupManager() {
+	public ProxyGroupManager getGroupManager() {
 		return groupManager;
 	}
 	

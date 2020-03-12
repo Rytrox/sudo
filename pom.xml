@@ -75,7 +75,6 @@
   		<version>2.6</version>
   	</dependency>
   	
-  	
   	<!-- Bungeecord here! -->
     <dependency>
        	<groupId>net.md-5</groupId>

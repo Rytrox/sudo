@@ -6,15 +6,23 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import org.apache.commons.lang.Validate;
+
+import com.google.common.graph.GraphBuilder;
+import com.google.common.graph.Graphs;
+import com.google.common.graph.MutableGraph;
+
 import de.timeout.sudo.utils.PermissionTree;
 
 public class BaseGroup implements Group, Comparable<Group> {
 	
-	protected final PermissionTree permissions = new PermissionTree();
-	protected final PermissionTree allPermissions = new PermissionTree();
+	protected static final MutableGraph<Group> inheritances = GraphBuilder.directed().build();
 	
+	protected final PermissionTree permissions = new PermissionTree();
 	protected final Set<User> members = new HashSet<>();
-	protected final Set<Group> inheritance = new HashSet<>();
 	
 	protected String name;
 	protected String prefix;
@@ -29,6 +37,26 @@ public class BaseGroup implements Group, Comparable<Group> {
 		this.prefix = prefix;
 		this.suffix = suffix;
 		this.defaultGroup = defaultGroup;
+		
+		inheritances.addNode(this);
+	}
+	
+	/**
+	 * Get the Group by its name. Returns null if the group is not loaded
+	 * @author Timeout
+	 * 
+	 * @param name the name of the group
+	 * @return the group or null if the group is not loaded
+	 */
+	@Nullable
+	public static Group getGroupByName(String name) {
+		// for each group in graph
+		for(Group group : inheritances.nodes()) {
+			// return group if group is found
+			if(group.getName().equalsIgnoreCase(name)) return group;
+		}
+		// return null for not found
+		return null;
 	}
 	
 	@Override
@@ -51,7 +79,7 @@ public class BaseGroup implements Group, Comparable<Group> {
 		// if permission is not null or empty
 		if(permission != null && !permission.isEmpty()) {
 			// add permission to list
-			return permissions.add(permission) && allPermissions.add(permission);
+			return permissions.add(permission);
 		}
 		// return false
 		return false;
@@ -62,7 +90,7 @@ public class BaseGroup implements Group, Comparable<Group> {
 		// if permission is not null
 		if(permission != null) {
 			// remove permission from collection
-			return permissions.remove(permission) && allPermissions.remove(permission);
+			return permissions.remove(permission);
 		}
 		// return false
 		return false;
@@ -70,8 +98,16 @@ public class BaseGroup implements Group, Comparable<Group> {
 
 	@Override
 	public boolean hasPermission(String permission) {
-		// return search
-		return allPermissions.contains(permission);
+		// return true if this group has permission
+		if(!permissions.contains(permission)) {
+			// search in extended groups
+			for(Group extended : getExtendedGroups()) {
+				// search for permission, return true if found
+				if(extended.hasPermission(permission)) return true;
+			}
+			// not found. return false
+			return false;
+		} else return true;
 	}
 
 	@Override
@@ -101,13 +137,8 @@ public class BaseGroup implements Group, Comparable<Group> {
 	}
 
 	@Override
-	public Set<String> getAllPermissions() {
-		return allPermissions.toSet();
-	}
-
-	@Override
 	public Collection<Group> getExtendedGroups() {
-		return new ArrayList<>(inheritance);
+		return new ArrayList<>(inheritances.successors(this));
 	}
 
 	@Override
@@ -117,7 +148,7 @@ public class BaseGroup implements Group, Comparable<Group> {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(allPermissions, defaultGroup, inheritance, members, name, permissions, prefix, suffix);
+		return Objects.hash(defaultGroup, members, name, permissions, prefix, suffix);
 	}
 
 	@Override
@@ -132,14 +163,17 @@ public class BaseGroup implements Group, Comparable<Group> {
 		return Objects.equals(name, other.name) && Objects.equals(permissions, other.permissions);
 	}
 
-	@Override
-	public Set<Group> getAllExtendedGroups() {
-		// create new set
-		Set<Group> copy = new HashSet<>(inheritance);
-		// run through inheritances and add every extended group
-		inheritance.forEach(group -> copy.addAll(group.getAllExtendedGroups()));
-		// return set
-		return copy;
+	protected void bindInheritance(@Nonnull Group other) throws CircularInheritanceException {
+		// Validate
+		Validate.notNull(other, "Other group cannot be null");
+		// link in graph
+		inheritances.putEdge(this, other);
+		// check for circle
+		if(Graphs.hasCycle(inheritances)) {
+			// remove edge
+			inheritances.removeEdge(this, other);
+			// throw exception
+			throw new CircularInheritanceException(this);
+		}
 	}
-
 }

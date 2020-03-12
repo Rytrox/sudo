@@ -1,7 +1,5 @@
 package de.timeout.sudo.bukkit.permissions;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 
 import javax.annotation.Nonnull;
@@ -17,14 +15,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import de.timeout.sudo.bukkit.Sudo;
-import de.timeout.sudo.groups.Group;
-import de.timeout.sudo.permissions.GroupManager;
 
-public class BukkitGroupManager implements GroupManager, PluginMessageListener {
+public class BukkitGroupManager implements PluginMessageListener {
 	
 	private static final Sudo main = Sudo.getInstance();
-
-	private final List<Group> groups = new ArrayList<>();
 	
 	private boolean bukkit;
 	
@@ -53,14 +47,6 @@ public class BukkitGroupManager implements GroupManager, PluginMessageListener {
 	private void loadGroupsFromFile() {
 		// get data from file
 		
-	}
-
-	@Override
-	public Group getGroup(String name) {
-		// search for group with name
-		for(Group group : groups) {
-			if(group.getName().equalsIgnoreCase(string))
-		}
 	}
 
 	@Override

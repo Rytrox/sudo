@@ -1,15 +1,18 @@
 package de.timeout.sudo.bungee.permissions;
 
+import java.util.Optional;
 import java.util.logging.Level;
 
 import javax.annotation.Nonnull;
 
+import com.google.common.graph.Graphs;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
 import de.timeout.sudo.bungee.Sudo;
 import de.timeout.sudo.groups.BaseGroup;
+import de.timeout.sudo.groups.CircularInheritanceException;
 
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.config.Configuration;
@@ -24,18 +27,18 @@ public class ProxyGroup extends BaseGroup {
 				groupConfiguration.getBoolean("options.defaultGroup"));
 		// load inheritances
 		groupConfiguration.getStringList("extends").forEach(extendedGroupName -> {
-			// only continue if same name cannot be in extended group
-			if(!main.getGroupConfig().getStringList(String.format("%s.extends", extendedGroupName)).contains(name)) {
-				// load supergroup
-				ProxyGroup superGroup = (ProxyGroup) main.getGroupManager().getGroup(extendedGroupName);
-				// only continue if group could be loaded
-				if(superGroup != null) {
-					// add to supergroup
-					this.inheritance.add(superGroup);
-					// add permissions to supergroup
-					this.allPermissions.addAll(superGroup.allPermissions);
+			// load supergroup
+			ProxyGroup superGroup = (ProxyGroup) Optional.ofNullable(BaseGroup.getGroupByName(extendedGroupName))
+					.orElse(new ProxyGroup(extendedGroupName, main.getGroupConfig().getSection(extendedGroupName)));
+			// only continue if group could be loaded
+			if(superGroup != null) {
+				// bind inheritance
+				try {
+					bindInheritance(superGroup);
+				} catch (CircularInheritanceException e) {
+					Sudo.log().log(Level.SEVERE, String.format("&cInvalid group configuration for Group %s", name), e);
 				}
-			} else Sudo.log().log(Level.WARNING, "&cCannot instanciate Configuration. There are an extendrotation");
+			}
 		});
 		// load permissions
 		groupConfiguration.getStringList("permissions").forEach(this::addPermission);
@@ -58,10 +61,10 @@ public class ProxyGroup extends BaseGroup {
 		object.addProperty("suffix", prefix.replace(ChatColor.COLOR_CHAR, '&'));
 		// create JsonArray for extended groups
 		JsonArray extend = new JsonArray();
-		inheritance.forEach(group -> extend.add(new JsonPrimitive(group.getName())));
+		Graphs.reachableNodes(inheritances, this).forEach(group -> extend.add(new JsonPrimitive(group.getName())));
 		// create JsonArray for permissions
 		JsonArray permissions = new JsonArray();
-		this.allPermissions.toSet().forEach(permission -> permissions.add(new JsonPrimitive(permission)));
+		this.permissions.toSet().forEach(permission -> permissions.add(new JsonPrimitive(permission)));
 		// write arrays in object
 		object.add("extends", extend);
 		object.add("permissions", permissions);
