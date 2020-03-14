@@ -12,7 +12,7 @@ import com.google.gson.JsonPrimitive;
 
 import de.timeout.sudo.bungee.Sudo;
 import de.timeout.sudo.groups.BaseGroup;
-import de.timeout.sudo.groups.CircularInheritanceException;
+import de.timeout.sudo.groups.exception.CircularInheritanceException;
 
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.config.Configuration;
@@ -24,12 +24,12 @@ public class ProxyGroup extends BaseGroup {
 	public ProxyGroup(String name, Configuration groupConfiguration) {
 		super(name, groupConfiguration.getString("options.prefix"),
 				groupConfiguration.getString("options.suffix"),
-				groupConfiguration.getBoolean("options.defaultGroup"));
+				groupConfiguration.getBoolean("options.default"));
 		// load inheritances
 		groupConfiguration.getStringList("extends").forEach(extendedGroupName -> {
 			// load supergroup
 			ProxyGroup superGroup = (ProxyGroup) Optional.ofNullable(BaseGroup.getGroupByName(extendedGroupName))
-					.orElse(new ProxyGroup(extendedGroupName, main.getGroupConfig().getSection(extendedGroupName)));
+							.orElse(new ProxyGroup(extendedGroupName, main.getGroupConfig().getSection(extendedGroupName)));
 			// only continue if group could be loaded
 			if(superGroup != null) {
 				// bind inheritance
@@ -56,7 +56,7 @@ public class ProxyGroup extends BaseGroup {
 		JsonObject object = new JsonObject();
 		// write name and options in object
 		object.addProperty("name", name);
-		object.addProperty("defaultGroup", defaultGroup);
+		object.addProperty("default", isDefault);
 		object.addProperty("prefix", prefix.replace(ChatColor.COLOR_CHAR, '&'));
 		object.addProperty("suffix", prefix.replace(ChatColor.COLOR_CHAR, '&'));
 		// create JsonArray for extended groups

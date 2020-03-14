@@ -4,12 +4,14 @@ import java.util.UUID;
 
 import javax.annotation.Nonnull;
 
+import com.google.gson.JsonObject;
+
 /**
  * Represents User which can be managed in groups
  * @author Timeout
  *
  */
-public interface User extends Comparable<User>, PermissibleBase, Collectable<Group> {
+public interface User extends Comparable<User>, PermissibleBase, Collectable<Group>, Customizable {
 
 	/**
 	 * Checks if the user is sudoer and can use sudo
@@ -29,4 +31,13 @@ public interface User extends Comparable<User>, PermissibleBase, Collectable<Gro
 	 */
 	@Nonnull
 	public UUID getUniqueID();
+	
+	/**
+	 * Converts the user into a Json-String
+	 * @author Timeout
+	 * 
+	 * @return the user as JsonObject
+	 */
+	@Nonnull
+	public JsonObject toJson();
 }

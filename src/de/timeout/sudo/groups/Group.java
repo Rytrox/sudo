@@ -3,14 +3,13 @@ package de.timeout.sudo.groups;
 import java.util.Collection;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 /**
  * Represents a group which handles permissions 
  * @author Timeout
  *
  */
-public interface Group extends PermissibleBase, Collectable<User> {
+public interface Group extends PermissibleBase, Collectable<User>, Customizable {
 	
 	/**
 	 * Returns a list of extended group of this group. <br>
@@ -20,27 +19,6 @@ public interface Group extends PermissibleBase, Collectable<User> {
 	 */
 	@Nonnull
 	public Collection<Group> getExtendedGroups();
-	
-	/**
-	 * Returns the name of this group
-	 * @return the name of this group
-	 */
-	@Nonnull
-	public String getName();
-	
-	/**
-	 * Returns the prefix of this group. Can be null
-	 * @return the prefix or null
-	 */
-	@Nullable
-	public String getPrefix();
-	
-	/**
-	 * Returns the suffix of this group. Can be null
-	 * @return the suffix or null
-	 */
-	@Nullable
-	public String getSuffix();
 	
 	/**
 	 * Checks if this group is a default group

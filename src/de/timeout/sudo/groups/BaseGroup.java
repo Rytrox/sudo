@@ -15,11 +15,13 @@ import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableGraph;
 
+import de.timeout.sudo.groups.exception.CircularInheritanceException;
 import de.timeout.sudo.utils.PermissionTree;
 
 public class BaseGroup implements Group, Comparable<Group> {
 	
 	protected static final MutableGraph<Group> inheritances = GraphBuilder.directed().build();
+	protected static Group defaultGroup;
 	
 	protected final PermissionTree permissions = new PermissionTree();
 	protected final Set<User> members = new HashSet<>();
@@ -27,17 +29,24 @@ public class BaseGroup implements Group, Comparable<Group> {
 	protected String name;
 	protected String prefix;
 	protected String suffix;
-	protected boolean defaultGroup;
+	protected boolean isDefault;
 	
 	/**
 	 * Constructor for inheritances
 	 */
-	protected BaseGroup(String name, String prefix, String suffix, boolean defaultGroup) {
+	protected BaseGroup(String name, String prefix, String suffix, boolean isDefault) {
 		this.name = name;
 		this.prefix = prefix;
 		this.suffix = suffix;
-		this.defaultGroup = defaultGroup;
-		
+		this.isDefault = isDefault;
+			
+		// select first loaded group as default group
+		if(defaultGroup != null) {
+			// select new default group if this group is default
+			if(isDefault) defaultGroup = this;
+		} else defaultGroup = this;
+
+		// add it in inheritances
 		inheritances.addNode(this);
 	}
 	
@@ -57,6 +66,17 @@ public class BaseGroup implements Group, Comparable<Group> {
 		}
 		// return null for not found
 		return null;
+	}
+	
+	/**
+	 * Returns the default group 
+	 * @author Timeout
+	 * 
+	 * @return
+	 */
+	@Nonnull
+	public static Group getDefaultGroup() {
+		return defaultGroup;
 	}
 	
 	@Override
@@ -133,7 +153,7 @@ public class BaseGroup implements Group, Comparable<Group> {
 
 	@Override
 	public boolean isDefault() {
-		return defaultGroup;
+		return isDefault;
 	}
 
 	@Override

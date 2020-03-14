@@ -11,6 +11,7 @@ import org.bukkit.plugin.messaging.PluginMessageListener;
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -44,10 +45,16 @@ public class BukkitGroupManager implements PluginMessageListener {
 		
 	}
 	
+	private void loadUsersFromBungeecord(@Nonnull JsonArray data) {
+		
+	}
+	
 	private void loadGroupsFromFile() {
 		// get data from file
 		
 	}
+	
+
 
 	@Override
 	public void onPluginMessageReceived(String channel, Player player, byte[] message) {
@@ -62,6 +69,8 @@ public class BukkitGroupManager implements PluginMessageListener {
 				Sudo.log().log(Level.INFO, "&7Data &areceived&7. Fetching into groups...");
 				// load groups from BungeeCord.
 				loadGroupsFromBungeecord(new JsonParser().parse(input.readUTF()).getAsJsonObject());
+				// load users from BungeeCord
+				loadUsersFromBungeecord(new JsonParser().parse(input.readUTF()).getAsJsonArray());
 			}
 		}
 	}

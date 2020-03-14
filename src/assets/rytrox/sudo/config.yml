@@ -1,5 +1,10 @@
 # Default Configuration-File for Sudo
 
+# Only Bukkit
+bungeecord:
+  # Enter uuid from stats field in bungeecords config.yml
+  uuid: 
+
 # commands which require sudo
 required:
 - 'op'

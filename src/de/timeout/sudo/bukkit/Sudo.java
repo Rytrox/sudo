@@ -15,6 +15,7 @@ import de.timeout.libs.config.ConfigCreator;
 import de.timeout.libs.config.UTFConfig;
 import de.timeout.sudo.bukkit.permissions.BukkitGroupManager;
 import de.timeout.sudo.permissions.GroupConfigurable;
+import de.timeout.sudo.permissions.UserConfigurable;
 
 import net.md_5.bungee.api.ChatColor;
 
@@ -23,16 +24,18 @@ import net.md_5.bungee.api.ChatColor;
  * @author Timeout
  *
  */
-public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
+public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig>, UserConfigurable<UTFConfig> {
 	
 	private static final ColoredLogger LOG = new ColoredLogger("&8[&6Sudo&8] ");
 	private static final String CONFIG_YML = "config.yml";
 	private static final String GROUPS_YML = "groups.yml";
+	private static final String USERS_YML = "users.yml";
 
 	private static Sudo instance;
 	
 	private UTFConfig config;
 	private UTFConfig groups;
+	private UTFConfig users;
 	
 	private BukkitGroupManager groupManager;
 
@@ -73,9 +76,15 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 		// create configurations
 		createConfiguration();
 		reloadConfig();
+		reloadGroupConfig();
+		reloadUserConfig();
 		
 		// load groupsmanager
 		groupManager = new BukkitGroupManager(!bungeecordEnabled());
+	}
+	
+	public BukkitGroupManager getGroupManager() {
+		return groupManager;
 	}
 	
 	/**
@@ -95,10 +104,12 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 	
 	private void createConfiguration() {
 		// create ConfigCreator
-		ConfigCreator creator = new ConfigCreator(getDataFolder(), "assets/sudo/bukkit");
+		ConfigCreator creator = new ConfigCreator(getDataFolder(), "assets/rytrox/sudo");
 		// create config.yml
 		try {
 			creator.loadRessource(CONFIG_YML);
+			creator.loadRessource(GROUPS_YML);
+			creator.loadRessource(USERS_YML);
 		} catch (IOException e) {
 			// log error
 			error("Unable to create configurations.", e);
@@ -153,6 +164,25 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 			this.groups.save(new File(getDataFolder(), GROUPS_YML));
 		} catch (IOException e) {
 			LOG.log(Level.WARNING, "&cCannot save groups.yml", e);
+		}
+	}
+
+	@Override
+	public void reloadUserConfig() {
+		this.users = new UTFConfig(new File(getDataFolder(), USERS_YML));
+	}
+
+	@Override
+	public UTFConfig getUserConfig() {
+		return users;
+	}
+
+	@Override
+	public void saveUserConfig() {
+		try {
+			this.users.save(new File(getDataFolder(), USERS_YML));
+		} catch (IOException e) {
+			LOG.log(Level.WARNING, "&cCannot save users.yml", e);
 		}
 	}
 }

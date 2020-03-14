@@ -1,6 +1,8 @@
-package de.timeout.sudo.groups;
+package de.timeout.sudo.groups.exception;
 
 import org.bukkit.configuration.InvalidConfigurationException;
+
+import de.timeout.sudo.groups.Group;
 
 /**
  * Exception which will be thrown if a circular inheritance between groups is detected
