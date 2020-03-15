@@ -51,7 +51,7 @@ public class ProxyGroup extends BaseGroup {
 	 * @return the group converted in a JsonObject
 	 */
 	@Nonnull
-	public JsonObject toJsonObject() {
+	public JsonObject toJson() {
 		// create new JsonObject
 		JsonObject object = new JsonObject();
 		// write name and options in object

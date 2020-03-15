@@ -3,6 +3,7 @@ package de.timeout.sudo.groups;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -14,6 +15,9 @@ import org.apache.commons.lang.Validate;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableGraph;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 
 import de.timeout.sudo.groups.exception.CircularInheritanceException;
 import de.timeout.sudo.utils.PermissionTree;
@@ -66,6 +70,17 @@ public class BaseGroup implements Group, Comparable<Group> {
 		}
 		// return null for not found
 		return null;
+	}
+	
+	/**
+	 * Returns all loaded groups in a list
+	 * @author Timeout
+	 * 
+	 * @return a list containing all loaded groups
+	 */
+	@Nonnull
+	public static List<Group> getGroups() {
+		return new ArrayList<>(inheritances.nodes());
 	}
 	
 	/**
@@ -195,5 +210,33 @@ public class BaseGroup implements Group, Comparable<Group> {
 			// throw exception
 			throw new CircularInheritanceException(this);
 		}
+	}
+
+	@Override
+	public JsonObject toJson() {
+		// create JsonObject
+		JsonObject object = new JsonObject();
+		// write primitives in object
+		object.addProperty("name", name);
+		object.addProperty("default", isDefault);
+		object.addProperty("prefix", prefix);
+		object.addProperty("suffix", suffix);
+		
+		// create jsonarray for permissions
+		JsonArray permissionsArray = new JsonArray();
+		// write all permissions into array
+		this.permissions.toSet().forEach(permission -> permissionsArray.add(new JsonPrimitive(permission)));
+		// write array into object
+		object.add("permissions", permissionsArray);
+		
+		// create JsonArray for inheritances
+		JsonArray inheritancesArray = new JsonArray();
+		// write all inheritances into array
+		inheritances.successors(this).forEach(group -> inheritancesArray.add(new JsonPrimitive(group.getName())));
+		// write array into object
+		object.add("extends", inheritancesArray);
+		
+		// return object
+		return object;
 	}
 }

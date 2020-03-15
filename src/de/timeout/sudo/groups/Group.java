@@ -4,6 +4,8 @@ import java.util.Collection;
 
 import javax.annotation.Nonnull;
 
+import com.google.gson.JsonObject;
+
 /**
  * Represents a group which handles permissions 
  * @author Timeout
@@ -25,4 +27,13 @@ public interface Group extends PermissibleBase, Collectable<User>, Customizable 
 	 * @return if this group is a default group
 	 */
 	public boolean isDefault();
+	
+	/**
+	 * Compiles the group into Json-Objects
+	 * @author Timeout
+	 * 
+	 * @return the group as JsonObject
+	 */
+	@Nonnull
+	public JsonObject toJson();
 }

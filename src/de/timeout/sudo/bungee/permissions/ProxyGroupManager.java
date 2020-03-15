@@ -1,11 +1,11 @@
 package de.timeout.sudo.bungee.permissions;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
-
-import org.bukkit.entity.Player;
 
 import de.timeout.sudo.bungee.Sudo;
 import de.timeout.sudo.groups.User;
@@ -19,7 +19,7 @@ public class ProxyGroupManager implements Listener {
 
 	private static final Sudo main = Sudo.getInstance();
 	
-	private final Map<Player, User> profiles = new HashMap<>();
+	private final Map<UUID, User> profiles = new HashMap<>();
 	
 	public ProxyGroupManager() {
 		// register Listener
@@ -28,6 +28,21 @@ public class ProxyGroupManager implements Listener {
 		main.getGroupConfig().getKeys().forEach(this::loadGroup);
 		// log data
 		Sudo.log().log(Level.FINE, "&6groups.yml &asuccessfully loaded&7.");
+	}
+	
+	/**
+	 * Returns a list with all online users
+	 * @author Timeout
+	 * 
+	 * @return a list containing a
+	 */
+	public List<User> getAllLoggedUsers() {
+		// create new list
+		List<User> onlineUsers = new ArrayList<>();
+		// run through onlineplayers
+		main.getProxy().getPlayers().forEach(player -> onlineUsers.add(profiles.get(player.getUniqueId())));
+		// return list
+		return onlineUsers;
 	}
 	
 	private void loadGroup(String name) {	

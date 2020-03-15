@@ -20,6 +20,7 @@ import de.timeout.sudo.bukkit.Sudo;
 public class BukkitGroupManager implements PluginMessageListener {
 	
 	private static final Sudo main = Sudo.getInstance();
+	private static final JsonParser parser = new JsonParser();
 	
 	private boolean bukkit;
 	
@@ -68,9 +69,9 @@ public class BukkitGroupManager implements PluginMessageListener {
 				// log result to server
 				Sudo.log().log(Level.INFO, "&7Data &areceived&7. Fetching into groups...");
 				// load groups from BungeeCord.
-				loadGroupsFromBungeecord(new JsonParser().parse(input.readUTF()).getAsJsonObject());
+				loadGroupsFromBungeecord(parser.parse(input.readUTF()).getAsJsonObject());
 				// load users from BungeeCord
-				loadUsersFromBungeecord(new JsonParser().parse(input.readUTF()).getAsJsonArray());
+				loadUsersFromBungeecord(parser.parse(input.readUTF()).getAsJsonArray());
 			}
 		}
 	}
