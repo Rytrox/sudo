@@ -8,6 +8,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 
+import com.avaje.ebean.text.json.JsonElement;
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
@@ -16,6 +17,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import de.timeout.sudo.bukkit.Sudo;
+import de.timeout.sudo.groups.exception.CircularInheritanceException;
 
 public class BukkitGroupManager implements PluginMessageListener {
 	
@@ -42,12 +44,20 @@ public class BukkitGroupManager implements PluginMessageListener {
 		
 	}
 	
-	private void loadGroupsFromBungeecord(@Nonnull JsonObject data) {
-		
+	private void loadGroupsFromBungeecord(@Nonnull JsonArray data) {
+		// run through data to initialize formal groups without inheritances
+		data.forEach(groupData -> {
+			// create group
+			try {
+				new BukkitGroup(groupData.getAsJsonObject());
+			} catch (CircularInheritanceException e) {
+				Sudo.log().log(Level.WARNING, "&cUnable to apply data from Bungeecord. Circular dependency in group detected.", e);
+			}
+		});
 	}
 	
 	private void loadUsersFromBungeecord(@Nonnull JsonArray data) {
-		
+		// run through data to create users 
 	}
 	
 	private void loadGroupsFromFile() {
@@ -67,11 +77,19 @@ public class BukkitGroupManager implements PluginMessageListener {
 			// check if channel is login channel
 			if("login".equalsIgnoreCase(subchannel)) {
 				// log result to server
-				Sudo.log().log(Level.INFO, "&7Data &areceived&7. Fetching into groups...");
-				// load groups from BungeeCord.
-				loadGroupsFromBungeecord(parser.parse(input.readUTF()).getAsJsonObject());
-				// load users from BungeeCord
-				loadUsersFromBungeecord(parser.parse(input.readUTF()).getAsJsonArray());
+				Sudo.log().log(Level.INFO, "&7Data &areceived&7");
+				// get element of data
+				JsonObject data = parser.parse(input.readUTF()).getAsJsonObject();
+				// check if code was a success
+				if(data.get("code").getAsInt() == 200) {
+					// load groups from BungeeCord.
+					loadGroupsFromBungeecord(data.get("groups").getAsJsonArray());
+					// load users from BungeeCord
+					loadUsersFromBungeecord(data.get("users").getAsJsonArray());
+				} else {
+					// send error log to console
+					Sudo.log().log(Level.WARNING, data.get("message").getAsString());
+				}
 			}
 		}
 	}

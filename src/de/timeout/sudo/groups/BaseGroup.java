@@ -239,4 +239,14 @@ public class BaseGroup implements Group, Comparable<Group> {
 		// return object
 		return object;
 	}
+
+	@Override
+	public void setPrefix(String prefix) {
+		this.prefix = prefix;
+	}
+
+	@Override
+	public void setSuffix(String suffix) {
+		this.suffix = suffix;
+	}
 }

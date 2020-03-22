@@ -57,7 +57,7 @@ public class ProxyUser implements User {
 			this.name = connection.getName();
 		}
 	}
-	
+		
 	@Override
 	public boolean isMember(Group element) {
 		return groups.contains(element);
@@ -179,5 +179,15 @@ public class ProxyUser implements User {
 	@Override
 	public String getSuffix() {
 		return suffix;
+	}
+
+	@Override
+	public void setPrefix(String prefix) {
+		this.prefix = prefix;
+	}
+
+	@Override
+	public void setSuffix(String suffix) {
+		this.suffix = suffix;
 	}
 }
