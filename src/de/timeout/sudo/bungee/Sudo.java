@@ -11,20 +11,19 @@ import de.timeout.libs.config.ColoredLogger;
 import de.timeout.libs.config.ConfigCreator;
 import de.timeout.sudo.bungee.permissions.ProxyGroupManager;
 import de.timeout.sudo.permissions.GroupConfigurable;
-import de.timeout.sudo.permissions.UserConfigurable;
 
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
 
-public class Sudo extends Plugin implements GroupConfigurable<Configuration>, UserConfigurable<Configuration> {
+public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 	
 	private static final ConfigurationProvider PROVIDER = ConfigurationProvider.getProvider(YamlConfiguration.class);
 	private static final ColoredLogger LOG = new ColoredLogger("&8[&6Sudo&8] ");
+	
 	private static final String CONFIG_YML = "config.yml";
 	private static final String GROUPS_YML = "groups.yml";
-	private static final String USERS_YML = "users.yml";
 	private static final String LOAD_ERROR = "&cUnable to read %s";
 	private static final String SAVE_ERROR = "&cUnable to save %s";
 
@@ -34,7 +33,6 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration>, Us
 	
 	private Configuration config;
 	private Configuration groups;
-	private Configuration users;
 
 	/**
 	 * Returns the Main-Instance of the Plugin. <br>
@@ -79,7 +77,6 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration>, Us
 		// reload configs
 		reloadConfig();
 		reloadGroupConfig();
-		reloadUserConfig();
 		// initialize manager
 		initializeManager();
 	}
@@ -155,29 +152,6 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration>, Us
 			PROVIDER.save(config, new File(getDataFolder(), GROUPS_YML));
 		} catch (IOException e) {
 			LOG.log(Level.WARNING, String.format(SAVE_ERROR, GROUPS_YML), e);
-		}
-	}
-
-	@Override
-	public void reloadUserConfig() {
-		try {
-			this.users = PROVIDER.load(new File(getDataFolder(), USERS_YML));
-		} catch (IOException e) {
-			LOG.log(Level.WARNING, String.format(LOAD_ERROR, USERS_YML), e);
-		}
-	}
-
-	@Override
-	public Configuration getUserConfig() {
-		return users;
-	}
-
-	@Override
-	public void saveUserConfig() {
-		try {
-			PROVIDER.save(users, new File(getDataFolder(), USERS_YML));
-		} catch (IOException e) {
-			LOG.log(Level.WARNING, String.format(SAVE_ERROR, USERS_YML), e);
 		}
 	}
 }

@@ -15,7 +15,6 @@ import de.timeout.libs.config.ConfigCreator;
 import de.timeout.libs.config.UTFConfig;
 import de.timeout.sudo.bukkit.permissions.BukkitGroupManager;
 import de.timeout.sudo.permissions.GroupConfigurable;
-import de.timeout.sudo.permissions.UserConfigurable;
 
 import net.md_5.bungee.api.ChatColor;
 
@@ -24,7 +23,7 @@ import net.md_5.bungee.api.ChatColor;
  * @author Timeout
  *
  */
-public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig>, UserConfigurable<UTFConfig> {
+public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 	
 	private static final ColoredLogger LOG = new ColoredLogger("&8[&6Sudo&8] ");
 	private static final String CONFIG_YML = "config.yml";
@@ -35,7 +34,6 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig>, Us
 	
 	private UTFConfig config;
 	private UTFConfig groups;
-	private UTFConfig users;
 	
 	private BukkitGroupManager groupManager;
 
@@ -77,7 +75,6 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig>, Us
 		createConfiguration();
 		reloadConfig();
 		reloadGroupConfig();
-		reloadUserConfig();
 		
 		// load groupsmanager
 		groupManager = new BukkitGroupManager(!bungeecordEnabled());
@@ -164,25 +161,6 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig>, Us
 			this.groups.save(new File(getDataFolder(), GROUPS_YML));
 		} catch (IOException e) {
 			LOG.log(Level.WARNING, "&cCannot save groups.yml", e);
-		}
-	}
-
-	@Override
-	public void reloadUserConfig() {
-		this.users = new UTFConfig(new File(getDataFolder(), USERS_YML));
-	}
-
-	@Override
-	public UTFConfig getUserConfig() {
-		return users;
-	}
-
-	@Override
-	public void saveUserConfig() {
-		try {
-			this.users.save(new File(getDataFolder(), USERS_YML));
-		} catch (IOException e) {
-			LOG.log(Level.WARNING, "&cCannot save users.yml", e);
 		}
 	}
 }

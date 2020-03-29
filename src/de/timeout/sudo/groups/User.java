@@ -12,12 +12,6 @@ import com.google.gson.JsonObject;
  *
  */
 public interface User extends Comparable<User>, PermissibleBase, Collectable<Group>, Customizable {
-
-	/**
-	 * Checks if the user is sudoer and can use sudo
-	 * @return if the user is sudoer
-	 */
-	public boolean isSudoer();
 	
 	/**
 	 * Checks if the user is currently online

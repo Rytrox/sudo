@@ -20,11 +20,8 @@ public final class PasswordCryptor {
 	 * Each token produced by this class uses this identifier as a prefix.
 	 */
 	public static final String ID = "$31$";
-
 	private static final String ALGORITHM = "PBKDF2WithHmacSHA1";
-
 	private static final int SIZE = 128;
-
 	private static final Pattern layout = Pattern.compile("\\$31\\$(\\d\\d?)\\$(.{43})");
 
 	private static int iterations(int cost) {
