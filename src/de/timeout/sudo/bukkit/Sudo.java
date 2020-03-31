@@ -8,11 +8,18 @@ import java.util.logging.Level;
 import javax.annotation.Nonnull;
 
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import com.google.common.io.ByteArrayDataInput;
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
+import com.google.gson.JsonObject;
 
 import de.timeout.libs.config.ColoredLogger;
 import de.timeout.libs.config.ConfigCreator;
 import de.timeout.libs.config.UTFConfig;
+import de.timeout.sudo.bukkit.messenger.PluginMessageFuture;
 import de.timeout.sudo.bukkit.permissions.BukkitGroupManager;
 import de.timeout.sudo.permissions.GroupConfigurable;
 
@@ -28,7 +35,6 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 	private static final ColoredLogger LOG = new ColoredLogger("&8[&6Sudo&8] ");
 	private static final String CONFIG_YML = "config.yml";
 	private static final String GROUPS_YML = "groups.yml";
-	private static final String USERS_YML = "users.yml";
 
 	private static Sudo instance;
 	
@@ -76,8 +82,18 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 		reloadConfig();
 		reloadGroupConfig();
 		
-		// load groupsmanager
-		groupManager = new BukkitGroupManager(!bungeecordEnabled());
+//		// load groupsmanager
+//		groupManager = new BukkitGroupManager(!bungeecordEnabled());
+		
+		
+		// DEBUG:
+//		Bukkit.getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
+		ByteArrayDataOutput out = ByteStreams.newDataOutput();
+		out.writeUTF("PlayerCount");
+		out.writeUTF("remote");
+//		
+//		this.getServer().sendPluginMessage(instance, "BungeeCord", out.toByteArray());
+		Bukkit.getMessenger().registerIncomingPluginChannel(this, "BungeeCord", new TestFuture("BungeeCord", out));
 	}
 	
 	public BukkitGroupManager getGroupManager() {
@@ -94,9 +110,9 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 	 */
 	private boolean bungeecordEnabled() {
 		// get spigot.yml
-		UTFConfig spigot = new UTFConfig(new File(getDataFolder().getParentFile(), "spigot.yml"));
+		UTFConfig spigot = new UTFConfig(new File(getDataFolder().getParentFile().getParentFile(), "spigot.yml"));
 		// check if bungeecord is enabled. Return false for not found
-		return spigot.getBoolean("bungeecord", false);
+		return spigot.getBoolean("settings.bungeecord", false);
 	}
 	
 	private void createConfiguration() {
@@ -106,7 +122,6 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 		try {
 			creator.loadRessource(CONFIG_YML);
 			creator.loadRessource(GROUPS_YML);
-			creator.loadRessource(USERS_YML);
 		} catch (IOException e) {
 			// log error
 			error("Unable to create configurations.", e);
@@ -162,5 +177,22 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 		} catch (IOException e) {
 			LOG.log(Level.WARNING, "&cCannot save groups.yml", e);
 		}
+	}
+	
+	private static class TestFuture extends PluginMessageFuture {
+
+		public TestFuture(String channel, ByteArrayDataOutput out) {
+			super(channel, out);
+		}
+
+		@Override
+		protected JsonObject readData(ByteArrayDataInput input) {
+			// create jsonobject
+			JsonObject object = new JsonObject();
+			object.addProperty("name", input.readUTF());
+			object.addProperty("count", input.readInt());
+			return object;
+		}
+		
 	}
 }

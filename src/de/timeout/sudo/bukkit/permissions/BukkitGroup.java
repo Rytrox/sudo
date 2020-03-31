@@ -10,6 +10,8 @@ import de.timeout.sudo.groups.BaseGroup;
 
 public class BukkitGroup extends BaseGroup {
 	
+	private static final String OPTIONS = "options";
+	
 	/**
 	 * Creates a new BukkitGroup from the JsonObject
 	 * @author Timeout
@@ -18,10 +20,10 @@ public class BukkitGroup extends BaseGroup {
 	 */
 	public BukkitGroup(@Nonnull JsonObject data) {
 		// load data without inheritances
-		super(data.get("name").getAsString(),
-				data.get("prefix").getAsString(),
-				data.get("suffix").getAsString(),
-				data.get("default").getAsBoolean());
+		super(data.get(OPTIONS).getAsJsonObject().get("name").getAsString(),
+				data.get(OPTIONS).getAsJsonObject().get("prefix").getAsString(),
+				data.get(OPTIONS).getAsJsonObject().get("suffix").getAsString(),
+				data.get(OPTIONS).getAsJsonObject().get("default").getAsBoolean());
 		// add own permissions in group
 		data.get("permissions").getAsJsonArray().forEach(permission -> this.addPermission(permission.getAsString()));
 	}

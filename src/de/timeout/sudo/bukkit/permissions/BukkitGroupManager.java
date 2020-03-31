@@ -1,8 +1,6 @@
 package de.timeout.sudo.bukkit.permissions;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
@@ -11,9 +9,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.entity.Player;
 import org.bukkit.permissions.ServerOperator;
 
 import com.google.common.io.ByteArrayDataInput;
@@ -26,7 +22,6 @@ import com.google.gson.JsonParser;
 
 import de.timeout.sudo.bukkit.Sudo;
 import de.timeout.sudo.bukkit.messenger.PluginMessageFuture;
-import de.timeout.sudo.bukkit.messenger.ProxyUpdateMessager;
 import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.groups.User;
 import de.timeout.sudo.groups.exception.CircularInheritanceException;
@@ -42,10 +37,9 @@ public class BukkitGroupManager extends GroupManager<ServerOperator> {
 		if(!bukkit) {
 			// info server for using Bungeecord
 			Sudo.log().log(Level.INFO, "&2Bungeecord &7in &6spigot.yml &aenabled&7. Requesting data from &2Bungeecord&7...");
-			Bukkit.getMessenger().registerOutgoingPluginChannel(main, "sudo");
 
-			// create update messager
-			Bukkit.getMessenger().registerIncomingPluginChannel(main, "sudo", new ProxyUpdateMessager());
+//			// create update messager
+//			new ProxyUpdateMessager();
 			
 			// send Login Request to BungeeCord
 			sendLoginRequest();
@@ -60,7 +54,6 @@ public class BukkitGroupManager extends GroupManager<ServerOperator> {
 	private void sendLoginRequest() {
 		// send login request to Bungeecord
 		final ByteArrayDataOutput out = ByteStreams.newDataOutput();
-		out.writeUTF("login");
 		out.writeUTF(main.getConfig().getString("bungeecord.uuid"));
 		
 		// Create new Async task
@@ -104,79 +97,80 @@ public class BukkitGroupManager extends GroupManager<ServerOperator> {
 		return Optional.ofNullable(profiles.get(operator)).orElse(new BukkitUser(operator));
 	}
 	
-	/**
-	 * Sends a user load request and returns a Future of the request
-	 * @author Timeout
-	 * 
-	 * @param player the offlineplayer you want to get. Cannot be null
-	 * @return
-	 */
-	public Future<User> getUserFromPlayer(OfflinePlayer player) {
-		// load from cache else from OfflinePlayer
-		return CompletableFuture.supplyAsync(() -> {
-			// check if player is not null
-			if(player != null) {
-				// try to load from cache
-				return Optional.ofNullable(profiles.get(player)).orElseGet(() -> {
-					// create from user and request from BungeeCord
-					BukkitUser user = new BukkitUser(player);
-					try {
-						// create byte request 
-						ByteArrayDataOutput out = ByteStreams.newDataOutput();
-						out.writeUTF("user");
-						out.writeUTF("load");
-						out.writeUTF(player.getUniqueId().toString());
-						
-						// load json from Bungeecord
-						JsonObject data = new PluginMessageFuture(out) {
-	
-							@Override
-							public void onPluginMessageReceived(String channel, Player receiver, byte[] message) {
-								// read message
-								ByteArrayDataInput in = ByteStreams.newDataInput(message);
-								// check if subchannel is loadUser channel and uuid is correct
-								if(in.readUTF().equalsIgnoreCase("user") &&
-										in.readUTF().equalsIgnoreCase("load") &&
-										in.readUTF().equalsIgnoreCase(player.getUniqueId().toString())) {
-									// read data
-									data = new JsonParser().parse(in.readUTF()).getAsJsonObject();
-									// unregister this listener
-									Bukkit.getMessenger().unregisterIncomingPluginChannel(main, "sudo", this);
-								}
-							}
-							
-						}.get(5, TimeUnit.SECONDS);
-						// insert prefix and suffix
-						user.setPrefix(data.get("prefix").getAsString());
-						user.setSuffix(data.get("suffix").getAsString());
-						// set permissions
-						data.get("permissions").getAsJsonArray().forEach(permission -> user.addPermission(permission.getAsString()));
-						// set groups
-						data.get("groups").getAsJsonArray().forEach(groupName -> {
-							// get Group by name
-							Group group = main.getGroupManager().getGroupByName(groupName.getAsString());
-							// if group could be found
-							if(group != null) {
-								// remove him from default group
-								user.kick(BukkitGroup.getDefaultGroup());
-								// add him to this group
-								user.join(group);
-							}
-						});
-					} catch (InterruptedException e) {
-						Sudo.log().log(Level.SEVERE, "&4Fatal error while receiving data from Bungeecord. Thread interrupted", e);
-						// reinterrupt task
-						Thread.currentThread().interrupt();
-					} catch (TimeoutException e) {
-						Sudo.log().log(Level.WARNING, "&cUnable to receive data from BungeeCord in time... Connection timed out", e);
-					}
-					
-					// return user
-					return user;
-				});
-			} else return null;
-		});
-	}
+//	/**
+//	 * Sends a user load request and returns a Future of the request
+//	 * @author Timeout
+//	 * 
+//	 * @param player the offlineplayer you want to get. Cannot be null
+//	 * @return
+//	 */
+//	public Future<User> getUserFromPlayer(OfflinePlayer player) {
+//		// load from cache else from OfflinePlayer
+//		return CompletableFuture.supplyAsync(() -> {
+//			// check if player is not null
+//			if(player != null) {
+//				// try to load from cache
+//				return Optional.ofNullable(profiles.get(player)).orElseGet(() -> {
+//					// create from user and request from BungeeCord
+//					BukkitUser user = new BukkitUser(player);
+//					try {
+//						// create byte request 
+//						ByteArrayDataOutput out = ByteStreams.newDataOutput();
+//						out.writeUTF("load");
+//						out.writeUTF(player.getUniqueId().toString());
+//						
+//						// load json from Bungeecord
+//						JsonObject data = new PluginMessageFuture("user", out) {
+//	
+//							@Override
+//							public void onPluginMessageReceived(String channel, Player receiver, byte[] message) {
+//								// check if channel is right
+//								if("sudo:user".equalsIgnoreCase(channel)) {
+//									// read message
+//									ByteArrayDataInput in = ByteStreams.newDataInput(message);
+//									// check if subchannel is loadUser channel and uuid is correct
+//									if(in.readUTF().equalsIgnoreCase("load") &&
+//											in.readUTF().equalsIgnoreCase(player.getUniqueId().toString())) {
+//										// read data
+//										data = new JsonParser().parse(in.readUTF()).getAsJsonObject();
+//										// unregister this listener
+//										Bukkit.getMessenger().unregisterIncomingPluginChannel(main, "sudo:user", this);
+//									}
+//								}
+//							}
+//							
+//						}.get(5, TimeUnit.SECONDS);
+//						// insert prefix and suffix
+//						user.setPrefix(data.get("prefix").getAsString());
+//						user.setSuffix(data.get("suffix").getAsString());
+//						// set permissions
+//						data.get("permissions").getAsJsonArray().forEach(permission -> user.addPermission(permission.getAsString()));
+//						// set groups
+//						data.get("groups").getAsJsonArray().forEach(groupName -> {
+//							// get Group by name
+//							Group group = main.getGroupManager().getGroupByName(groupName.getAsString());
+//							// if group could be found
+//							if(group != null) {
+//								// remove him from default group
+//								user.kick(BukkitGroup.getDefaultGroup());
+//								// add him to this group
+//								user.join(group);
+//							}
+//						});
+//					} catch (InterruptedException e) {
+//						Sudo.log().log(Level.SEVERE, "&4Fatal error while receiving data from Bungeecord. Thread interrupted", e);
+//						// reinterrupt task
+//						Thread.currentThread().interrupt();
+//					} catch (TimeoutException e) {
+//						Sudo.log().log(Level.WARNING, "&cUnable to receive data from BungeeCord in time... Connection timed out", e);
+//					}
+//					
+//					// return user
+//					return user;
+//				});
+//			} else return null;
+//		});
+//	}
 	
 	/**
 	 * Converts the Groups-Array from BungeeCord into BukkitGroups
@@ -262,24 +256,15 @@ public class BukkitGroupManager extends GroupManager<ServerOperator> {
 	private class LoginMessageFuture extends PluginMessageFuture {
 
 		public LoginMessageFuture(ByteArrayDataOutput out) {
-			super(out);
+			super("login", out);
 		}
-
+		
 		@Override
-		public void onPluginMessageReceived(String channel, Player player, byte[] message) {
-			// if channel is Sudo-Channel
-			if("sudo".equalsIgnoreCase(channel)) {
-				// get Input
-				ByteArrayDataInput input = ByteStreams.newDataInput(message);
-				String subchannel = input.readUTF();
-				// check if channel is login channel
-				if("login".equalsIgnoreCase(subchannel)) {
-					// log result to server
-					Sudo.log().log(Level.INFO, "&7Data &areceived&7");
-					// get element of data
-					this.data = parser.parse(input.readUTF()).getAsJsonObject();
-				}
-			}
+		protected JsonObject readData(ByteArrayDataInput input) {
+			// log result to server
+			Sudo.log().log(Level.INFO, "&7Data &areceived&7");
+			// get element of data
+			return parser.parse(input.readUTF()).getAsJsonObject();
 		}
 	}
 }

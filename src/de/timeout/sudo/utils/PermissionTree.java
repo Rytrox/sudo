@@ -9,8 +9,6 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.apache.commons.lang.Validate;
-
 /**
  * Datastructure which manages permissions of a Permissible.
  * @author Timeout
@@ -39,17 +37,6 @@ public class PermissionTree {
 		);
 	}
 	
-	private PermissionTree(PermissionTree parent, String name) {
-		// Validate
-		Validate.notEmpty(name, "Permissionname cannot be empty");
-		// force asterisk if child is a asterisk-permission.
-		// Also the parent cannot be an asterisk-node
-		if("*".equals(name) && !parent.isAsterisk()) {
-			// add this node to parent
-			parent.children.put(name, this);
-		} else parent.setAsterisk();
-	}
-	
 	/**
 	 * Runs through subtrees and collect all permissions into a HashSet.
 	 * 
@@ -67,7 +54,6 @@ public class PermissionTree {
 		if(current.isAsterisk()) {
 			// end here
 			set.add(path + ".*");
-			return set;
 		} else {
 			// run through children
 			current.children.entrySet().forEach(entry -> 
@@ -134,21 +120,28 @@ public class PermissionTree {
 		// Validate. A Permission cannot be null and no permission can be added if the current tree is an forced asterisk
 		if(!asterisk && permission != null && !permission.isEmpty()) {
 			// Split permissions into Subpermisions (Add asterisk at end)
-			String[] subpermissions = (permission.endsWith(".*") ? permission : permission + ".*").toLowerCase(Locale.ENGLISH).split(".");
+			String[] subpermissions = (permission.endsWith("*") ? permission : permission + ".*").toLowerCase(Locale.ENGLISH).split("\\.");
 			// define actual parent
 			PermissionTree parent = this;
-			// run through subpermissions
-			for (int i = 0; i < subpermissions.length; i++) {
-				String subPerm = subpermissions[i];
-				// break if parent is an asterisk
-				if(!parent.asterisk) {
-					// go to next node
-					if(!parent.children.containsKey(subPerm)) {
-						// bind new subtree to parent (Also relocate pointer)
-						parent = new PermissionTree(parent, subPerm);
-					} parent = parent.children.get(subPerm);
-				} else break;
+			int currentPosition = 0;
+			// stop when parent is asterisk or last one is reached. (last one is definitely a asterisk)
+			while(!parent.isAsterisk() && currentPosition < subpermissions.length -1) {
+				// get Sub-Permission
+				String subpermission = subpermissions[currentPosition];
+				// increase current position
+				currentPosition++;
+				// create tree section if it not exists
+				if(!parent.children.containsKey(subpermission)) {
+					// create tree section
+					PermissionTree child = new PermissionTree();
+					// link section in parents children
+					parent.children.put(subpermission, child);
+					// update parent
+					parent = child;
+				} else parent = parent.children.get(subpermission);
 			}
+			// set last one to asterisk
+			parent.setAsterisk();
 			// return true for success
 			return true;
 		} else return false;
@@ -190,7 +183,7 @@ public class PermissionTree {
 		// return true if client has asterisk permission
 		if(!asterisk) {
 			// validate (return false for null)
-			if(permission != null && permission.isEmpty()) {
+			if(permission != null && !permission.isEmpty()) {
 				// split permission into Array
 				String[] subpermissions = permission.split(".");
 				// define current subtree
@@ -221,9 +214,9 @@ public class PermissionTree {
 		// create Set
 		Set<String> set = new HashSet<>();
 		// check if root is not an asterisk
-		if(asterisk) {
+		if(!asterisk) {
 			// run through subtree
-			children.entrySet().forEach(entry ->
+			children.entrySet().forEach(entry -> 
 				// add to set
 				set.addAll(runthroughTree(entry.getKey(), entry.getValue()))
 			);

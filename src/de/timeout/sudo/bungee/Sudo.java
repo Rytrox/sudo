@@ -9,6 +9,7 @@ import javax.annotation.Nullable;
 
 import de.timeout.libs.config.ColoredLogger;
 import de.timeout.libs.config.ConfigCreator;
+import de.timeout.sudo.bungee.messenger.ProxyLoginMessager;
 import de.timeout.sudo.bungee.permissions.ProxyGroupManager;
 import de.timeout.sudo.permissions.GroupConfigurable;
 
@@ -70,6 +71,7 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 	
 	@Override
 	public void onEnable() {
+		LOG.log(Level.INFO, "&7Load &6Sudo &eVersion 0.0.1-SNAPSHOT");
 		// initialize instance
 		instance = this;
 		// load configurations
@@ -77,12 +79,20 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 		// reload configs
 		reloadConfig();
 		reloadGroupConfig();
+		getProxy().registerChannel("sudo");
 		// initialize manager
 		initializeManager();
 	}
 
 	private void initializeManager() {
+		// initialize group manager
 		groupManager = new ProxyGroupManager();
+		// register listener
+		this.getProxy().getPluginManager().registerListener(this, groupManager);
+		
+		// register login channel
+		getProxy().registerChannel("sudo:login");
+		this.getProxy().getPluginManager().registerListener(this, new ProxyLoginMessager());
 	}
 
 	@Override
@@ -135,7 +145,7 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 	@Override
 	public void reloadGroupConfig() {
 		try {
-			PROVIDER.load(new File(getDataFolder(), GROUPS_YML));
+			groups = PROVIDER.load(new File(getDataFolder(), GROUPS_YML));
 		} catch (IOException e) {
 			LOG.log(Level.WARNING, String.format(LOAD_ERROR, GROUPS_YML), e);
 		}

@@ -1,6 +1,6 @@
 package de.timeout.sudo.groups.exception;
 
-import org.bukkit.configuration.InvalidConfigurationException;
+import java.io.IOException;
 
 import de.timeout.sudo.groups.Group;
 
@@ -9,7 +9,7 @@ import de.timeout.sudo.groups.Group;
  * @author Timeout
  *
  */
-public class CircularInheritanceException extends InvalidConfigurationException {
+public class CircularInheritanceException extends IOException {
 
 	/**
 	 * 

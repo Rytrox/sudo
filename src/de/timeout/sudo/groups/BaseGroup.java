@@ -145,7 +145,7 @@ public class BaseGroup implements Group, Comparable<Group> {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(defaultGroup, members, name, permissions, prefix, suffix);
+		return Objects.hash(members, name, permissions, prefix, suffix);
 	}
 
 	@Override

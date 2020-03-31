@@ -1,5 +1,6 @@
 package de.timeout.sudo.bukkit.messenger;
 
+import java.util.Locale;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -8,9 +9,12 @@ import javax.annotation.Nonnull;
 
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 
+import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
 import com.google.gson.JsonObject;
 
 import de.timeout.sudo.bukkit.Sudo;
@@ -25,6 +29,7 @@ public abstract class PluginMessageFuture implements Future<JsonObject>, PluginM
 	private static final Sudo main = Sudo.getInstance();
 	
 	protected JsonObject data;
+	protected final String channel;
 	protected boolean cancel;
 
 	/**
@@ -32,14 +37,20 @@ public abstract class PluginMessageFuture implements Future<JsonObject>, PluginM
 	 * @author Timeout
 	 *
 	 * @param out the request which will be sent to BungeeCord. Cannot be null
+	 * 
 	 * @throws IllegalArgumentException if the request is null
 	 */
-	public PluginMessageFuture(@Nonnull ByteArrayDataOutput out) {
+	public PluginMessageFuture(@Nonnull String channel, @Nonnull ByteArrayDataOutput out) {
 		// Validate
 		Validate.notNull(out, "Request cannot be null");
+		Validate.notNull(channel, "Channel cannot be null");
+		// this.channel = String.format("sudo:%s", channel.toLowerCase(Locale.ENGLISH));
+		this.channel = channel;
+		registerPluginChannels();
 		// send request to bungeecord over loadUser
-		Bukkit.getServer().sendPluginMessage(main, "sudo", out.toByteArray());
-		registerIncomingPluginChannel();
+		System.out.println("Nachricht gesendet...");
+		Bukkit.getServer().sendPluginMessage(main, channel, out.toByteArray());
+
 	}
 	
 	/**
@@ -47,10 +58,29 @@ public abstract class PluginMessageFuture implements Future<JsonObject>, PluginM
 	 * @author Timeout
 	 *
 	 */
-	private void registerIncomingPluginChannel() {
-		// register this BungeeCord message listener
-		Bukkit.getMessenger().registerIncomingPluginChannel(main, "sudo", this);
+	private void registerPluginChannels() {
+		// register outgoing channel
+		Bukkit.getMessenger().registerOutgoingPluginChannel(main, this.channel);
 	}
+	
+	@Override
+	public void onPluginMessageReceived(String channel, Player player, byte[] message) {
+		// check if channel is correct
+		if(channel.equals(this.channel)) {
+			// get Input
+			this.data = readData(ByteStreams.newDataInput(message));
+		}
+	}
+	
+	/**
+	 * Read and return the json-object.
+	 * This method is called, when a message receives through this channel
+	 * @author Timeout
+	 * 
+	 * @param input the input of the data unread
+	 * @return the jsonobject which you read in the channel
+	 */
+	protected abstract JsonObject readData(ByteArrayDataInput input);
 	
 	/**
 	* Returns if the request is done and the data is received
@@ -70,7 +100,7 @@ public abstract class PluginMessageFuture implements Future<JsonObject>, PluginM
 			// interrupt here
 			cancel = true;
 			// unregister Listener
-			Bukkit.getMessenger().unregisterIncomingPluginChannel(main, "sudo", this);
+			Bukkit.getMessenger().unregisterIncomingPluginChannel(main, this.channel, this);
 		}
 		// return cancel
 		return cancel;
@@ -112,11 +142,13 @@ public abstract class PluginMessageFuture implements Future<JsonObject>, PluginM
 				if(!cancel) {
 					// wait for next tick
 					Thread.sleep(1000 / 20);
+					// reallocate current
+					current += 1000 / 20;
 				} else {
 					// throw interrupted exception
-					throw new InterruptedException();
+					throw new InterruptedException("Thread interrupted while waiting for data from BungeeCord");
 				}
-			} else throw new TimeoutException();
+			} else throw new TimeoutException("Connection timed out...");
 		}
 		
 		return data;

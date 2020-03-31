@@ -19,7 +19,7 @@ import de.timeout.sudo.permissions.UserConfigHandler;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.PermissionCheckEvent;
-import net.md_5.bungee.api.event.PlayerHandshakeEvent;
+import net.md_5.bungee.api.event.PreLoginEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
@@ -44,7 +44,10 @@ public class ProxyGroupManager extends GroupManager<UUID> implements Listener, U
 		// load groups.yml
 		main.getGroupConfig().getKeys().forEach(this::loadGroup);
 		// log data
-		Sudo.log().log(Level.FINE, "&6groups.yml &asuccessfully loaded&7.");
+		Sudo.log().log(Level.INFO, "&6groups.yml &asuccessfully loaded&7.");
+		
+		// DEBUG: print loaded groups
+		groups.nodes().forEach(group -> System.out.println(group.toJson()));
 	}
 	
 	/**
@@ -81,7 +84,7 @@ public class ProxyGroupManager extends GroupManager<UUID> implements Listener, U
 		// check if group is already loaded
 		Group group = getGroupByName(name);
 		// load group if section is found and group is not loaded yet
-		if(group != null && section != null) {
+		if(group == null && section != null) {
 			group = new ProxyGroup(name, section);
 			// add edge to graph
 			groups.addNode(group);
@@ -113,7 +116,7 @@ public class ProxyGroupManager extends GroupManager<UUID> implements Listener, U
 	 * @param event the playerhandshakeevent
 	 */
 	@EventHandler
-	public void onUserLoad(PlayerHandshakeEvent event) {
+	public void onUserLoad(PreLoginEvent event) {
 		try {
 			// get User 
 			User user = new ProxyUser(event.getConnection());

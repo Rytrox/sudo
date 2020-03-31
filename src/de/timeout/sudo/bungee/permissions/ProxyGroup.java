@@ -29,11 +29,15 @@ public class ProxyGroup extends BaseGroup {
 	public JsonObject toJson() {
 		// create new JsonObject
 		JsonObject object = new JsonObject();
+		// create options section
+		JsonObject options = new JsonObject();
 		// write name and options in object
-		object.addProperty("name", name);
-		object.addProperty("default", isDefault);
-		object.addProperty("prefix", prefix.replace(ChatColor.COLOR_CHAR, '&'));
-		object.addProperty("suffix", prefix.replace(ChatColor.COLOR_CHAR, '&'));
+		options.addProperty("name", name);
+		options.addProperty("default", isDefault);
+		options.addProperty("prefix", prefix.replace(ChatColor.COLOR_CHAR, '&'));
+		options.addProperty("suffix", prefix.replace(ChatColor.COLOR_CHAR, '&'));
+		// write options into object
+		object.add("options", options);
 		// create JsonArray for extended groups
 		JsonArray extend = new JsonArray();
 		groups.forEach(group -> extend.add(new JsonPrimitive(group.getName())));
