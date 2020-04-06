@@ -11,8 +11,10 @@ import de.timeout.libs.config.ColoredLogger;
 import de.timeout.libs.config.ConfigCreator;
 import de.timeout.sudo.bungee.messenger.ProxyLoginMessager;
 import de.timeout.sudo.bungee.permissions.ProxyGroupManager;
+import de.timeout.sudo.netty.bungeecord.BungeeSocketServer;
 import de.timeout.sudo.permissions.GroupConfigurable;
 
+import net.jafama.FastMath;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
@@ -31,6 +33,7 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 	private static Sudo instance;
 	
 	private ProxyGroupManager groupManager;
+	private BungeeSocketServer netty;
 	
 	private Configuration config;
 	private Configuration groups;
@@ -79,7 +82,8 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 		// reload configs
 		reloadConfig();
 		reloadGroupConfig();
-		getProxy().registerChannel("sudo");
+		// start netty server
+		startSocketServer();
 		// initialize manager
 		initializeManager();
 	}
@@ -91,18 +95,31 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 		this.getProxy().getPluginManager().registerListener(this, groupManager);
 		
 		// register login channel
-		getProxy().registerChannel("sudo:login");
 		this.getProxy().getPluginManager().registerListener(this, new ProxyLoginMessager());
 	}
 
 	@Override
 	public void onDisable() {
-		
+		// disable server
+	}
+	
+	/**
+	 * Starts the Socket-Server
+	 * @author Timeout
+	 *
+	 */
+	private void startSocketServer() {
+		// create netty server
+		netty = new BungeeSocketServer(FastMath.abs(getConfig().getInt("netty.port", 10020)));
+		// start netty server
+		Thread serverThread = new Thread(netty);
+		serverThread.setName("SudoServer-Thread");
+		serverThread.start();
 	}
 	
 	private void loadConfigurations() {
 		// load ConfigCreator
-		ConfigCreator creator = new ConfigCreator(getDataFolder(), "assets/rytrox/sudo");
+		ConfigCreator creator = new ConfigCreator(getDataFolder(), "assets/rytrox/sudo/bungee");
 		// create configs
 		try {
 			creator.loadRessource(CONFIG_YML);

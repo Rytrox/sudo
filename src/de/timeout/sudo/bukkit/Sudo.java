@@ -8,7 +8,6 @@ import java.util.logging.Level;
 import javax.annotation.Nonnull;
 
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.google.common.io.ByteArrayDataInput;
@@ -21,6 +20,7 @@ import de.timeout.libs.config.ConfigCreator;
 import de.timeout.libs.config.UTFConfig;
 import de.timeout.sudo.bukkit.messenger.PluginMessageFuture;
 import de.timeout.sudo.bukkit.permissions.BukkitGroupManager;
+import de.timeout.sudo.netty.bukkit.BukkitSocket;
 import de.timeout.sudo.permissions.GroupConfigurable;
 
 import net.md_5.bungee.api.ChatColor;
@@ -41,6 +41,7 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 	private UTFConfig config;
 	private UTFConfig groups;
 	
+	private BukkitSocket netty;
 	private BukkitGroupManager groupManager;
 
 	/**
@@ -70,7 +71,8 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 
 	@Override
 	public void onDisable() {
-
+		// disable connection to bungeecord server
+		this.netty.close();
 	}
 
 	@Override
@@ -81,6 +83,7 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 		createConfiguration();
 		reloadConfig();
 		reloadGroupConfig();
+		startSocketClient();
 		
 //		// load groupsmanager
 //		groupManager = new BukkitGroupManager(!bungeecordEnabled());
@@ -115,9 +118,20 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 		return spigot.getBoolean("settings.bungeecord", false);
 	}
 	
+	private void startSocketClient() {
+		// create server
+		netty = new BukkitSocket(
+				getConfig().getString("bungeecord.host", "localhost"),
+				getConfig().getInt("bungeecord.port", 10020));
+		// start server
+		Thread clientThread = new Thread(netty);
+		clientThread.setName("Sudo-SocketClient Thread");
+		clientThread.start();
+	}
+	
 	private void createConfiguration() {
 		// create ConfigCreator
-		ConfigCreator creator = new ConfigCreator(getDataFolder(), "assets/rytrox/sudo");
+		ConfigCreator creator = new ConfigCreator(getDataFolder(), "assets/rytrox/sudo/bukkit");
 		// create config.yml
 		try {
 			creator.loadRessource(CONFIG_YML);

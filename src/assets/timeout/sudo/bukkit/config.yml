@@ -4,10 +4,14 @@
 bungeecord:
   # Enter uuid from stats field in bungeecords config.yml
   uuid: 
+  # Enter the IP of the BungeeCord
+  host: 'localhost'
+  # Enter the port of BungeeCords Sudo Socket-Server
+  port: 10020
 
+# This setting will only be necessary if bungeecord is disabled
 # commands which require sudo
 required:
 - 'op'
-- 'end'
 - 'stop'
 - 'gamemode'

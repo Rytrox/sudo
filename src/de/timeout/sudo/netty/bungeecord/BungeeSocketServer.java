@@ -5,6 +5,8 @@ import java.util.logging.Level;
 import javax.annotation.Nonnegative;
 
 import de.timeout.sudo.bungee.Sudo;
+import de.timeout.sudo.netty.ByteToPacketDecoder;
+import de.timeout.sudo.netty.PacketToByteEncoder;
 
 import net.jafama.FastMath;
 
@@ -13,6 +15,7 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.FixedRecvByteBufAllocator;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
@@ -23,7 +26,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 public class BungeeSocketServer implements Runnable {
 	
 	private static final boolean EPOLL = Epoll.isAvailable();
-
+	
 	private int port;
 	private ChannelFuture channel;
 	
@@ -55,11 +58,15 @@ public class BungeeSocketServer implements Runnable {
 					.childHandler(new ChannelInitializer<SocketChannel>() {
 
 						@Override
-						protected void initChannel(SocketChannel arg0) throws Exception {
+						protected void initChannel(SocketChannel channel) throws Exception {			
 							// Wird aufgerufen, wenn verbunden wird
+							channel.pipeline().addLast("encoder", new PacketToByteEncoder());
+							channel.pipeline().addLast("decoder", new ByteToPacketDecoder());
+							channel.pipeline().addLast("authorize", new AuthorizeHandler());
 							
+							
+							Sudo.log().log(Level.INFO, "&aBukkit-Server connected!");
 						}
-						
 					})
 					.option(ChannelOption.SO_BACKLOG, 128)
 					.childOption(ChannelOption.SO_KEEPALIVE, true)
