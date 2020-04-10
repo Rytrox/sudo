@@ -101,6 +101,7 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 	@Override
 	public void onDisable() {
 		// disable server
+		netty.close();
 	}
 	
 	/**
@@ -180,5 +181,18 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 		} catch (IOException e) {
 			LOG.log(Level.WARNING, String.format(SAVE_ERROR, GROUPS_YML), e);
 		}
+	}
+	
+	/**
+	 * Returns the Netty-Server. Cannot be null
+	 * @author Timeout
+	 * 
+	 * @return the Netty-Server
+	 */
+	@Nonnull
+	public BungeeSocketServer getNettyServer() {
+		// load server if the server is null
+		if(netty == null) startSocketServer();
+		return netty;
 	}
 }

@@ -1,7 +1,5 @@
 package de.timeout.sudo.netty;
 
-import java.nio.charset.StandardCharsets;
-
 import de.timeout.sudo.netty.packets.Packet;
 
 import io.netty.buffer.ByteBuf;
@@ -12,10 +10,9 @@ public class PacketToByteEncoder extends MessageToByteEncoder<Packet<?>> {
 
 	@Override
 	protected void encode(ChannelHandlerContext ctx, Packet<?> packet, ByteBuf output) throws Exception {
-		System.out.println("Encode Packet " + packet.getClass().getName());
-		// write output to packet
+		System.out.println("Encoding " + packet.getClass().getSimpleName());
+ 		// write output to packet
 		packet.encode(output);
-		System.out.println(output.toString(StandardCharsets.UTF_8));
 	}
 
 }

@@ -1,87 +1,36 @@
 package de.timeout.sudo.bukkit.permissions;
 
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.Set;
 import java.util.logging.Level;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.permissions.ServerOperator;
 
-import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteArrayDataOutput;
-import com.google.common.io.ByteStreams;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 import de.timeout.sudo.bukkit.Sudo;
-import de.timeout.sudo.bukkit.messenger.PluginMessageFuture;
 import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.groups.User;
 import de.timeout.sudo.groups.exception.CircularInheritanceException;
+import de.timeout.sudo.netty.packets.PacketRemoteInGroupInheritances;
 import de.timeout.sudo.permissions.GroupManager;
 
 public class BukkitGroupManager extends GroupManager<ServerOperator> {
 	
 	private static final Sudo main = Sudo.getInstance();
-	private static final JsonParser parser = new JsonParser();
 			
 	public BukkitGroupManager(boolean bukkit) {
 		// register PluginMessageChannel if bungeecord is enabled
 		if(!bukkit) {
 			// info server for using Bungeecord
 			Sudo.log().log(Level.INFO, "&2Bungeecord &7in &6spigot.yml &aenabled&7. Requesting data from &2Bungeecord&7...");
-
-//			// create update messager
-//			new ProxyUpdateMessager();
-			
-			// send Login Request to BungeeCord
-			sendLoginRequest();
 		} else loadGroupsFromFile();
-	}
-	
-	/**
-	 * Sends a Login-Request to BungeeCord and compiles the received data
-	 * @author Timeout
-	 *
-	 */
-	private void sendLoginRequest() {
-		// send login request to Bungeecord
-		final ByteArrayDataOutput out = ByteStreams.newDataOutput();
-		out.writeUTF(main.getConfig().getString("bungeecord.uuid"));
-		
-		// Create new Async task
-		Bukkit.getScheduler().runTaskAsynchronously(main, () -> {
-			// send future to bungeecord
-			try {
-				JsonObject result = new LoginMessageFuture(out).get(5, TimeUnit.SECONDS);
-				// check if code was a success
-				if(result.get("code").getAsInt() == 200) {
-					// log result
-					Sudo.log().log(Level.INFO, "&aReceived OK from BungeeCord. Compiling groups...");
-					// load groups from BungeeCord.
-					loadGroupsFromBungeecord(result.get("groups").getAsJsonArray());
-					// load users from BungeeCord
-					loadUsersFromBungeecord(result.get("users").getAsJsonArray());
-					// log done
-					Sudo.log().log(Level.INFO, "&aDone!");
-				} else {
-					// send error log to console
-					Sudo.log().log(Level.WARNING, result.get("message").getAsString());
-				}
-			} catch (InterruptedException e) {
-				Sudo.log().log(Level.SEVERE, "&4Unable to wait for BungeeCord Login-Result. Thread interrupted", e);
-				Thread.currentThread().interrupt();
-			} catch (TimeoutException e) {
-				Sudo.log().log(Level.WARNING, "&cUnable to wait longer for PluginMessage. Connection timed out...", e);
-			}
-		});
 	}
 	
 	/**
@@ -97,106 +46,51 @@ public class BukkitGroupManager extends GroupManager<ServerOperator> {
 		return Optional.ofNullable(profiles.get(operator)).orElse(new BukkitUser(operator));
 	}
 	
-//	/**
-//	 * Sends a user load request and returns a Future of the request
-//	 * @author Timeout
-//	 * 
-//	 * @param player the offlineplayer you want to get. Cannot be null
-//	 * @return
-//	 */
-//	public Future<User> getUserFromPlayer(OfflinePlayer player) {
-//		// load from cache else from OfflinePlayer
-//		return CompletableFuture.supplyAsync(() -> {
-//			// check if player is not null
-//			if(player != null) {
-//				// try to load from cache
-//				return Optional.ofNullable(profiles.get(player)).orElseGet(() -> {
-//					// create from user and request from BungeeCord
-//					BukkitUser user = new BukkitUser(player);
-//					try {
-//						// create byte request 
-//						ByteArrayDataOutput out = ByteStreams.newDataOutput();
-//						out.writeUTF("load");
-//						out.writeUTF(player.getUniqueId().toString());
-//						
-//						// load json from Bungeecord
-//						JsonObject data = new PluginMessageFuture("user", out) {
-//	
-//							@Override
-//							public void onPluginMessageReceived(String channel, Player receiver, byte[] message) {
-//								// check if channel is right
-//								if("sudo:user".equalsIgnoreCase(channel)) {
-//									// read message
-//									ByteArrayDataInput in = ByteStreams.newDataInput(message);
-//									// check if subchannel is loadUser channel and uuid is correct
-//									if(in.readUTF().equalsIgnoreCase("load") &&
-//											in.readUTF().equalsIgnoreCase(player.getUniqueId().toString())) {
-//										// read data
-//										data = new JsonParser().parse(in.readUTF()).getAsJsonObject();
-//										// unregister this listener
-//										Bukkit.getMessenger().unregisterIncomingPluginChannel(main, "sudo:user", this);
-//									}
-//								}
-//							}
-//							
-//						}.get(5, TimeUnit.SECONDS);
-//						// insert prefix and suffix
-//						user.setPrefix(data.get("prefix").getAsString());
-//						user.setSuffix(data.get("suffix").getAsString());
-//						// set permissions
-//						data.get("permissions").getAsJsonArray().forEach(permission -> user.addPermission(permission.getAsString()));
-//						// set groups
-//						data.get("groups").getAsJsonArray().forEach(groupName -> {
-//							// get Group by name
-//							Group group = main.getGroupManager().getGroupByName(groupName.getAsString());
-//							// if group could be found
-//							if(group != null) {
-//								// remove him from default group
-//								user.kick(BukkitGroup.getDefaultGroup());
-//								// add him to this group
-//								user.join(group);
-//							}
-//						});
-//					} catch (InterruptedException e) {
-//						Sudo.log().log(Level.SEVERE, "&4Fatal error while receiving data from Bungeecord. Thread interrupted", e);
-//						// reinterrupt task
-//						Thread.currentThread().interrupt();
-//					} catch (TimeoutException e) {
-//						Sudo.log().log(Level.WARNING, "&cUnable to receive data from BungeeCord in time... Connection timed out", e);
-//					}
-//					
-//					// return user
-//					return user;
-//				});
-//			} else return null;
-//		});
-//	}
-	
 	/**
 	 * Converts the Groups-Array from BungeeCord into BukkitGroups
 	 * @author Timeout
 	 * 
 	 * @param data the groups array from bungeecords message
 	 */
-	private void loadGroupsFromBungeecord(@Nonnull JsonArray data) {
-		// run through data to initialize formal groups without inheritances
-		data.forEach(groupData -> {
-			// get JsonObject of data
-			JsonObject groupJson = groupData.getAsJsonObject();
-			// create group
-			try {
-				Group group = new BukkitGroup(groupData.getAsJsonObject());
-				// try to add inheritances
-				for(JsonElement extend : groupJson.get("extends").getAsJsonArray()) {
-					// try to get group
-					Group other = getGroupByName(extend.getAsString());
-					// try to bind inheritance
-					this.bindInheritance(group, other);
-				}
-			} catch (CircularInheritanceException e) {
-				Sudo.log().log(Level.WARNING, "&cUnable to apply data from Bungeecord. Circular dependency in group detected.", e);
-			}
-		});
+	public void loadGroupFromBungeecord(@Nonnull JsonObject data) {
+		// create group
+		Group group = new BukkitGroup(data);
+		// add group to cache
+		groups.addNode(group);
+	}
+	
+	/**
+	 * Loads the inheritances of one group. <br>
+	 * Will be executed by receiving {@link PacketRemoteInGroupInheritances}
+	 * @author Timeout
+	 * 
+	 * @param name the name of the group. Cannot be null
+	 * @param inheritances a list of inheritances of the group. Cannot be null
+	 * @throws IllegalArgumentException if the group with the name cannot be found or any argument is null
+	 */
+	public void loadInheritances(@Nonnull String name, @Nonnull Set<String> inheritances) {
+		// Validate
+		Validate.notNull(name, "Group name cannot be null");
+		Validate.notNull(inheritances, "Inheritances cannot be null");
+		// get Group for name
+		Group group = getGroupByName(name);
+		// throw exception if the name cannot be found
+		if(group != null) {
+			// load inheritances
+			inheritances.forEach(extendName -> {
+				// get group
+				Group extend = getGroupByName(extendName);
+				// log if group cannot be found
+				if(extend != null) {
+					// bind inheritance
+					try {
+						bindInheritance(group, extend);
+					} catch (CircularInheritanceException e) {
+						Sudo.log().log(Level.WARNING, String.format("&cUnable to bind inheritances from group %s to group %s. A circular inheritance is detected!", name, extendName), e);
+					}
+				} else Sudo.log().log(Level.WARNING, String.format("&cTry to load group %s but this group does not exist", extendName));
+			});
+		} else throw new IllegalArgumentException("Group cannot not be found");
 	}
 	
 	/**
@@ -205,19 +99,18 @@ public class BukkitGroupManager extends GroupManager<ServerOperator> {
 	 * 
 	 * @param data the users array from bungeecord message
 	 */
-	private void loadUsersFromBungeecord(@Nonnull JsonArray data) {
-		// run through data to create users 
-		data.forEach(userJson -> {
-			// create user
-			BukkitUser user = new BukkitUser(userJson.getAsJsonObject());
-			// cache user
-			profiles.put(Bukkit.getServer().getOfflinePlayer(user.getUniqueID()), user);
-		});
+	public void loadUserFromBungeecord(@Nonnull JsonObject data) {
+		// validate
+		Validate.notNull(data, "Json-Data cannot be null");
+		// create user
+		BukkitUser user = new BukkitUser(data);
+		// cache user
+		profiles.put(Bukkit.getServer().getOfflinePlayer(user.getUniqueID()), user);
 	}
 	
 	private void loadGroupsFromFile() {
 		// log load from bukkit files
-		Sudo.log().log(Level.INFO, "&9Bukkit-Mode &aenabled. Load groups from ");
+		Sudo.log().log(Level.INFO, "&9Bukkit-Mode &aenabled. Load groups from File");
 		// load all groups
 		main.getGroupConfig().getKeys(false).forEach(this::loadGroup);
 	}
@@ -251,20 +144,5 @@ public class BukkitGroupManager extends GroupManager<ServerOperator> {
 		}
 		// return group
 		return group;
-	}
-	
-	private class LoginMessageFuture extends PluginMessageFuture {
-
-		public LoginMessageFuture(ByteArrayDataOutput out) {
-			super("login", out);
-		}
-		
-		@Override
-		protected JsonObject readData(ByteArrayDataInput input) {
-			// log result to server
-			Sudo.log().log(Level.INFO, "&7Data &areceived&7");
-			// get element of data
-			return parser.parse(input.readUTF()).getAsJsonObject();
-		}
 	}
 }

@@ -6,6 +6,7 @@ import java.util.UUID;
 import java.util.logging.Level;
 
 import de.timeout.sudo.bungee.Sudo;
+import de.timeout.sudo.netty.packets.Packet;
 import de.timeout.sudo.netty.packets.PacketProxyInAuthorize;
 import de.timeout.sudo.netty.packets.PacketRemoteInAuthorize;
 
@@ -16,7 +17,7 @@ import net.md_5.bungee.config.YamlConfiguration;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
-public class AuthorizeHandler extends SimpleChannelInboundHandler<PacketProxyInAuthorize> {
+public class AuthorizeHandler extends SimpleChannelInboundHandler<Packet<?>> {
 	
 	private static final Sudo main = Sudo.getInstance();
 	private static final UUID bungeeID = loadProxyUUID();
@@ -24,25 +25,31 @@ public class AuthorizeHandler extends SimpleChannelInboundHandler<PacketProxyInA
 	private boolean authorized;
 	
 	@Override
-	protected void channelRead0(ChannelHandlerContext ctx, PacketProxyInAuthorize packet) throws Exception {
-		System.out.println("Channel liest.");
-		// only accept authorize if it is not authorized yet
+	protected void channelRead0(ChannelHandlerContext ctx, Packet<?> packet) throws Exception {
+		// send packet to next handler if the client is authorized
 		if(!authorized) {
-			// compare results (return true if both are equal) 
-			authorized = bungeeID.compareTo(packet.getProxyID()) == 0;
-			// send result to remote
-			PacketRemoteInAuthorize authorize = new PacketRemoteInAuthorize(authorized);
-			ctx.writeAndFlush(authorize);
-			
-			// authorize if the uuid is correct
-			if(authorized) {
-				System.out.println("Hat geklappt!");
-			} else {
-				// block Connection and drop...
-				System.out.println("Hat geklappt, ID ist aber falsch");
-			}
-		}
+			// get IP
+			String remote = ctx.channel().remoteAddress().toString();
+			// block pipeline if packet is send but not authorized
+			if(packet instanceof PacketProxyInAuthorize) {
+				// compare results (return true if both are equal) 
+				authorized = bungeeID.compareTo(((PacketProxyInAuthorize) packet).getProxyID()) == 0;
+				// send result to remote
+				PacketRemoteInAuthorize authorize = new PacketRemoteInAuthorize(authorized);
+				ctx.writeAndFlush(authorize);
+				
+				// drop connection if authorization failed
+				if(!authorized) {
+					ctx.close();
+					// log result
+					Sudo.log().log(Level.INFO, String.format("&2Remote-Server &a%s &7was trying to connect &cwithout authorization&7. &cDropping connection immediately", remote));
+					Sudo.log().log(Level.INFO, "&cPlease have a look at https://www.spigotmc.org/wiki/firewall-guide/ and activate a firewall for this server too!");
+				} else Sudo.log().log(Level.INFO, String.format("&2Remote-Server &a%s &7was &asuccessfully authorized.", remote));
+			} else Sudo.log().log(Level.WARNING, String.format("&cRemote %s tries to send %s without being authorized!", remote, packet.getClass().getSimpleName()));
+		} 
 	}
+	
+	
 
 	/**
 	 * Loads the UUID from the BungeeCord Configuration
@@ -62,5 +69,13 @@ public class AuthorizeHandler extends SimpleChannelInboundHandler<PacketProxyInA
 		}
 		// return random UUID for errors
 		return UUID.randomUUID();
+	}
+
+	/**
+	 * Send packet to next handler if the connection is authorized!
+	 */
+	@Override
+	public boolean acceptInboundMessage(Object arg0) throws Exception {
+		return !authorized;
 	}
 }

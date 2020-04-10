@@ -4,7 +4,11 @@ import java.util.List;
 
 import de.timeout.sudo.netty.packets.Packet;
 import de.timeout.sudo.netty.packets.PacketProxyInAuthorize;
+import de.timeout.sudo.netty.packets.PacketProxyInLogin;
 import de.timeout.sudo.netty.packets.PacketRemoteInAuthorize;
+import de.timeout.sudo.netty.packets.PacketRemoteInGroupInheritances;
+import de.timeout.sudo.netty.packets.PacketRemoteInInitializeGroup;
+import de.timeout.sudo.netty.packets.PacketRemoteInLoadUser;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -19,6 +23,7 @@ public class ByteToPacketDecoder extends ByteToMessageDecoder {
 		Packet<?> packet = getPacketByName(Packet.readString(input));
 		// check if packet could be read
 		if(packet != null) { 
+			System.out.println("Received " + packet.getClass().getSimpleName());
 			// decode packet
 			packet.decode(input);
 			System.out.println("Decoded!");
@@ -35,12 +40,19 @@ public class ByteToPacketDecoder extends ByteToMessageDecoder {
 	 * @return the packet or null
 	 */
 	private static Packet<?> getPacketByName(String name) {
-		System.out.println(name);
 		switch(name) {
 		case "PacketProxyInAuthorize":
 			return new PacketProxyInAuthorize();
+		case "PacketProxyInLogin":
+			return new PacketProxyInLogin();
 		case "PacketRemoteInAuthorize":
 			return new PacketRemoteInAuthorize();
+		case "PacketRemoteInGroupInheritances":
+			return new PacketRemoteInGroupInheritances();
+		case "PacketRemoteInInitializeGroup":
+			return new PacketRemoteInInitializeGroup();
+		case "PacketRemoteInLoadUser":
+			return new PacketRemoteInLoadUser();
 		default: 
 			return null;
 		}

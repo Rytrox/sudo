@@ -1,21 +1,28 @@
 package de.timeout.sudo.netty.bungeecord;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Level;
 
 import javax.annotation.Nonnegative;
+import javax.annotation.Nonnull;
+
+import org.apache.commons.lang.Validate;
 
 import de.timeout.sudo.bungee.Sudo;
 import de.timeout.sudo.netty.ByteToPacketDecoder;
+import de.timeout.sudo.netty.Closeable;
 import de.timeout.sudo.netty.PacketToByteEncoder;
+import de.timeout.sudo.netty.packets.Packet;
 
 import net.jafama.FastMath;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.FixedRecvByteBufAllocator;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
@@ -23,12 +30,15 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
-public class BungeeSocketServer implements Runnable {
+public class BungeeSocketServer implements Runnable, Closeable {
 	
 	private static final boolean EPOLL = Epoll.isAvailable();
 	
+	private final Set<ChannelHandlerContext> connections = new HashSet<>();
+	
 	private int port;
-	private ChannelFuture channel;
+	private ChannelFuture channelFuture;
+	
 	
 	/**
 	 * Creates a new SocketServer on a certain port
@@ -52,7 +62,7 @@ public class BungeeSocketServer implements Runnable {
 		
 		// create Bootstrap
 		try {
-			this.channel = new ServerBootstrap()
+			 channelFuture = new ServerBootstrap()
 					.group(bossGroup, workerGroup)
 					.channel(EPOLL ? EpollServerSocketChannel.class : NioServerSocketChannel.class)
 					.childHandler(new ChannelInitializer<SocketChannel>() {
@@ -60,12 +70,26 @@ public class BungeeSocketServer implements Runnable {
 						@Override
 						protected void initChannel(SocketChannel channel) throws Exception {			
 							// Wird aufgerufen, wenn verbunden wird
+							
+							// link decoder and encoder
 							channel.pipeline().addLast("encoder", new PacketToByteEncoder());
 							channel.pipeline().addLast("decoder", new ByteToPacketDecoder());
+							
+							// link handlers
 							channel.pipeline().addLast("authorize", new AuthorizeHandler());
+							channel.pipeline().addLast("login", new LoginHandler());
 							
 							
-							Sudo.log().log(Level.INFO, "&aBukkit-Server connected!");
+							Sudo.log().log(Level.INFO, String.format("&aBukkit-Server %s connected!", channel.remoteAddress().toString()));
+						}
+
+						/**
+						 * Remove channel from connection if this connection is closed
+						 */
+						@Override
+						public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
+							// remove channelhandlercontext from initializer
+							connections.remove(ctx);
 						}
 					})
 					.option(ChannelOption.SO_BACKLOG, 128)
@@ -73,10 +97,50 @@ public class BungeeSocketServer implements Runnable {
 					.bind(port).sync().channel().closeFuture();
 			
 			// sync
-			this.channel.sync();
+			channelFuture.sync();
 		} catch (InterruptedException e) {
 			Sudo.log().log(Level.SEVERE, "&4Unable to start Netty-Server. Thread interrupted...", e);
 			Thread.currentThread().interrupt();
+		} finally {
+			workerGroup.shutdownGracefully();
+			bossGroup.shutdownGracefully();
 		}
+	}
+	
+	/**
+	 * Authorize a ChannelHandlerContext and adds it to collections
+	 * @author Timeout
+	 * 
+	 * @param ctx the new connection
+	 * @throws IllegalArgumentException if the connection is null
+	 * @return if the connection could be added
+	 */
+	public boolean authorize(@Nonnull ChannelHandlerContext ctx) {
+		// Validate
+		Validate.notNull(ctx, "ChannelHandlerContext cannot be null");
+		// add to set
+		return connections.add(ctx);
+	}
+	
+	/**
+	 * Sends a packet to all connected and authorized Servers.
+	 * This method does nothing if the packet is null
+	 * @author Timeout
+	 * 
+	 * @param packet the packet you want to broadcast
+	 */
+	public void broadcastPacket(Packet<?> packet) {
+		// do nothing if the packet is null
+		if(packet != null)
+			// for each connection
+			connections.forEach(connection -> connection.writeAndFlush(packet));
+	}
+
+	@Override
+	public void close() {
+		// disconnect to all connections
+		connections.forEach(ChannelHandlerContext::close);
+		// stop server
+		channelFuture.channel().close();
 	}
 }
