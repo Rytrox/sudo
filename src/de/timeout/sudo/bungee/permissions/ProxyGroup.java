@@ -32,7 +32,7 @@ public class ProxyGroup extends BaseGroup {
 		// create options section
 		JsonObject options = new JsonObject();
 		// write name and options in object
-		options.addProperty("name", name);
+		options.addProperty("name", name);	
 		options.addProperty("default", isDefault);
 		options.addProperty("prefix", prefix.replace(ChatColor.COLOR_CHAR, '&'));
 		options.addProperty("suffix", prefix.replace(ChatColor.COLOR_CHAR, '&'));

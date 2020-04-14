@@ -1,5 +1,6 @@
 package de.timeout.sudo.groups;
 
+import java.util.Collection;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
@@ -18,6 +19,15 @@ public interface User extends Comparable<User>, PermissibleBase, Collectable<Gro
 	 * @return true if the user is online otherwise false
 	 */
 	public boolean isOnline();
+	
+	/**
+	 * Returns a collection with all groups of the user
+	 * @author Timeout
+	 * 
+	 * @return a collection containing all groups of the user
+	 */
+	@Nonnull
+	public Collection<Group> getGroups();
 	
 	/**
 	 * Returns the unique id of the player
