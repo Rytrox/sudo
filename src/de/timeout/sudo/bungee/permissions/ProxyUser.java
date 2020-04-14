@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -174,8 +175,8 @@ public class ProxyUser implements User, Storable {
 		// write attributes in object
 		object.addProperty("uuid", this.playerID.toString());
 		object.addProperty(NAME_FIELD, this.name);
-		object.addProperty(PREFIX_FIELD, this.prefix);
-		object.addProperty(SUFFIX_FIELD, this.suffix);
+		object.addProperty(PREFIX_FIELD, this.prefix != null ? this.prefix : "");
+		object.addProperty(SUFFIX_FIELD, this.suffix != null ? this.suffix : "");
 		
 		// Create JsonArray for groups
 		JsonArray groupsArray = new JsonArray();
@@ -247,5 +248,10 @@ public class ProxyUser implements User, Storable {
 		if(Files.notExists(path)) Files.createFile(path);
 		// write data in file
 		Files.write(path, new GsonBuilder().setPrettyPrinting().create().toJson(toJson()).getBytes(StandardCharsets.UTF_8));
+	}
+
+	@Override
+	public Collection<Group> getGroups() {
+		return new ArrayList<>(groups);
 	}
 }

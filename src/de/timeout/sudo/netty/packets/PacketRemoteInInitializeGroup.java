@@ -55,7 +55,7 @@ public class PacketRemoteInInitializeGroup extends Packet<PacketRemoteInInitiali
 		// do super call
 		super.encode(output);
 		// write data in bytebuf
-		writeString(output, group.getAsString());
+		writeString(output, group.toString());
 	}
 	
 	/**

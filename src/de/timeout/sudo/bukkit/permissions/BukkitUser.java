@@ -1,22 +1,48 @@
 package de.timeout.sudo.bukkit.permissions;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.logging.Level;
+
 import javax.annotation.Nonnull;
 
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.permissions.PermissibleBase;
+import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.ServerOperator;
 
+import com.google.common.io.Files;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 
+import de.timeout.libs.config.JsonConfig;
+import de.timeout.sudo.bukkit.Sudo;
 import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.groups.User;
 import de.timeout.sudo.utils.PermissionTree;
+import de.timeout.sudo.utils.Storable;
 
-public class BukkitUser extends PermissibleBase implements User {
+import net.md_5.bungee.api.ChatColor;
+
+/**
+ * Bukkit representation of the User-Interface
+ * @author Timeout
+ *
+ */
+public class BukkitUser extends PermissibleBase implements User, Storable {
+	
+	private static final Sudo main = Sudo.getInstance();
+	private static final Gson JSON_BUILDER = new GsonBuilder().setPrettyPrinting().create();
 		
 	private final PermissionTree permissions = new PermissionTree();
 	private final Set<Group> groups = new HashSet<>();
@@ -31,7 +57,7 @@ public class BukkitUser extends PermissibleBase implements User {
 	 *
 	 * @param opable
 	 */
-	protected BukkitUser(ServerOperator opable) {
+	public BukkitUser(ServerOperator opable) {
 		super(opable);
 		// add him to default group
 		join(BukkitGroup.getDefaultGroup());
@@ -45,22 +71,45 @@ public class BukkitUser extends PermissibleBase implements User {
 	 */
 	public BukkitUser(@Nonnull OfflinePlayer opable) {
 		super(opable);
+		// load from config if server runs bukkit mode
+		if(!main.bungeecordEnabled()) {
+			try {
+				load();
+			} catch (IOException e) {
+				Sudo.log().log(Level.WARNING, "&cUnable to load configuration from ", e);
+			}
+		}
 		this.operator = opable;
 	}
 	
 	public BukkitUser(JsonObject data) {
 		// load for OfflinePlayer
 		this(Bukkit.getOfflinePlayer(UUID.fromString(data.get("uuid").getAsString())));
+		// set data
+		this.prefix = ChatColor.translateAlternateColorCodes('&', data.get("prefix").getAsString());
+		this.suffix = ChatColor.translateAlternateColorCodes('&', data.get("suffix").getAsString());
+		
+		// load groups
+		data.get("groups").getAsJsonArray().forEach(groupname -> {
+			// get group
+			Group group = main.getGroupManager().getGroupByName(groupname.getAsString());
+			// join if group yould be found
+			if(group != null) join(group);
+		});
+		
+		// load own permissions
+		data.get("permissions").getAsJsonArray().forEach(permission -> addPermission(permission.getAsString()));
 	}
 	
 	@Override
 	public boolean isOp() {
-		return permissions.contains("*");
+		// Return always false. Sudo does not allow OP
+		return false;
 	}
 
 	@Override
 	public void setOp(boolean value) {
-		permissions.add("*");
+		/* DO NOTHING. SUDO DOES NOT ALLOW OP */
 	}
 
 	@Override
@@ -76,6 +125,23 @@ public class BukkitUser extends PermissibleBase implements User {
 	@Override
 	public Set<String> getPermissions() {
 		return permissions.toSet();
+	}
+	
+	@Override
+	public boolean hasPermission(Permission perm) {
+		// check if user has permission
+		return this.hasPermission(perm.getName()) || super.hasPermission(perm);
+	}
+
+	@Override
+	public boolean hasPermission(String inName) {
+		// return true if the user has this permission
+		if(!this.permissions.contains(inName)) {
+			// run through groups
+			for(Group group : groups) if(group.hasPermission(inName)) return true;
+			// return false. Player has not this permission
+			return super.hasPermission(inName);
+		} else return true;
 	}
 
 	@Override
@@ -135,11 +201,6 @@ public class BukkitUser extends PermissibleBase implements User {
 	}
 
 	@Override
-	public JsonObject toJson() {
-		return null;
-	}
-
-	@Override
 	public void setPrefix(String prefix) {
 		this.prefix = prefix;
 	}
@@ -147,5 +208,75 @@ public class BukkitUser extends PermissibleBase implements User {
 	@Override
 	public void setSuffix(String suffix) {
 		this.suffix = suffix;
+	}
+	
+	@Override
+	public JsonObject toJson() {
+		// create JsonObject
+		JsonObject object = new JsonObject();
+		// write uuid
+		object.addProperty("uuid", this.operator.getUniqueId().toString());
+		
+		// write primitives
+		JsonObject options = new JsonObject();
+		options.addProperty("prefix", this.prefix != null ? this.prefix.replace(ChatColor.COLOR_CHAR, '&') : null);
+		options.addProperty("suffix", this.suffix != null ? this.suffix.replace(ChatColor.COLOR_CHAR, '&') : null);
+		object.add("options", options);
+		
+		// write groups
+		JsonArray groupsArray = new JsonArray();
+		this.groups.forEach(group -> groupsArray.add(new JsonPrimitive(group.getName())));
+		object.add("groups", groupsArray);
+		
+		// write permissions
+		JsonArray permissionsArray = new JsonArray();
+		this.permissions.toSet().forEach(permission -> permissionsArray.add(new JsonPrimitive(permission)));
+		options.add("permissions", permissionsArray);
+		
+		return object;
+	}
+
+	@Override
+	public void load() throws IOException {
+		// get configuration
+		JsonConfig userConfig = new JsonConfig(new File(new File(main.getDataFolder(), "users"), String.format("%s.json", this.operator.toString())));
+		// clear permissions and groups
+		permissions.clear();
+		groups.forEach(this::kick);
+		
+		// load options
+		prefix = ChatColor.translateAlternateColorCodes('&', userConfig.getString("options.prefix"));
+		suffix = ChatColor.translateAlternateColorCodes('&', userConfig.getString("options.suffix"));
+		
+		// load groups
+		userConfig.getStringList("groups").forEach(groupname -> {
+			// get group
+			Group group = main.getGroupManager().getGroupByName(groupname);
+			// add to group if group has been found
+			if(group != null) join(group);
+		});
+		
+		// load permissions
+		userConfig.getStringList("permissions").forEach(this::addPermission);
+	}
+
+	@Override
+	public void save() throws IOException {
+		// get Json
+		JsonObject data = toJson();
+		// create new File
+		File file = new File(new File(main.getDataFolder(), "users"), String.format("%s.json", this.operator.getUniqueId().toString()));
+		// write data into file
+		Files.write(JSON_BUILDER.toJson(data), file, StandardCharsets.UTF_8);
+	}
+
+	@Override
+	public Collection<Group> getGroups() {
+		return new ArrayList<>(groups);
+	}
+
+	@Override
+	public void recalculatePermissions() {
+		/* DO NOTHING. NO RELOAD IS REQUIRED WHILE RUNNING SUDO */
 	}
 }

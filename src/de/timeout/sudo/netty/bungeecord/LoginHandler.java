@@ -4,6 +4,7 @@ import de.timeout.sudo.bungee.Sudo;
 import de.timeout.sudo.netty.packets.PacketProxyInLogin;
 import de.timeout.sudo.netty.packets.PacketRemoteInGroupInheritances;
 import de.timeout.sudo.netty.packets.PacketRemoteInInitializeGroup;
+import de.timeout.sudo.netty.packets.PacketRemoteInLoadUser;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -24,6 +25,11 @@ public class LoginHandler extends SimpleChannelInboundHandler<PacketProxyInLogin
 			// create packet
 			ctx.writeAndFlush(new PacketRemoteInGroupInheritances(group))
 		);
+//		// sending all current users to server
+//		main.getGroupManager().getUsers().forEach(user -> 
+//			// create packet
+//			ctx.writeAndFlush(new PacketRemoteInLoadUser(user))
+//		);
 	}
 
 }

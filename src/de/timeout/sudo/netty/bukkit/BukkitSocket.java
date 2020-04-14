@@ -12,6 +12,7 @@ import de.timeout.sudo.bukkit.Sudo;
 import de.timeout.sudo.netty.ByteToPacketDecoder;
 import de.timeout.sudo.netty.Closeable;
 import de.timeout.sudo.netty.PacketToByteEncoder;
+import de.timeout.sudo.netty.packets.Packet;
 import de.timeout.sudo.netty.packets.PacketProxyInAuthorize;
 
 import net.jafama.FastMath;
@@ -64,7 +65,7 @@ public class BukkitSocket implements Runnable, Closeable {
 		boot.handler(new ChannelInitializer<SocketChannel>() {
 
 			@Override
-			protected void initChannel(SocketChannel channel) throws Exception {
+			protected void initChannel(SocketChannel channel) throws Exception {				
 				// register decoder and encoder
 				channel.pipeline().addLast("decoder", new ByteToPacketDecoder());
 				channel.pipeline().addLast("encoder", new PacketToByteEncoder());
@@ -72,20 +73,18 @@ public class BukkitSocket implements Runnable, Closeable {
 				// define handler
 				channel.pipeline().addLast("authorize", new AuthorizeHandler());
 				channel.pipeline().addLast("initialization", new GroupInitializationHandler());
-			}
+			}	
 		});
 		
 		Sudo.log().log(Level.INFO, "&aCreation succeed. Start connecting...");
 		try {
 			// connect to bungeecord
 			channel = boot.connect(host, port).sync().channel().closeFuture();
+			
+			sendPacket(new PacketProxyInAuthorize(
+					UUID.fromString(main.getConfig().getString("bungeecord.uuid"))));
 			// connection succeed. log
 			Sudo.log().log(Level.INFO, "&aConnected to &2BungeeCord! &7Sending &5Authentification");
-			// send authorize packet
-			channel.channel().writeAndFlush(new PacketProxyInAuthorize(
-				UUID.fromString(main.getConfig().getString("bungeecord.uuid"))));
-			
-			// synchronize with server
 			channel.syncUninterruptibly();
 		} catch (InterruptedException e) {
 			Sudo.log().log(Level.SEVERE, "&cUnable to hold Connection to BungeeCord. Thread interrupted", e);
@@ -96,8 +95,14 @@ public class BukkitSocket implements Runnable, Closeable {
 		}
 	}
 		
+	public void sendPacket(Packet<?> packet) {
+		channel.channel().writeAndFlush(packet, channel.channel().voidPromise());
+	}
+	
 	@Override
 	public void close() {
-		this.channel.channel().close();
+		// close if connection is not already closed
+		if(this.channel.channel().isOpen())
+			this.channel.channel().close();
 	}
 }

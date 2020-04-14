@@ -35,6 +35,17 @@ public abstract class GroupManager<T> {
 	}
 	
 	/**
+	 * Returns all loaded user profiles
+	 * @author Timeout
+	 * 
+	 * @return a list containing all loaded user profiles
+	 */
+	@Nonnull
+	public List<User> getUsers() {
+		return new ArrayList<>(profiles.values());
+	}
+	
+	/**
 	 * Get the Group by its name. Returns null if the group is not loaded
 	 * @author Timeout
 	 * 

@@ -9,22 +9,28 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Level;
 
+import javax.annotation.Nonnull;
+
+import org.apache.commons.lang.Validate;
+
 import de.timeout.sudo.bungee.Sudo;
 import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.groups.User;
 import de.timeout.sudo.groups.exception.CircularInheritanceException;
+import de.timeout.sudo.netty.packets.PacketRemoteInLoadUser;
 import de.timeout.sudo.permissions.GroupManager;
 import de.timeout.sudo.permissions.UserConfigHandler;
 
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
+import net.md_5.bungee.api.event.LoginEvent;
 import net.md_5.bungee.api.event.PermissionCheckEvent;
-import net.md_5.bungee.api.event.PreLoginEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.JsonConfiguration;
 import net.md_5.bungee.event.EventHandler;
+import net.md_5.bungee.event.EventPriority;
 
 public class ProxyGroupManager extends GroupManager<UUID> implements Listener, UserConfigHandler<Configuration> {
 
@@ -39,15 +45,11 @@ public class ProxyGroupManager extends GroupManager<UUID> implements Listener, U
 			} catch (IOException e) {
 				Sudo.log().log(Level.WARNING, "&4Unable to create user folder", e);
 			}
-		// register Listener
-		main.getProxy().getPluginManager().registerListener(main, this);
 		// load groups.yml
 		main.getGroupConfig().getKeys().forEach(this::loadGroup);
 		// log data
 		Sudo.log().log(Level.INFO, "&6groups.yml &asuccessfully loaded&7.");
-		
-		// DEBUG: print loaded groups
-		groups.nodes().forEach(group -> System.out.println(group.toJson()));
+		getGroups().forEach(group -> System.out.println(group.toJson().toString()));
 	}
 	
 	/**
@@ -116,20 +118,28 @@ public class ProxyGroupManager extends GroupManager<UUID> implements Listener, U
 	 * @param event the playerhandshakeevent
 	 */
 	@EventHandler
-	public void onUserLoad(PreLoginEvent event) {
-		try {
-			// get User 
-			User user = new ProxyUser(event.getConnection());
-			// add user to cache
-			profiles.put(event.getConnection().getUniqueId(), user);
-			// send user to all subserver
-		} catch (IOException e) {
-			Sudo.log().log(Level.WARNING, 
-					String.format("&cUnable to access %s.json", event.getConnection().getUniqueId().toString()), e);
+	public void onUserLoad(LoginEvent event) {
+		// load permissions if the user is connected
+		if(!event.isCancelled()) {
+			System.out.println("Event is not cancelled");
+			try {
+				// get User 
+				User user = new ProxyUser(event.getConnection());
+				// add user to cache
+				profiles.put(event.getConnection().getUniqueId(), user);
+				System.out.println("get ProxyUser and save him");
+				// send user to all subserver
+				System.out.println("Send Packet to remote!");
+				main.getProxy().getScheduler().runAsync(main, () -> 
+					main.getNettyServer().broadcastPacket(new PacketRemoteInLoadUser(user)));
+			} catch (IOException e) {
+				Sudo.log().log(Level.WARNING, 
+						String.format("&cUnable to access %s.json", event.getConnection().getUniqueId().toString()), e);
+			}
 		}
 	}
-	
-	@EventHandler
+
+	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onPermissionCheck(PermissionCheckEvent event) {
 		// get ProxiedPlayer
 		CommandSender sender = event.getSender();
@@ -143,7 +153,9 @@ public class ProxyGroupManager extends GroupManager<UUID> implements Listener, U
 	}
 
 	@Override
-	public Configuration getUserConfiguration(UUID uuid) throws IOException {
+	public Configuration getUserConfiguration(@Nonnull UUID uuid) throws IOException {
+		// Validate
+		Validate.notNull(uuid, "UUID cannot be null");
 		// get user-file
 		File file = new File(userFolder, String.format("%s.json", uuid.toString()));
 		// read file if file exists and is not empty

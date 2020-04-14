@@ -13,6 +13,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import de.timeout.libs.config.ColoredLogger;
 import de.timeout.libs.config.ConfigCreator;
 import de.timeout.libs.config.UTFConfig;
+import de.timeout.sudo.bukkit.listener.ModifyWorldListener;
+import de.timeout.sudo.bukkit.listener.VanillaPermissionOverrider;
 import de.timeout.sudo.bukkit.permissions.BukkitGroupManager;
 import de.timeout.sudo.netty.bukkit.BukkitSocket;
 import de.timeout.sudo.permissions.GroupConfigurable;
@@ -31,6 +33,8 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 	private static final String GROUPS_YML = "groups.yml";
 
 	private static Sudo instance;
+	
+	private final UTFConfig spigot = new UTFConfig(new File(getDataFolder().getParentFile().getParentFile(), "spigot.yml"));
 	
 	private UTFConfig config;
 	private UTFConfig groups;
@@ -112,11 +116,20 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 	private void registerManager() {
 		// register group mananger
 		this.groupManager = new BukkitGroupManager(bungeecordEnabled());
+		// register modifyworld
+		Bukkit.getPluginManager().registerEvents(new ModifyWorldListener(), this);
+		// register overrider
+		Bukkit.getPluginManager().registerEvents(new VanillaPermissionOverrider(), this);
 	}
 
-	private boolean bungeecordEnabled() {
+	/**
+	 * Checks if bungeecord is enabled
+	 * @author Timeout
+	 * 
+	 * @return true if bungeecord is enabled. Else false
+	 */
+	public boolean bungeecordEnabled() {
 		// load spigot.yml
-		UTFConfig spigot = new UTFConfig(new File(getDataFolder().getParentFile().getParentFile(), "spigot.yml"));
 		return spigot.getBoolean("settings.bungeecord");
 	}
 	

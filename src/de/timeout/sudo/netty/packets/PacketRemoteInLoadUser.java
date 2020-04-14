@@ -51,7 +51,7 @@ public class PacketRemoteInLoadUser extends Packet<PacketRemoteInLoadUser> {
 		// do super call
 		super.encode(output);
 		// write data into packet
-		writeString(output, data.getAsString());
+		writeString(output, data.toString());
 	}
 	
 	/**

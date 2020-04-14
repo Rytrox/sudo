@@ -5,16 +5,17 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.permissions.ServerOperator;
 
 import com.google.gson.JsonObject;
 
 import de.timeout.sudo.bukkit.Sudo;
+import de.timeout.sudo.bukkit.listener.VanillaPermissionOverrider;
 import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.groups.User;
 import de.timeout.sudo.groups.exception.CircularInheritanceException;
@@ -34,13 +35,13 @@ public class BukkitGroupManager extends GroupManager<ServerOperator> {
 	}
 	
 	/**
-	 * Returns the User of the operator. Can be null
+	 * Returns the User of the operator. Cannot be null
 	 * @author Timeout
 	 * 
 	 * @param operator the operator you want to get
 	 * @return the User of the Player or null
 	 */
-	@Nullable
+	@Nonnull
 	public User getUserFromOperator(ServerOperator operator) {
 		// returns from cache if user is loaded. else load him before
 		return Optional.ofNullable(profiles.get(operator)).orElse(new BukkitUser(operator));
@@ -104,8 +105,12 @@ public class BukkitGroupManager extends GroupManager<ServerOperator> {
 		Validate.notNull(data, "Json-Data cannot be null");
 		// create user
 		BukkitUser user = new BukkitUser(data);
+		// get OfflinePlayer
+		OfflinePlayer op = Bukkit.getOfflinePlayer(user.getUniqueID());
 		// cache user
-		profiles.put(Bukkit.getServer().getOfflinePlayer(user.getUniqueID()), user);
+		profiles.put(op, user);
+		// overrides profile if user is already online
+		if(op.isOnline()) VanillaPermissionOverrider.overridePermissionSystem(op.getPlayer(), user);
 	}
 	
 	private void loadGroupsFromFile() {

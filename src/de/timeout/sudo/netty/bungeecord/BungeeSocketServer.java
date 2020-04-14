@@ -1,7 +1,5 @@
 package de.timeout.sudo.netty.bungeecord;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.logging.Level;
 
 import javax.annotation.Nonnegative;
@@ -18,6 +16,7 @@ import de.timeout.sudo.netty.packets.Packet;
 import net.jafama.FastMath;
 
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
@@ -26,19 +25,20 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
+import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.util.concurrent.GlobalEventExecutor;
 
 public class BungeeSocketServer implements Runnable, Closeable {
 	
 	private static final boolean EPOLL = Epoll.isAvailable();
 	
-	private final Set<ChannelHandlerContext> connections = new HashSet<>();
+	private final ChannelGroup connections = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 	
-	private int port;
-	private ChannelFuture channelFuture;
-	
+	private int port;	
 	
 	/**
 	 * Creates a new SocketServer on a certain port
@@ -62,7 +62,7 @@ public class BungeeSocketServer implements Runnable, Closeable {
 		
 		// create Bootstrap
 		try {
-			 channelFuture = new ServerBootstrap()
+			 ChannelFuture channelFuture = new ServerBootstrap()
 					.group(bossGroup, workerGroup)
 					.channel(EPOLL ? EpollServerSocketChannel.class : NioServerSocketChannel.class)
 					.childHandler(new ChannelInitializer<SocketChannel>() {
@@ -89,7 +89,7 @@ public class BungeeSocketServer implements Runnable, Closeable {
 						@Override
 						public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
 							// remove channelhandlercontext from initializer
-							connections.remove(ctx);
+							connections.remove(ctx.channel());
 						}
 					})
 					.option(ChannelOption.SO_BACKLOG, 128)
@@ -97,7 +97,7 @@ public class BungeeSocketServer implements Runnable, Closeable {
 					.bind(port).sync().channel().closeFuture();
 			
 			// sync
-			channelFuture.sync();
+			channelFuture.syncUninterruptibly();
 		} catch (InterruptedException e) {
 			Sudo.log().log(Level.SEVERE, "&4Unable to start Netty-Server. Thread interrupted...", e);
 			Thread.currentThread().interrupt();
@@ -119,7 +119,7 @@ public class BungeeSocketServer implements Runnable, Closeable {
 		// Validate
 		Validate.notNull(ctx, "ChannelHandlerContext cannot be null");
 		// add to set
-		return connections.add(ctx);
+		return connections.add(ctx.channel());
 	}
 	
 	/**
@@ -133,14 +133,14 @@ public class BungeeSocketServer implements Runnable, Closeable {
 		// do nothing if the packet is null
 		if(packet != null)
 			// for each connection
-			connections.forEach(connection -> connection.writeAndFlush(packet));
+			connections.forEach(connection -> {
+				connection.writeAndFlush(packet, connection.voidPromise());
+			});
 	}
 
 	@Override
 	public void close() {
 		// disconnect to all connections
-		connections.forEach(ChannelHandlerContext::close);
-		// stop server
-		channelFuture.channel().close();
+		connections.forEach(Channel::close);
 	}
 }

@@ -20,7 +20,6 @@ public class AuthorizeHandler extends SimpleChannelInboundHandler<PacketRemoteIn
 
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, PacketRemoteInAuthorize packet) throws Exception {
-		System.out.println("Authorize-Handler triggered");
 		// only read if success is not marked
 		if(!success) {
 			// update success
@@ -30,9 +29,17 @@ public class AuthorizeHandler extends SimpleChannelInboundHandler<PacketRemoteIn
 				// log result
 				Sudo.log().log(Level.INFO,"&2Connection &7is &aauthorized&7. Ready to receive information from &2BungeeCord");
 				// send login packet to bungeecord. Ask for data
-				ctx.writeAndFlush(new PacketProxyInLogin());
+				ctx.writeAndFlush(new PacketProxyInLogin(), ctx.voidPromise());
 			} else Sudo.log().log(Level.INFO, "&2Connection &ccannot be authorized&7. &cPlease check your configuration and try again.");
 		}
+	}
+	
+	/**
+	 * Send packet to next handler if the connection is authorized!
+	 */
+	@Override
+	public boolean acceptInboundMessage(Object arg0) throws Exception {
+		return !success;
 	}
 
 	/**

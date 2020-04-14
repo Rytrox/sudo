@@ -9,7 +9,6 @@ import javax.annotation.Nullable;
 
 import de.timeout.libs.config.ColoredLogger;
 import de.timeout.libs.config.ConfigCreator;
-import de.timeout.sudo.bungee.messenger.ProxyLoginMessager;
 import de.timeout.sudo.bungee.permissions.ProxyGroupManager;
 import de.timeout.sudo.netty.bungeecord.BungeeSocketServer;
 import de.timeout.sudo.permissions.GroupConfigurable;
@@ -93,9 +92,6 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 		groupManager = new ProxyGroupManager();
 		// register listener
 		this.getProxy().getPluginManager().registerListener(this, groupManager);
-		
-		// register login channel
-		this.getProxy().getPluginManager().registerListener(this, new ProxyLoginMessager());
 	}
 
 	@Override
