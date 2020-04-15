@@ -101,9 +101,6 @@ public class BungeeSocketServer implements Runnable, Closeable {
 		} catch (InterruptedException e) {
 			Sudo.log().log(Level.SEVERE, "&4Unable to start Netty-Server. Thread interrupted...", e);
 			Thread.currentThread().interrupt();
-		} finally {
-			workerGroup.shutdownGracefully();
-			bossGroup.shutdownGracefully();
 		}
 	}
 	

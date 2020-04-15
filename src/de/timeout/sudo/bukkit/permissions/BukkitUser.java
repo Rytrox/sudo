@@ -41,6 +41,9 @@ import net.md_5.bungee.api.ChatColor;
  */
 public class BukkitUser extends PermissibleBase implements User, Storable {
 	
+	private static final String PERMISSIONS_FIELD = "permissions";
+	private static final String GROUPS_FIELD = "groups";
+	
 	private static final Sudo main = Sudo.getInstance();
 	private static final Gson JSON_BUILDER = new GsonBuilder().setPrettyPrinting().create();
 		
@@ -90,7 +93,7 @@ public class BukkitUser extends PermissibleBase implements User, Storable {
 		this.suffix = ChatColor.translateAlternateColorCodes('&', data.get("suffix").getAsString());
 		
 		// load groups
-		data.get("groups").getAsJsonArray().forEach(groupname -> {
+		data.get(GROUPS_FIELD).getAsJsonArray().forEach(groupname -> {
 			// get group
 			Group group = main.getGroupManager().getGroupByName(groupname.getAsString());
 			// join if group yould be found
@@ -98,7 +101,7 @@ public class BukkitUser extends PermissibleBase implements User, Storable {
 		});
 		
 		// load own permissions
-		data.get("permissions").getAsJsonArray().forEach(permission -> addPermission(permission.getAsString()));
+		data.get(PERMISSIONS_FIELD).getAsJsonArray().forEach(permission -> addPermission(permission.getAsString()));
 	}
 	
 	@Override
@@ -130,7 +133,7 @@ public class BukkitUser extends PermissibleBase implements User, Storable {
 	@Override
 	public boolean hasPermission(Permission perm) {
 		// check if user has permission
-		return this.hasPermission(perm.getName()) || super.hasPermission(perm);
+		return this.hasPermission(perm.getName());
 	}
 
 	@Override
@@ -140,7 +143,7 @@ public class BukkitUser extends PermissibleBase implements User, Storable {
 			// run through groups
 			for(Group group : groups) if(group.hasPermission(inName)) return true;
 			// return false. Player has not this permission
-			return super.hasPermission(inName);
+			return false;
 		} else return true;
 	}
 
@@ -226,12 +229,12 @@ public class BukkitUser extends PermissibleBase implements User, Storable {
 		// write groups
 		JsonArray groupsArray = new JsonArray();
 		this.groups.forEach(group -> groupsArray.add(new JsonPrimitive(group.getName())));
-		object.add("groups", groupsArray);
+		object.add(GROUPS_FIELD, groupsArray);
 		
 		// write permissions
 		JsonArray permissionsArray = new JsonArray();
 		this.permissions.toSet().forEach(permission -> permissionsArray.add(new JsonPrimitive(permission)));
-		options.add("permissions", permissionsArray);
+		options.add(PERMISSIONS_FIELD, permissionsArray);
 		
 		return object;
 	}
@@ -249,7 +252,7 @@ public class BukkitUser extends PermissibleBase implements User, Storable {
 		suffix = ChatColor.translateAlternateColorCodes('&', userConfig.getString("options.suffix"));
 		
 		// load groups
-		userConfig.getStringList("groups").forEach(groupname -> {
+		userConfig.getStringList(GROUPS_FIELD).forEach(groupname -> {
 			// get group
 			Group group = main.getGroupManager().getGroupByName(groupname);
 			// add to group if group has been found
@@ -257,17 +260,22 @@ public class BukkitUser extends PermissibleBase implements User, Storable {
 		});
 		
 		// load permissions
-		userConfig.getStringList("permissions").forEach(this::addPermission);
+		userConfig.getStringList(PERMISSIONS_FIELD).forEach(this::addPermission);
 	}
 
 	@Override
 	public void save() throws IOException {
-		// get Json
-		JsonObject data = toJson();
-		// create new File
-		File file = new File(new File(main.getDataFolder(), "users"), String.format("%s.json", this.operator.getUniqueId().toString()));
-		// write data into file
-		Files.write(JSON_BUILDER.toJson(data), file, StandardCharsets.UTF_8);
+		// only save if bungeecord is disabled
+		if(!main.bungeecordEnabled()) {
+			// get Json
+			JsonObject data = toJson();
+			// create new File
+			File file = new File(new File(main.getDataFolder(), "users"), String.format("%s.json", this.operator.getUniqueId().toString()));
+			// create folder if not exists
+			if(!file.getParentFile().exists()) file.getParentFile().mkdirs();
+			// write data into file
+			Files.write(JSON_BUILDER.toJson(data), file, StandardCharsets.UTF_8);
+		}
 	}
 
 	@Override

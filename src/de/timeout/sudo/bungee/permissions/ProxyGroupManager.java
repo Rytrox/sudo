@@ -18,6 +18,7 @@ import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.groups.User;
 import de.timeout.sudo.groups.exception.CircularInheritanceException;
 import de.timeout.sudo.netty.packets.PacketRemoteInLoadUser;
+import de.timeout.sudo.netty.packets.PacketRemoteInUnloadUser;
 import de.timeout.sudo.permissions.GroupManager;
 import de.timeout.sudo.permissions.UserConfigHandler;
 
@@ -25,6 +26,7 @@ import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.LoginEvent;
 import net.md_5.bungee.api.event.PermissionCheckEvent;
+import net.md_5.bungee.api.event.PlayerDisconnectEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
@@ -39,7 +41,7 @@ public class ProxyGroupManager extends GroupManager<UUID> implements Listener, U
 		
 	public ProxyGroupManager() {
 		// create users folder
-		if(userFolder.exists())
+		if(Files.notExists(userFolder.toPath()))
 			try {
 				Files.createDirectory(userFolder.toPath());
 			} catch (IOException e) {
@@ -49,7 +51,6 @@ public class ProxyGroupManager extends GroupManager<UUID> implements Listener, U
 		main.getGroupConfig().getKeys().forEach(this::loadGroup);
 		// log data
 		Sudo.log().log(Level.INFO, "&6groups.yml &asuccessfully loaded&7.");
-		getGroups().forEach(group -> System.out.println(group.toJson().toString()));
 	}
 	
 	/**
@@ -121,15 +122,12 @@ public class ProxyGroupManager extends GroupManager<UUID> implements Listener, U
 	public void onUserLoad(LoginEvent event) {
 		// load permissions if the user is connected
 		if(!event.isCancelled()) {
-			System.out.println("Event is not cancelled");
 			try {
 				// get User 
 				User user = new ProxyUser(event.getConnection());
 				// add user to cache
 				profiles.put(event.getConnection().getUniqueId(), user);
-				System.out.println("get ProxyUser and save him");
 				// send user to all subserver
-				System.out.println("Send Packet to remote!");
 				main.getProxy().getScheduler().runAsync(main, () -> 
 					main.getNettyServer().broadcastPacket(new PacketRemoteInLoadUser(user)));
 			} catch (IOException e) {
@@ -137,6 +135,21 @@ public class ProxyGroupManager extends GroupManager<UUID> implements Listener, U
 						String.format("&cUnable to access %s.json", event.getConnection().getUniqueId().toString()), e);
 			}
 		}
+	}
+	
+	@EventHandler
+	public void onUserSave(PlayerDisconnectEvent event) {
+		// removes user from cache
+		User user = profiles.remove(event.getPlayer().getUniqueId());
+		try {
+			// save data
+			((ProxyUser) user).save();
+		} catch (IOException e) {
+			Sudo.log().log(Level.WARNING, String.format("&cUnable to save user %s.", event.getPlayer().getName()), e);
+		}
+		// send unloadpacket to all bukkit-server
+		main.getProxy().getScheduler().runAsync(main, () -> main.getNettyServer().broadcastPacket(
+				new PacketRemoteInUnloadUser(user.getUniqueID())));
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)
@@ -160,7 +173,7 @@ public class ProxyGroupManager extends GroupManager<UUID> implements Listener, U
 		File file = new File(userFolder, String.format("%s.json", uuid.toString()));
 		// read file if file exists and is not empty
 		if(file.exists() && file.length() > 0L) {
-			return ConfigurationProvider.getProvider(JsonConfiguration.class).load(userFolder);
+			return ConfigurationProvider.getProvider(JsonConfiguration.class).load(file);
 		} else return null;
 	}
 }

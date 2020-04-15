@@ -9,6 +9,7 @@ import de.timeout.sudo.netty.packets.PacketRemoteInAuthorize;
 import de.timeout.sudo.netty.packets.PacketRemoteInGroupInheritances;
 import de.timeout.sudo.netty.packets.PacketRemoteInInitializeGroup;
 import de.timeout.sudo.netty.packets.PacketRemoteInLoadUser;
+import de.timeout.sudo.netty.packets.PacketRemoteInUnloadUser;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -53,6 +54,8 @@ public class ByteToPacketDecoder extends ByteToMessageDecoder {
 			return new PacketRemoteInInitializeGroup();
 		case "PacketRemoteInLoadUser":
 			return new PacketRemoteInLoadUser();
+		case "PacketRemoteInUnloadUser":
+			return new PacketRemoteInUnloadUser();
 		default: 
 			return null;
 		}
