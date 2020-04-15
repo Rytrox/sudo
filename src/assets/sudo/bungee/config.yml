@@ -1,8 +1,0 @@
-# Default Configuration-File for Sudo
-
-# commands which require sudo
-required:
-- 'op'
-- 'end'
-- 'stop'
-- 'gamemode'

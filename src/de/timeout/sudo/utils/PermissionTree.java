@@ -4,245 +4,211 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
-import org.apache.commons.lang.Validate;
-
-/**
- * Datastructure which manages permissions of a Permissible.
- * @author Timeout
- *
- */
 public class PermissionTree {
-	
-	private final Map<String, PermissionTree> children = new HashMap<>();
-	
-	private boolean asterisk;
-	
-	public PermissionTree() {
-		/* EMPTY. IT IS NOT NECESSARY */
-	}
+
+	private final Node root = new Node();
 	
 	/**
-	 * Creates a clone of a permission tree
+	 * Creates a new empty PermissionTree
 	 * @author Timeout
 	 *
-	 * @param clone the clone of this tree
 	 */
-	public PermissionTree(PermissionTree clone) {
-		asterisk = clone.asterisk;
-		clone.children.entrySet().forEach(subtree -> 
-			this.children.put(subtree.getKey(), new PermissionTree(subtree.getValue()))
-		);
-	}
-	
-	private PermissionTree(PermissionTree parent, String name) {
-		// Validate
-		Validate.notEmpty(name, "Permissionname cannot be empty");
-		// force asterisk if child is a asterisk-permission.
-		// Also the parent cannot be an asterisk-node
-		if("*".equals(name) && !parent.isAsterisk()) {
-			// add this node to parent
-			parent.children.put(name, this);
-		} else parent.setAsterisk();
+	public PermissionTree() {
+		/* DO NOTHING. NO ATTRIBUTES MUST BE SET */
 	}
 	
 	/**
-	 * Runs through subtrees and collect all permissions into a HashSet.
-	 * 
+	 * Static method to get all permissions of the trr
 	 * @author Timeout
 	 * 
-	 * @param path the path of the subtree
-	 * @param current the current subtree
-	 * @return
+	 * @param current the current node
+	 * @param path the path of the permission
+	 * @return a set containing all permissions 
 	 */
 	@Nonnull
-	private static Set<String> runthroughTree(String path, PermissionTree current) {
-		// Create Set
+	private static Set<String> toSet(Node current, String path) {
+		// create Set
 		Set<String> set = new HashSet<>();
-		// check if current is an asterisk
-		if(current.isAsterisk()) {
-			// end here
-			set.add(path + ".*");
-			return set;
-		} else {
-			// run through children
-			current.children.entrySet().forEach(entry -> 
-				// add all permissions from subtree to this set
-				set.addAll(runthroughTree(path + "." + entry.getKey(), entry.getValue()))
+		// if current has asterisk
+		if(!current.asterisk) {
+			// perform for all children
+			current.children.values().forEach(child -> 
+				set.addAll(
+						toSet(child, 
+						(path != null && !path.isEmpty() ? String.format("%s.%s", path, child.subpermission) : child.subpermission)))
 			);
+		} else {
+			// add permission (add asterisk if this is the first
+			set.add((path != null && !path.isEmpty() ? path + ".*" : "*"));
 		}
 		// return set
 		return set;
 	}
 	
 	/**
-	 * Adds all elements of other permissiontree into
+	 * adds a permission to the tree and returns a boolean if the permission could be added
 	 * @author Timeout
 	 * 
-	 * @param instance
-	 * @param other
-	 */
-	private static void addAll(PermissionTree instance, PermissionTree other) {
-		// set instance to asterisk if other is asterisk
-		if(!other.isAsterisk()) {
-			// run through other
-			other.children.entrySet().forEach(entry -> {
-				// define next subTree
-				PermissionTree subtree = instance.children.get(entry.getKey());
-				// add full subtree if instance does not contain subtree
-				if(subtree != null) {
-					// call for next level if instance's children is not an asterisk node
-					if(!subtree.isAsterisk()) addAll(instance.children.get(entry.getKey()), entry.getValue());
-				} else instance.children.put(entry.getKey(), entry.getValue());
-			});
-		} else instance.setAsterisk();
-	}
-	
-	/**
-	 * Clears the node so this node is the last node.
-	 * @author Timeout
-	 *
-	 */
-	private void setAsterisk() {
-		this.children.clear();
-		asterisk = true;
-	}
-	
-	/**
-	 * Checks if the current node is an asterisk-node
-	 * @author Timeout
-	 * 
-	 * @return if the current node is an asterisk-node
-	 */
-	public boolean isAsterisk() {
-		return asterisk;
-	}
-	
-	/**
-	 * Adds a permission to the tree.
-	 * Returns false if the permission is null
-	 * @author Timeout
-	 * 
-	 * @param permission the permission you want to add
-	 * @return true if the permission is successfully added
+	 * @param permission the permission 
+	 * @return true if the player now has the permission. else false
 	 */
 	public boolean add(String permission) {
-		// Validate. A Permission cannot be null and no permission can be added if the current tree is an forced asterisk
-		if(!asterisk && permission != null && !permission.isEmpty()) {
-			// Split permissions into Subpermisions (Add asterisk at end)
-			String[] subpermissions = (permission.endsWith(".*") ? permission : permission + ".*").toLowerCase(Locale.ENGLISH).split(".");
-			// define actual parent
-			PermissionTree parent = this;
-			// run through subpermissions
-			for (int i = 0; i < subpermissions.length; i++) {
-				String subPerm = subpermissions[i];
-				// break if parent is an asterisk
-				if(!parent.asterisk) {
-					// go to next node
-					if(!parent.children.containsKey(subPerm)) {
-						// bind new subtree to parent (Also relocate pointer)
-						parent = new PermissionTree(parent, subPerm);
-					} parent = parent.children.get(subPerm);
+		// validate (do nothing if permission is invalid)
+		if(permission != null && !permission.isEmpty()) {
+			// define current node
+			Node current = root;
+			// split permission into subpermissions
+			String[] subpermissions = (permission.endsWith(".*") ? permission : permission + ".*").toLowerCase(Locale.ENGLISH).split("\\.");
+			// run through permissions
+			for(int i = 0; i < subpermissions.length -1; i++) {
+				// break if the current is an asterisk
+				if(!current.asterisk && !subpermissions[i].equals("*")) {
+					// finalize current to have write-access
+					final Node currentConst = current;
+					// get subpermission
+					String subpermission = subpermissions[i];
+					// get current (link if not exists)
+					Node child = Optional.ofNullable(current.children.get(subpermission)).orElseGet(() -> {
+						// create new Node
+						Node node = new Node(currentConst, subpermission);
+						// link it
+						currentConst.children.put(subpermission, node);
+						// return node
+						return node;
+					});
+					// relink current and continue
+					current = child;
 				} else break;
 			}
-			// return true for success
+			// set last element to asterisk
+			current.asterisk = true;
 			return true;
-		} else return false;
+		} 
+		return false;
 	}
 	
 	public boolean remove(String permission) {
-		// return false when client has asterisk permission and not asterisk will be removed
-		if(!asterisk && !"*".equals(permission)) {
-			// Split permissions into subpermission
-			String[] subpermissions = (permission.endsWith(".*") ? permission.substring(0, permission.length() - 2) : permission)
-					.toLowerCase(Locale.ENGLISH).split(".");
-			// define parent
-			PermissionTree parent = this;
-			// run trough array
-			for (int i = 0; i < subpermissions.length; i++) {
-				String subpermission = subpermissions[i];
-				// return false if permission is not in tree
-				if(parent.children.containsKey(subpermission)) {
-					// check if subpermission is last one
-					if(i == subpermissions.length -1) {
-						// delete tree in children
-						children.remove(subpermission);
-						// return true for success
-						return true;
-					} else {
-						// redefine parent
-						parent = parent.children.get(subpermission);
-						// break if parent is asterisk
-						if(parent.isAsterisk()) return false;
-					}
+		// validate
+		if(permission != null && !permission.isEmpty()) {
+			// define current node
+			Node current = root;
+			// split permission into subpermissions
+			String[] subpermissions = (permission.endsWith(".*") ? permission.substring(0, permission.length() -2) : permission).toLowerCase(Locale.ENGLISH).split("\\.");
+			// run through subpermissions
+			for(int i = 0; i < subpermissions.length -1; i++) {
+				// return false if current has asterisk and is not null
+				if(current != null && !current.asterisk) {
+					// redefine current
+					current = current.children.get(subpermissions[i]);
 				} else return false;
 			}
-			// permission cannot be found return false
-			return false;
+			// try to get last one
+			boolean result = current.children.remove(subpermissions[subpermissions.length -1]) != null;
+			// remove unnecessary nodes if the result is true
+			if(result) removeUnnecessaryNodes(current);
+			// return result
+			return result;
+		}
+		// return false for error
+		return false;
+	}
+	
+	/**
+	 * Removes all unnnecessary nodes from a current node in direction to its root
+	 * @author Timeout
+	 * 
+	 * @param current the node where this method starts
+	 */
+	private void removeUnnecessaryNodes(Node current) {
+		// walk in tree backwards
+		Node parent;
+		while((parent = current.parent) != null) {
+			// remove current from parent
+			parent.children.remove(current.subpermission);
+			// break loop if parents children are not empty
+			if(parent.children.isEmpty()) {
+				// set parent as current to continue
+				current = parent;
+			} else break;
+		}
+	}
+	
+	/**
+	 * Checks if the current permission is in this tree
+	 * @author Timeout
+	 * 
+	 * @param permission the permission you want to check
+	 * @return false if the permission is null or not inside the tree else true
+	 */
+	public boolean contains(String permission) {
+		// validate (return false if permission is invalid)
+		if(permission != null && !permission.isEmpty()) {
+			// define pointer for current node
+			Node current = root;
+			// split into subpermissions and erase ".*"
+			String[] subpermissions = (permission.endsWith(".*") ? permission.substring(0, permission.length() -2) : permission).toLowerCase(Locale.ENGLISH).split("\\.");
+			// run through subpermissions
+			for(int i = 0; i < subpermissions.length; i++) {
+				// return false if current does not exists
+				if(current != null) {
+					// return true if current is asterisk
+					if(!current.asterisk) {
+						// redefine current
+						current = current.children.get(subpermissions[i]);
+					} else return true;
+				} else return false;
+			}
+			// return true if the last node is asterisk
+			return current.asterisk;
 		} else return false;
 	}
 	
-	public boolean contains(String permission) {
-		// return true if client has asterisk permission
-		if(!asterisk) {
-			// validate (return false for null)
-			if(permission != null && permission.isEmpty()) {
-				// split permission into Array
-				String[] subpermissions = permission.split(".");
-				// define current subtree
-				PermissionTree current = this;
-				// run through subpermissions
-				for (int i = 0; i < subpermissions.length; i++) {
-					String subpermission = subpermissions[i];
-					// redefine current
-					current = current.children.get(subpermission);
-					// return false if current cannot be found (is null)
-					if(current == null) return false;
-				}
-				// found!
-				return true;
-			} else return false;
-		} else return true;
+	/**
+	 * Clears the current permissiontree
+	 * @author Timeout
+	 *
+	 */
+	public void clear() {
+		root.children.clear();
 	}
 	
 	/**
-	 * Collects all Permissions into a HashSet and returns it.
-	 * Cannot be null
+	 * Converts the permissiontree to a set with all permissions
 	 * @author Timeout
 	 * 
-	 * @return a set with all permissions inside the tree
+	 * @return the permissiontree with all permissions
 	 */
 	@Nonnull
 	public Set<String> toSet() {
-		// create Set
-		Set<String> set = new HashSet<>();
-		// check if root is not an asterisk
-		if(asterisk) {
-			// run through subtree
-			children.entrySet().forEach(entry ->
-				// add to set
-				set.addAll(runthroughTree(entry.getKey(), entry.getValue()))
-			);
-		} else set.add("*");
-		// return set
-		return set;
+		return toSet(root, "");
 	}
 	
 	/**
-	 * Adds all elements from other tree into this tree. Does nothing if the tree is null
+	 * Structure for Nodes
 	 * @author Timeout
-	 * 
-	 * @param tree the other tree
+	 *
 	 */
-	public void addAll(@Nullable PermissionTree tree) {
-		// check if tree is not null
-		if(tree != null) {
-			// add all subtrees
-			addAll(this, tree);
+	private static class Node {
+		
+		private final Map<String, Node> children = new HashMap<>();
+		
+		private boolean asterisk;
+		private String subpermission;
+		private Node parent;
+		
+		public Node() {
+			parent = null;
+			subpermission = null;
+		}
+		
+		public Node(Node parent, String subpermission) {
+			this.parent = parent;
+			this.subpermission = subpermission;
 		}
 	}
 }

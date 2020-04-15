@@ -9,25 +9,30 @@ import javax.annotation.Nullable;
 
 import de.timeout.libs.config.ColoredLogger;
 import de.timeout.libs.config.ConfigCreator;
-import de.timeout.sudo.bungee.permissions.GroupManager;
+import de.timeout.sudo.bungee.permissions.ProxyGroupManager;
+import de.timeout.sudo.netty.bungeecord.BungeeSocketServer;
+import de.timeout.sudo.permissions.GroupConfigurable;
 
-import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.chat.TextComponent;
+import net.jafama.FastMath;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
 
-public class Sudo extends Plugin {
+public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 	
 	private static final ConfigurationProvider PROVIDER = ConfigurationProvider.getProvider(YamlConfiguration.class);
 	private static final ColoredLogger LOG = new ColoredLogger("&8[&6Sudo&8] ");
+	
 	private static final String CONFIG_YML = "config.yml";
 	private static final String GROUPS_YML = "groups.yml";
+	private static final String LOAD_ERROR = "&cUnable to read %s";
+	private static final String SAVE_ERROR = "&cUnable to save %s";
 
 	private static Sudo instance;
 	
-	private GroupManager groupManager;
+	private ProxyGroupManager groupManager;
+	private BungeeSocketServer netty;
 	
 	private Configuration config;
 	private Configuration groups;
@@ -62,12 +67,13 @@ public class Sudo extends Plugin {
 	 * @return the groupmanager or null
 	 */
 	@Nullable
-	public GroupManager getGroupManager() {
+	public ProxyGroupManager getGroupManager() {
 		return groupManager;
 	}
 	
 	@Override
 	public void onEnable() {
+		LOG.log(Level.INFO, "&7Load &6Sudo &eVersion 0.0.1-SNAPSHOT");
 		// initialize instance
 		instance = this;
 		// load configurations
@@ -75,22 +81,42 @@ public class Sudo extends Plugin {
 		// reload configs
 		reloadConfig();
 		reloadGroupConfig();
+		// start netty server
+		startSocketServer();
 		// initialize manager
 		initializeManager();
 	}
 
 	private void initializeManager() {
-		groupManager = new GroupManager();
+		// initialize group manager
+		groupManager = new ProxyGroupManager();
+		// register listener
+		this.getProxy().getPluginManager().registerListener(this, groupManager);
 	}
 
 	@Override
 	public void onDisable() {
-		
+		// disable server
+		netty.close();
+	}
+	
+	/**
+	 * Starts the Socket-Server
+	 * @author Timeout
+	 *
+	 */
+	private void startSocketServer() {
+		// create netty server
+		netty = new BungeeSocketServer(FastMath.abs(getConfig().getInt("netty.port", 10020)));
+		// start netty server
+		Thread serverThread = new Thread(netty);
+		serverThread.setName("SudoServer-Thread");
+		serverThread.start();
 	}
 	
 	private void loadConfigurations() {
 		// load ConfigCreator
-		ConfigCreator creator = new ConfigCreator(getDataFolder(), "assets/sudo/bungee");
+		ConfigCreator creator = new ConfigCreator(getDataFolder(), "assets/rytrox/sudo/bungee");
 		// create configs
 		try {
 			creator.loadRessource(CONFIG_YML);
@@ -107,7 +133,7 @@ public class Sudo extends Plugin {
 		try {
 			config = PROVIDER.load(new File(getDataFolder(), CONFIG_YML));
 		} catch (IOException e) {
-			getProxy().getConsole().sendMessage(new TextComponent(ChatColor.translateAlternateColorCodes('&', "&8[&6Sudo&8] &cUnable to load config.yml from datafolder. IO-Exception: " + e)));
+			LOG.log(Level.WARNING, String.format(LOAD_ERROR, CONFIG_YML));
 		}
 	}
 	
@@ -126,28 +152,43 @@ public class Sudo extends Plugin {
 		try {
 			PROVIDER.save(config, new File(getDataFolder(), CONFIG_YML));
 		} catch (IOException e) {
-			getProxy().getConsole().sendMessage(new TextComponent(ChatColor.translateAlternateColorCodes('&', "&8[&6Sudo&8] &cUnable to write config.yml. IO-Exception: " + e.toString())));
+			LOG.log(Level.WARNING, String.format(SAVE_ERROR, CONFIG_YML), e);
 		}
 	}
 	
+	@Override
 	public void reloadGroupConfig() {
 		try {
-			PROVIDER.load(new File(getDataFolder(), GROUPS_YML));
+			groups = PROVIDER.load(new File(getDataFolder(), GROUPS_YML));
 		} catch (IOException e) {
-			getProxy().getConsole().sendMessage(new TextComponent(ChatColor.translateAlternateColorCodes('&', "&8[&6Sudo&8] &cUnable to read groups.yml. IO-Exception: " + e.toString())));
+			LOG.log(Level.WARNING, String.format(LOAD_ERROR, GROUPS_YML), e);
 		}
 	}
 	
-	@Nullable
+	@Override
 	public Configuration getGroupConfig() {
 		return groups;
 	}
 	
+	@Override
 	public void saveGroupConfig() {
 		try {
 			PROVIDER.save(config, new File(getDataFolder(), GROUPS_YML));
 		} catch (IOException e) {
-			getProxy().getConsole().sendMessage(new TextComponent(ChatColor.translateAlternateColorCodes('&', "&8[&6Sudo&8] &cUnable to save groups.yml. IO-Exception: " + e.toString())));
+			LOG.log(Level.WARNING, String.format(SAVE_ERROR, GROUPS_YML), e);
 		}
+	}
+	
+	/**
+	 * Returns the Netty-Server. Cannot be null
+	 * @author Timeout
+	 * 
+	 * @return the Netty-Server
+	 */
+	@Nonnull
+	public BungeeSocketServer getNettyServer() {
+		// load server if the server is null
+		if(netty == null) startSocketServer();
+		return netty;
 	}
 }

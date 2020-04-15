@@ -1,0 +1,20 @@
+# Default Configuration-File for Sudo
+
+# Only Bukkit
+bungeecord:
+  # Enter uuid from stats field in bungeecords config.yml
+  uuid: 
+  # Enter the IP of the BungeeCord
+  host: 'localhost'
+  # Enter the port of BungeeCords Sudo Socket-Server
+  port: 10020
+  
+  # enter how many times a bukkit server attempts to reconnect after losing connection (negative numbers for infinite)
+  reconnect: 10
+
+# This setting will only be necessary if bungeecord is disabled
+# commands which require sudo
+required:
+- 'op'
+- 'stop'
+- 'gamemode'

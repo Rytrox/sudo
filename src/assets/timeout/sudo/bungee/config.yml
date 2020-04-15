@@ -1,0 +1,13 @@
+# Default Configuration File for Sudo
+
+netty:
+  # port of the socket-server which runs on background
+  # do NOT choose a used port
+  port: 10020
+  
+# commands which requires sudo
+required:
+- 'op'
+- 'stop'
+- 'gamemode'
+- 'end'

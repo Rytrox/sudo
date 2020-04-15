@@ -1,0 +1,22 @@
+# the name of the group
+owner:
+  # setup options
+  options:
+    # the prefix of the group (not necessary)
+    prefix: '&4Owner'
+    # the suffix of the group (not necessary)
+    suffix: ''
+    # default group. (Only one group can and must be the default group)
+    default: false
+    
+  # group inheritation. groups get all permissions from their extended groups
+  extends: 
+  - 'user'
+  permissions:
+  - '*'
+  
+user:
+  options:
+    default: true
+  permissions:
+  - 'minecraft.modifyworld'

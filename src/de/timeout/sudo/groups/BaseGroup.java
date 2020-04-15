@@ -6,29 +6,54 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import javax.annotation.Nonnull;
+
+import org.apache.commons.lang.Validate;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+
 import de.timeout.sudo.utils.PermissionTree;
 
 public class BaseGroup implements Group, Comparable<Group> {
 	
-	protected final PermissionTree permissions = new PermissionTree();
-	protected final PermissionTree allPermissions = new PermissionTree();
+	protected static Group defaultGroup;
 	
+	protected final PermissionTree permissions = new PermissionTree();
 	protected final Set<User> members = new HashSet<>();
-	protected final Set<Group> inheritance = new HashSet<>();
+	protected final Set<Group> groups = new HashSet<>();
 	
 	protected String name;
 	protected String prefix;
 	protected String suffix;
-	protected boolean defaultGroup;
+	protected boolean isDefault;
 	
 	/**
 	 * Constructor for inheritances
 	 */
-	protected BaseGroup(String name, String prefix, String suffix, boolean defaultGroup) {
+	protected BaseGroup(String name, String prefix, String suffix, boolean isDefault) {
 		this.name = name;
 		this.prefix = prefix;
 		this.suffix = suffix;
-		this.defaultGroup = defaultGroup;
+		this.isDefault = isDefault;
+			
+		// select first loaded group as default group
+		if(defaultGroup != null) {
+			// select new default group if this group is default
+			if(isDefault) defaultGroup = this;
+		} else defaultGroup = this;
+	}
+	
+	/**
+	 * Returns the default group 
+	 * @author Timeout
+	 * 
+	 * @return
+	 */
+	@Nonnull
+	public static Group getDefaultGroup() {
+		return defaultGroup;
 	}
 	
 	@Override
@@ -51,7 +76,7 @@ public class BaseGroup implements Group, Comparable<Group> {
 		// if permission is not null or empty
 		if(permission != null && !permission.isEmpty()) {
 			// add permission to list
-			return permissions.add(permission) && allPermissions.add(permission);
+			return permissions.add(permission);
 		}
 		// return false
 		return false;
@@ -62,7 +87,7 @@ public class BaseGroup implements Group, Comparable<Group> {
 		// if permission is not null
 		if(permission != null) {
 			// remove permission from collection
-			return permissions.remove(permission) && allPermissions.remove(permission);
+			return permissions.remove(permission);
 		}
 		// return false
 		return false;
@@ -70,8 +95,16 @@ public class BaseGroup implements Group, Comparable<Group> {
 
 	@Override
 	public boolean hasPermission(String permission) {
-		// return search
-		return allPermissions.contains(permission);
+		// return true if this group has permission
+		if(!permissions.contains(permission)) {
+			// search in extended groups
+			for(Group extended : getExtendedGroups()) {
+				// search for permission, return true if found
+				if(extended.hasPermission(permission)) return true;
+			}
+			// not found. return false
+			return false;
+		} else return true;
 	}
 
 	@Override
@@ -97,17 +130,12 @@ public class BaseGroup implements Group, Comparable<Group> {
 
 	@Override
 	public boolean isDefault() {
-		return defaultGroup;
-	}
-
-	@Override
-	public Set<String> getAllPermissions() {
-		return allPermissions.toSet();
+		return isDefault;
 	}
 
 	@Override
 	public Collection<Group> getExtendedGroups() {
-		return new ArrayList<>(inheritance);
+		return new ArrayList<>(groups);
 	}
 
 	@Override
@@ -117,7 +145,7 @@ public class BaseGroup implements Group, Comparable<Group> {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(allPermissions, defaultGroup, inheritance, members, name, permissions, prefix, suffix);
+		return Objects.hash(members, name, permissions, prefix, suffix);
 	}
 
 	@Override
@@ -132,4 +160,49 @@ public class BaseGroup implements Group, Comparable<Group> {
 		return Objects.equals(name, other.name) && Objects.equals(permissions, other.permissions);
 	}
 
+	@Override
+	public JsonObject toJson() {
+		// create JsonObject
+		JsonObject object = new JsonObject();
+		// write primitives in object
+		object.addProperty("name", name);
+		object.addProperty("default", isDefault);
+		object.addProperty("prefix", prefix);
+		object.addProperty("suffix", suffix);
+		
+		// create jsonarray for permissions
+		JsonArray permissionsArray = new JsonArray();
+		// write all permissions into array
+		this.permissions.toSet().forEach(permission -> permissionsArray.add(new JsonPrimitive(permission)));
+		// write array into object
+		object.add("permissions", permissionsArray);
+		
+		// create JsonArray for inheritances
+		JsonArray inheritancesArray = new JsonArray();
+		// write all inheritances into array
+		groups.forEach(group -> inheritancesArray.add(new JsonPrimitive(group.getName())));
+		// write array into object
+		object.add("extends", inheritancesArray);
+		
+		// return object
+		return object;
+	}
+
+	@Override
+	public void setPrefix(String prefix) {
+		this.prefix = prefix;
+	}
+
+	@Override
+	public void setSuffix(String suffix) {
+		this.suffix = suffix;
+	}
+
+	@Override
+	public void extend(Group other) {
+		// Validate
+		Validate.notNull(other, "Other group cannot be null");
+		// add to set
+		groups.add(other);
+	}
 }

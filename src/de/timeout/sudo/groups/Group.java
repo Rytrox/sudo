@@ -1,17 +1,17 @@
 package de.timeout.sudo.groups;
 
 import java.util.Collection;
-import java.util.Set;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+
+import com.google.gson.JsonObject;
 
 /**
  * Represents a group which handles permissions 
  * @author Timeout
  *
  */
-public interface Group extends PermissibleBase, Collectable<User> {
+public interface Group extends PermissibleBase, Collectable<User>, Customizable {
 	
 	/**
 	 * Returns a list of extended group of this group. <br>
@@ -23,38 +23,26 @@ public interface Group extends PermissibleBase, Collectable<User> {
 	public Collection<Group> getExtendedGroups();
 	
 	/**
-	 * Returns a Set of all permissions of the group
+	 * Extends this group from another (Syntax "this extends other")
 	 * @author Timeout
 	 * 
-	 * @return a set containing all permissions of the group and his inheritances
+	 * @param other the other group
+	 * @throws IllegalArgumentException if the other group is null
 	 */
-	@Nonnull
-	public Set<String> getAllPermissions();
-	
-	/**
-	 * Returns the name of this group
-	 * @return the name of this group
-	 */
-	@Nonnull
-	public String getName();
-	
-	/**
-	 * Returns the prefix of this group. Can be null
-	 * @return the prefix or null
-	 */
-	@Nullable
-	public String getPrefix();
-	
-	/**
-	 * Returns the suffix of this group. Can be null
-	 * @return the suffix or null
-	 */
-	@Nullable
-	public String getSuffix();
+	public void extend(@Nonnull Group other);
 	
 	/**
 	 * Checks if this group is a default group
 	 * @return if this group is a default group
 	 */
 	public boolean isDefault();
+	
+	/**
+	 * Compiles the group into Json-Objects
+	 * @author Timeout
+	 * 
+	 * @return the group as JsonObject
+	 */
+	@Nonnull
+	public JsonObject toJson();
 }
