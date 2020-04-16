@@ -1,7 +1,9 @@
 package de.timeout.sudo.bukkit.permissions;
 
+import java.io.IOException;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Level;
 
 import javax.annotation.Nonnull;
@@ -111,6 +113,46 @@ public class BukkitGroupManager extends GroupManager<ServerOperator> {
 		profiles.put(op, user);
 		// overrides profile if user is already online
 		if(op.isOnline()) VanillaPermissionOverrider.overridePermissionSystem(op.getPlayer(), user);
+	}
+	
+	/**
+	 * Loads a new user from its configuration-file.
+	 * Throws an exception if the server runs in bungeecord-mode
+	 * 
+	 * @author Timeout
+	 * 
+	 * @param uuid the uuid of the user you want to load
+	 * @throws IllegalArgumentException if the uuid is null
+	 * @throws IllegalStateException if the server runs in bungeecord-mode
+	 */
+	public void loadUserFromFile(@Nonnull UUID uuid) {
+		// Validate
+		Validate.notNull(uuid, "UUID cannot be null");
+		// throw illegal state exception if bukkit mode is disabled
+		if(!main.bungeecordEnabled()) {
+			// get OfflinePlayer
+			OfflinePlayer player = Bukkit.getServer().getOfflinePlayer(uuid);
+			// get User and load from file
+			User user = Optional.ofNullable(profiles.get(player)).orElse(new BukkitUser(player));
+			// cache in database
+			profiles.putIfAbsent(player, user);
+		} else throw new IllegalStateException("Users cannot be loaded from files while bungeecord is enabled!");
+	}
+	
+	public void unloadUserToFile(@Nonnull OfflinePlayer player) {
+		// Validate
+		Validate.notNull(player, "Player cannot be null");
+		// throws illegal state exception if bukkit mode is disabled
+		if(!main.bungeecordEnabled()) {
+			// unload user from profiles
+			BukkitUser user = (BukkitUser) profiles.remove(player);
+			// save in file
+			try {
+				user.save();
+			} catch (IOException e) {
+				Sudo.log().log(Level.WARNING, String.format("&cUnable to write data file of player %s", player.getPlayer()), e);
+			}
+		} else throw new IllegalStateException("Users cannot be saved in files while bungeecord is enabled!");
 	}
 	
 	private void loadGroupsFromFile() {

@@ -13,6 +13,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import de.timeout.libs.config.ColoredLogger;
 import de.timeout.libs.config.ConfigCreator;
 import de.timeout.libs.config.UTFConfig;
+import de.timeout.sudo.bukkit.listener.BukkitModeListener;
 import de.timeout.sudo.bukkit.listener.ModifyWorldListener;
 import de.timeout.sudo.bukkit.listener.VanillaPermissionOverrider;
 import de.timeout.sudo.bukkit.permissions.BukkitGroupManager;
@@ -84,14 +85,17 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 	}
 	
 	private void startSocketClient() {
-		// create server
-		netty = new BukkitSocket(
-				getConfig().getString("bungeecord.host", "localhost"),
-				getConfig().getInt("bungeecord.port", 10020));
-		// start server
-		Thread clientThread = new Thread(netty);
-		clientThread.setName("Sudo-SocketClient Thread");
-		clientThread.start();
+		// only start if bungeecord is enabled
+		if(bungeecordEnabled()) {
+			// create server
+			netty = new BukkitSocket(
+					getConfig().getString("bungeecord.host", "localhost"),
+					getConfig().getInt("bungeecord.port", 10020));
+			// start server
+			Thread clientThread = new Thread(netty);
+			clientThread.setName("Sudo-SocketClient Thread");
+			clientThread.start();
+		}
 	}
 	
 	private void createConfiguration() {
@@ -114,6 +118,8 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 		Bukkit.getPluginManager().registerEvents(new ModifyWorldListener(), this);
 		// register overrider
 		Bukkit.getPluginManager().registerEvents(new VanillaPermissionOverrider(), this);
+		// register bukkit listener if bukkit mode is enabled
+		if(!bungeecordEnabled()) Bukkit.getPluginManager().registerEvents(new BukkitModeListener(), this);
 	}
 
 	/**
