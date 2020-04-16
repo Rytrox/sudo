@@ -12,6 +12,7 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
 import org.bukkit.permissions.ServerOperator;
 
 import com.google.gson.JsonObject;
@@ -134,16 +135,27 @@ public class BukkitGroupManager extends GroupManager<ServerOperator> {
 			OfflinePlayer player = Bukkit.getServer().getOfflinePlayer(uuid);
 			// get User and load from file
 			User user = Optional.ofNullable(profiles.get(player)).orElse(new BukkitUser(player));
+			// apply user to online player
+			Player p = player.getPlayer();
+			if(p != null) VanillaPermissionOverrider.overridePermissionSystem(p, (BukkitUser) user);
 			// cache in database
 			profiles.putIfAbsent(player, user);
 		} else throw new IllegalStateException("Users cannot be loaded from files while bungeecord is enabled!");
 	}
 	
+	/**
+	 * Unloads a user and saves its data in a file
+	 * @author Timeout
+	 * 
+	 * @param player the player you want to unload
+	 * @throws IllegalStateException if the server runs in bungeecord mode
+	 * @throws IllegalArgumentException if the player is null or online
+	 */
 	public void unloadUserToFile(@Nonnull OfflinePlayer player) {
 		// Validate
 		Validate.notNull(player, "Player cannot be null");
 		// throws illegal state exception if bukkit mode is disabled
-		if(!main.bungeecordEnabled()) {
+		if(!main.bungeecordEnabled() && !player.isOnline()) {
 			// unload user from profiles
 			BukkitUser user = (BukkitUser) profiles.remove(player);
 			// save in file
@@ -152,7 +164,7 @@ public class BukkitGroupManager extends GroupManager<ServerOperator> {
 			} catch (IOException e) {
 				Sudo.log().log(Level.WARNING, String.format("&cUnable to write data file of player %s", player.getPlayer()), e);
 			}
-		} else throw new IllegalStateException("Users cannot be saved in files while bungeecord is enabled!");
+		} else throw new IllegalStateException("Users cannot be saved in files while bungeecord is enabled or player is online.");
 	}
 	
 	private void loadGroupsFromFile() {

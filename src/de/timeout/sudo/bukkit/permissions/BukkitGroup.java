@@ -38,7 +38,7 @@ public class BukkitGroup extends BaseGroup {
 	 */
 	public BukkitGroup(@Nonnull ConfigurationSection section) {
 		// load data without inheritances
-		super(section.getName(), section.getString("prefix"), section.getString("suffix"), section.getBoolean("default"));
+		super(section.getName(), section.getString("options.prefix"), section.getString("options.suffix"), section.getBoolean("options.default", false));
 		// add own permissions in group
 		section.getStringList("permissions").forEach(this::addPermission);
 	}

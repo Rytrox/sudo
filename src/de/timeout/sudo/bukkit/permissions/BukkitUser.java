@@ -27,6 +27,7 @@ import com.google.gson.JsonPrimitive;
 
 import de.timeout.libs.config.JsonConfig;
 import de.timeout.sudo.bukkit.Sudo;
+import de.timeout.sudo.groups.BaseGroup;
 import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.groups.User;
 import de.timeout.sudo.utils.PermissionTree;
@@ -60,7 +61,7 @@ public class BukkitUser extends PermissibleBase implements User, Storable {
 	 *
 	 * @param opable
 	 */
-	public BukkitUser(ServerOperator opable) {
+	protected BukkitUser(ServerOperator opable) {
 		super(opable);
 		// add him to default group
 		join(BukkitGroup.getDefaultGroup());
@@ -74,6 +75,7 @@ public class BukkitUser extends PermissibleBase implements User, Storable {
 	 */
 	public BukkitUser(@Nonnull OfflinePlayer opable) {
 		super(opable);
+		this.operator = opable;
 		// load from config if server runs bukkit mode
 		if(!main.bungeecordEnabled()) {
 			try {
@@ -82,7 +84,6 @@ public class BukkitUser extends PermissibleBase implements User, Storable {
 				Sudo.log().log(Level.WARNING, "&cUnable to load configuration from ", e);
 			}
 		}
-		this.operator = opable;
 	}
 	
 	public BukkitUser(JsonObject data) {
@@ -242,14 +243,14 @@ public class BukkitUser extends PermissibleBase implements User, Storable {
 	@Override
 	public void load() throws IOException {
 		// get configuration
-		JsonConfig userConfig = new JsonConfig(new File(new File(main.getDataFolder(), "users"), String.format("%s.json", this.operator.toString())));
+		JsonConfig userConfig = new JsonConfig(new File(new File(main.getDataFolder(), "users"), String.format("%s.json", this.operator.getUniqueId().toString())));
 		// clear permissions and groups
 		permissions.clear();
 		groups.forEach(this::kick);
 		
 		// load options
-		prefix = ChatColor.translateAlternateColorCodes('&', userConfig.getString("options.prefix"));
-		suffix = ChatColor.translateAlternateColorCodes('&', userConfig.getString("options.suffix"));
+		prefix = ChatColor.translateAlternateColorCodes('&', userConfig.getString("options.prefix", ""));
+		suffix = ChatColor.translateAlternateColorCodes('&', userConfig.getString("options.suffix", ""));
 		
 		// load groups
 		userConfig.getStringList(GROUPS_FIELD).forEach(groupname -> {
@@ -258,6 +259,9 @@ public class BukkitUser extends PermissibleBase implements User, Storable {
 			// add to group if group has been found
 			if(group != null) join(group);
 		});
+		// add him to default group if he has no group
+		if(groups.isEmpty()) join(BaseGroup.getDefaultGroup());
+		System.out.println(BaseGroup.getDefaultGroup().getName());
 		
 		// load permissions
 		userConfig.getStringList(PERMISSIONS_FIELD).forEach(this::addPermission);

@@ -67,7 +67,7 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 	@Override
 	public void onDisable() {
 		// disable connection to bungeecord server
-		this.netty.close();
+		if(this.netty != null) this.netty.close();
 	}
 
 	@Override
