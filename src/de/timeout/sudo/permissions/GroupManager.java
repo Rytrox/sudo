@@ -17,6 +17,7 @@ import com.google.common.graph.MutableGraph;
 import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.groups.User;
 import de.timeout.sudo.groups.exception.CircularInheritanceException;
+import de.timeout.sudo.security.Sudoer;
 
 public abstract class GroupManager<T> {
 
@@ -70,6 +71,15 @@ public abstract class GroupManager<T> {
 	 * @param name the name of the group
 	 */
 	protected abstract Group loadGroup(String name);
+	
+	/**
+	 * Upgrades a normal User to super-user
+	 * @author Timeout
+	 * 
+	 * @param superUser the new superuser
+	 * @param executor the executor of the command
+	 */
+	public abstract void upgradeUser(@Nonnull Sudoer superUser, @Nonnull Sudoer executor);
 	
 	/**
 	 * Binds the group extension to the extended group

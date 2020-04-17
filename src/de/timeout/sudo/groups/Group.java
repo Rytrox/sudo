@@ -11,7 +11,14 @@ import com.google.gson.JsonObject;
  * @author Timeout
  *
  */
-public interface Group extends PermissibleBase, Collectable<User>, Customizable {
+public interface Group extends PermissibleBase, Collectable<User> {
+	
+	/**
+	 * Returns the name of this instance
+	 * @return the name of this instance
+	 */
+	@Nonnull
+	public String getName();
 	
 	/**
 	 * Returns a list of extended group of this group. <br>

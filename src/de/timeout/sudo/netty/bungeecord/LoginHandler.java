@@ -25,11 +25,11 @@ public class LoginHandler extends SimpleChannelInboundHandler<PacketProxyInLogin
 			// create packet
 			ctx.writeAndFlush(new PacketRemoteInGroupInheritances(group))
 		);
-//		// sending all current users to server
-//		main.getGroupManager().getUsers().forEach(user -> 
-//			// create packet
-//			ctx.writeAndFlush(new PacketRemoteInLoadUser(user))
-//		);
+		// sending all current users to server
+		main.getGroupManager().getUsers().forEach(user -> 
+			// create packet
+			ctx.writeAndFlush(new PacketRemoteInLoadUser(user))
+		);
 	}
 
 }

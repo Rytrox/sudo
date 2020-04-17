@@ -23,6 +23,7 @@ import com.google.gson.JsonPrimitive;
 
 import de.timeout.sudo.bungee.Sudo;
 import de.timeout.sudo.groups.BaseGroup;
+import de.timeout.sudo.groups.Customizable;
 import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.groups.User;
 import de.timeout.sudo.utils.PermissionTree;
@@ -33,7 +34,7 @@ import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.config.Configuration;
 
-public class ProxyUser implements User, Storable {
+public class ProxyUser implements User, Storable, Customizable {
 		
 	private static final String NAME_FIELD = "name";
 	private static final String PREFIX_FIELD = "prefix";

@@ -24,6 +24,7 @@ import de.timeout.sudo.groups.User;
 import de.timeout.sudo.groups.exception.CircularInheritanceException;
 import de.timeout.sudo.netty.packets.PacketRemoteInGroupInheritances;
 import de.timeout.sudo.permissions.GroupManager;
+import de.timeout.sudo.security.Sudoer;
 
 public class BukkitGroupManager extends GroupManager<ServerOperator> {
 	
@@ -203,5 +204,15 @@ public class BukkitGroupManager extends GroupManager<ServerOperator> {
 		}
 		// return group
 		return group;
+	}
+
+	@Override
+	public void upgradeUser(Sudoer superUser, Sudoer executor) {
+		Validate.notNull(superUser);
+		Validate.notNull(object);
+		// if executor is authorized
+		if(executor.isAuthorized()) {
+			// 
+		}
 	}
 }

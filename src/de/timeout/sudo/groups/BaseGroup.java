@@ -16,7 +16,7 @@ import com.google.gson.JsonPrimitive;
 
 import de.timeout.sudo.utils.PermissionTree;
 
-public class BaseGroup implements Group, Comparable<Group> {
+public class BaseGroup implements Group, Comparable<Group>, Customizable {
 	
 	protected static Group defaultGroup;
 	

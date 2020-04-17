@@ -1,6 +1,5 @@
 package de.timeout.sudo.groups;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
@@ -9,13 +8,6 @@ import javax.annotation.Nullable;
  *
  */
 public interface Customizable {
-
-	/**
-	 * Returns the name of this instance
-	 * @return the name of this instance
-	 */
-	@Nonnull
-	public String getName();
 	
 	/**
 	 * Returns the prefix of this instance. Can be null

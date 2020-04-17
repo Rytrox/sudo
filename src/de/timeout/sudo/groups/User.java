@@ -12,7 +12,14 @@ import com.google.gson.JsonObject;
  * @author Timeout
  *
  */
-public interface User extends Comparable<User>, PermissibleBase, Collectable<Group>, Customizable {
+public interface User extends Comparable<User>, PermissibleBase, Collectable<Group> {
+	
+	/**
+	 * Returns the name of this instance
+	 * @return the name of this instance
+	 */
+	@Nonnull
+	public String getName();
 	
 	/**
 	 * Checks if the user is currently online

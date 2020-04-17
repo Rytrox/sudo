@@ -28,6 +28,7 @@ import com.google.gson.JsonPrimitive;
 import de.timeout.libs.config.JsonConfig;
 import de.timeout.sudo.bukkit.Sudo;
 import de.timeout.sudo.groups.BaseGroup;
+import de.timeout.sudo.groups.Customizable;
 import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.groups.User;
 import de.timeout.sudo.utils.PermissionTree;
@@ -40,7 +41,7 @@ import net.md_5.bungee.api.ChatColor;
  * @author Timeout
  *
  */
-public class BukkitUser extends PermissibleBase implements User, Storable {
+public class BukkitUser extends PermissibleBase implements User, Storable, Customizable {
 	
 	private static final String PERMISSIONS_FIELD = "permissions";
 	private static final String GROUPS_FIELD = "groups";
@@ -48,12 +49,12 @@ public class BukkitUser extends PermissibleBase implements User, Storable {
 	private static final Sudo main = Sudo.getInstance();
 	private static final Gson JSON_BUILDER = new GsonBuilder().setPrettyPrinting().create();
 		
-	private final PermissionTree permissions = new PermissionTree();
-	private final Set<Group> groups = new HashSet<>();
+	protected final PermissionTree permissions = new PermissionTree();
+	protected final Set<Group> groups = new HashSet<>();
 	
-	private OfflinePlayer operator;
-	private String prefix;
-	private String suffix;
+	protected OfflinePlayer operator;
+	protected String prefix;
+	protected String suffix;
 	
 	/**
 	 * Loads the BukkitUser of an ServerOperator

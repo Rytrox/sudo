@@ -1,5 +1,6 @@
 package de.timeout.sudo.utils;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
@@ -8,10 +9,13 @@ import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import org.apache.commons.lang.Validate;
 
 public class PermissionTree {
 
-	private final Node root = new Node();
+	private final Node root;
 	
 	/**
 	 * Creates a new empty PermissionTree
@@ -19,7 +23,20 @@ public class PermissionTree {
 	 *
 	 */
 	public PermissionTree() {
-		/* DO NOTHING. NO ATTRIBUTES MUST BE SET */
+		root = new Node();
+	}
+	
+	/**
+	 * Constructor to create a copy of the permissiontree
+	 * @author Timeout
+	 *
+	 * @param other the original permissiontree
+	 */
+	public PermissionTree(@Nonnull PermissionTree other) {
+		// Validate
+		Validate.notNull(other, "Original tree cannot be null");
+		// create copy of the root
+		root = Node.createCopy(null, other.root);
 	}
 	
 	/**
@@ -48,6 +65,33 @@ public class PermissionTree {
 		}
 		// return set
 		return set;
+	}
+	
+	private static void addAll(@Nonnull Node current, @Nonnull Collection<Node> insertions) {
+		// Validate
+		Validate.notNull(current, "Current node cannot be null");
+		Validate.notNull(insertions, "Insertions cannot be null");
+		// continue if current is not an asterisk
+		if(current.asterisk) {
+			// run through insertions
+			insertions.forEach(insertNode -> {
+				// get next node
+				Node children = current.children.get(insertNode.subpermission);
+				// add subtree if not exists
+				if(children == null) {
+					// apply to next
+					addAll(children, insertions);
+				} else current.children.put(insertNode.subpermission, insertNode);
+			});
+		}
+	}
+	
+	public void addAll(PermissionTree other) {
+		// do nothing if the other tree is null
+		if(other != null) {
+			// add all to other tree
+			addAll(root, other.root.children.values());
+		}
 	}
 	
 	/**
@@ -206,9 +250,53 @@ public class PermissionTree {
 			subpermission = null;
 		}
 		
+		/**
+		 * Creates a copy of the node
+		 * @author Timeout
+		 *
+		 * @param other the copy of the node
+		 * @throws IllegalArgumentException if the argument is null
+		 */
+		private Node(Node other) {
+			// Validate
+			Validate.notNull(other, "Other Node cannot be null");
+			this.asterisk = other.asterisk;
+			this.subpermission = other.subpermission;
+			this.parent = other.parent;
+			
+			// copy all childrens
+			other.children.entrySet().forEach(entry -> 
+				// link copy here
+				this.children.put(entry.getKey(), createCopy(this, entry.getValue()))
+			);
+		}
+		
 		public Node(Node parent, String subpermission) {
 			this.parent = parent;
 			this.subpermission = subpermission;
+		}
+		
+		/**
+		 * Copies a Node with its parent
+		 * @author Timeout
+		 * 
+		 * @param parent the parent copy of the node
+		 * @param current the node you want to copy
+		 * @throws IllegalArgumentException if the current node is null
+		 * @return the copy of the node
+		 */
+		public static Node createCopy(@Nullable Node parent, @Nonnull Node current) {
+			// Validate
+			Validate.notNull(current, "Current node cannot be null");
+			// create Node
+			Node copy = new Node(current);
+			// reset parent
+			copy.parent = parent;
+			
+			// copy all children
+			current.children.entrySet().forEach(entry -> copy.children.put(entry.getKey(), createCopy(copy, entry.getValue())));
+			// return node
+			return copy;
 		}
 	}
 }
