@@ -17,6 +17,8 @@ import de.timeout.sudo.bukkit.listener.BukkitModeListener;
 import de.timeout.sudo.bukkit.listener.ModifyWorldListener;
 import de.timeout.sudo.bukkit.listener.VanillaPermissionOverrider;
 import de.timeout.sudo.bukkit.permissions.BukkitGroupManager;
+import de.timeout.sudo.bukkit.security.BukkitSudoHandler;
+import de.timeout.sudo.bukkit.security.BukkitSudoerManager;
 import de.timeout.sudo.netty.bukkit.BukkitSocket;
 import de.timeout.sudo.permissions.GroupConfigurable;
 
@@ -38,6 +40,8 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 	
 	private BukkitSocket netty;
 	private BukkitGroupManager groupManager;
+	private BukkitSudoerManager sudoermanager;
+	private BukkitSudoHandler sudoHandler;
 
 	/**
 	 * This method returns the instance of the plugin
@@ -80,8 +84,37 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 		startSocketClient();
 	}
 	
+	/**
+	 * Returns sudo's group manager. Cannot be null
+	 * @author Timeout
+	 * 
+	 * @return sudo's group manager. Cannot be null
+	 */
+	@Nonnull
 	public BukkitGroupManager getGroupManager() {
 		return groupManager;
+	}
+	
+	/**
+	 * Returns sudo's sudoer manager. Cannot be null
+	 * @author Timeout
+	 * 
+	 * @return the sudoer manager. Cannot be null
+	 */
+	@Nonnull
+	public BukkitSudoerManager getSudoerManager() {
+		return sudoermanager;
+	}
+	
+	/**
+	 * Returns the sudo handler. Cannot be null
+	 * @author Timeout
+	 * 
+	 * @return the sudo handler. Cannot be null
+	 */
+	@Nonnull
+	public BukkitSudoHandler getSudoHandler() {
+		return sudoHandler;
 	}
 	
 	private void startSocketClient() {
@@ -105,6 +138,8 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 		try {
 			creator.loadRessource(CONFIG_YML);
 			creator.loadRessource(GROUPS_YML);
+			// load sudoers.out if bukkit-mode is enabled
+			if(!bungeecordEnabled()) creator.loadRessource("sudoers.out");
 		} catch (IOException e) {
 			// log error
 			LOG.log(Level.WARNING, "Unable to create configurations.", e);
@@ -118,8 +153,18 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 		Bukkit.getPluginManager().registerEvents(new ModifyWorldListener(), this);
 		// register overrider
 		Bukkit.getPluginManager().registerEvents(new VanillaPermissionOverrider(), this);
-		// register bukkit listener if bukkit mode is enabled
-		if(!bungeecordEnabled()) Bukkit.getPluginManager().registerEvents(new BukkitModeListener(), this);
+		
+		// create BukkitSudoerManager
+		sudoermanager = new BukkitSudoerManager();
+		// create BukkitSudoHandler
+		sudoHandler = new BukkitSudoHandler();
+		Bukkit.getPluginManager().registerEvents(sudoHandler, this);
+		
+		// only register is bukkit mode is enabled
+		if(!bungeecordEnabled()) {
+			// register bukkit listener if bukkit mode is enabled
+			Bukkit.getPluginManager().registerEvents(new BukkitModeListener(), this);
+		}
 	}
 
 	/**

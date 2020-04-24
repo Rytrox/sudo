@@ -47,6 +47,19 @@ public abstract class GroupManager<T> {
 	}
 	
 	/**
+	 * Returns the user of a certain key. <br>
+	 * Can be null if the user is not loaded yet
+	 * @author Timeout
+	 * 
+	 * @param key the key you want to load.
+	 * @return the user or null if the user is not loaded yet or the key is null
+	 */
+	@Nullable
+	public User getUser(T key) {
+		return profiles.get(key);
+	}
+	
+	/**
 	 * Get the Group by its name. Returns null if the group is not loaded
 	 * @author Timeout
 	 * 

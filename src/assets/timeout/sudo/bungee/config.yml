@@ -5,9 +5,8 @@ netty:
   # do NOT choose a used port
   port: 10020
   
-# commands which requires sudo
-required:
-- 'op'
-- 'stop'
-- 'gamemode'
-- 'end'
+sudo:
+  # maximum attempts after lock
+  maxAttempts: 3
+  # lock users after to many attempts
+  lock: true

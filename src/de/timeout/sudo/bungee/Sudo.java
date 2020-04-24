@@ -10,6 +10,8 @@ import javax.annotation.Nullable;
 import de.timeout.libs.config.ColoredLogger;
 import de.timeout.libs.config.ConfigCreator;
 import de.timeout.sudo.bungee.permissions.ProxyGroupManager;
+import de.timeout.sudo.bungee.security.ProxySudoHandler;
+import de.timeout.sudo.bungee.security.ProxySudoerManager;
 import de.timeout.sudo.netty.bungeecord.BungeeSocketServer;
 import de.timeout.sudo.permissions.GroupConfigurable;
 
@@ -32,6 +34,8 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 	private static Sudo instance;
 	
 	private ProxyGroupManager groupManager;
+	private ProxySudoerManager sudoerManager;
+	private ProxySudoHandler sudoHandler;
 	private BungeeSocketServer netty;
 	
 	private Configuration config;
@@ -61,14 +65,36 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 	
 	
 	/**
-	 * Returns the group manager. <br>
-	 * Returns null if the GroupManager is not loaded. Be sure to call {@link Sudo#initializeManager()} first.
+	 * Returns the group manager. Cannot be null
+	 * @author Timeout
 	 * 
-	 * @return the groupmanager or null
+	 * @return the group manager. Cannot be null
 	 */
-	@Nullable
+	@Nonnull
 	public ProxyGroupManager getGroupManager() {
 		return groupManager;
+	}
+	
+	/**
+	 * Returns the sudoer manager. Cannot be null
+	 * @author Timeout
+	 * 
+	 * @return the sudoer manager. Cannot be null
+	 */
+	@Nonnull
+	public ProxySudoerManager getSudoerManager() {
+		return sudoerManager;
+	}
+	
+	/**
+	 * Returns the sudo handler. Cannot be null
+	 * @author Timeout
+	 * 
+	 * @return the sudo handler. Cannot be null
+	 */
+	@Nonnull
+	public ProxySudoHandler getSudoHandler() {
+		return sudoHandler;
 	}
 	
 	@Override
@@ -92,6 +118,11 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 		groupManager = new ProxyGroupManager();
 		// register listener
 		this.getProxy().getPluginManager().registerListener(this, groupManager);
+		// initialize sudoer manager
+		sudoerManager = new ProxySudoerManager();
+		// initialize sudo handler
+		sudoHandler = new ProxySudoHandler();
+		this.getProxy().getPluginManager().registerListener(this, sudoHandler);
 	}
 
 	@Override
@@ -121,6 +152,7 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 		try {
 			creator.loadRessource(CONFIG_YML);
 			creator.loadRessource(GROUPS_YML);
+			creator.loadRessource("sudoers.out");
 		} catch (IOException e) {
 			LOG.log(Level.WARNING, "&cCannot load configurations from Plugin.");
 		}

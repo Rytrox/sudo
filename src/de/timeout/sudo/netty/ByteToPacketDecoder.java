@@ -4,8 +4,10 @@ import java.util.List;
 
 import de.timeout.sudo.netty.packets.Packet;
 import de.timeout.sudo.netty.packets.PacketProxyInAuthorize;
+import de.timeout.sudo.netty.packets.PacketProxyInAuthorizeSudoer;
 import de.timeout.sudo.netty.packets.PacketProxyInLogin;
 import de.timeout.sudo.netty.packets.PacketRemoteInAuthorize;
+import de.timeout.sudo.netty.packets.PacketRemoteInAuthorizeSudoer;
 import de.timeout.sudo.netty.packets.PacketRemoteInGroupInheritances;
 import de.timeout.sudo.netty.packets.PacketRemoteInInitializeGroup;
 import de.timeout.sudo.netty.packets.PacketRemoteInLoadUser;
@@ -44,10 +46,14 @@ public class ByteToPacketDecoder extends ByteToMessageDecoder {
 		switch(name) {
 		case "PacketProxyInAuthorize":
 			return new PacketProxyInAuthorize();
+		case "PacketProxyInAuthorizeSudoer":
+			return new PacketProxyInAuthorizeSudoer();
 		case "PacketProxyInLogin":
 			return new PacketProxyInLogin();
 		case "PacketRemoteInAuthorize":
 			return new PacketRemoteInAuthorize();
+		case "PacketRemoteInAuthorizeSudoer":
+			return new PacketRemoteInAuthorizeSudoer();
 		case "PacketRemoteInGroupInheritances":
 			return new PacketRemoteInGroupInheritances();
 		case "PacketRemoteInInitializeGroup":

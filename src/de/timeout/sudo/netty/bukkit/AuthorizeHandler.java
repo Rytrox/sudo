@@ -15,7 +15,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
  *
  */
 public class AuthorizeHandler extends SimpleChannelInboundHandler<PacketRemoteInAuthorize> {
-	
+		
 	private boolean success;
 
 	@Override

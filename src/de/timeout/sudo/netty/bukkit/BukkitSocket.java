@@ -150,7 +150,7 @@ public class BukkitSocket implements Runnable, Closeable {
 	
 	private void authorize() {
 		sendPacket(new PacketProxyInAuthorize(
-				UUID.fromString(main.getConfig().getString("bungeecord.uuid"))));
+				UUID.fromString(main.getConfig().getString("bungeecord.uuid")), main.getServer().getPort()));
 		// connection succeed. log
 		Sudo.log().log(Level.INFO, "&aConnected to &2BungeeCord! &7Sending &5Authentification");
 	}

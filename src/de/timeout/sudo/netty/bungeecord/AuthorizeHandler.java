@@ -32,8 +32,9 @@ public class AuthorizeHandler extends SimpleChannelInboundHandler<Packet<?>> {
 			String remote = ctx.channel().remoteAddress().toString();
 			// block pipeline if packet is send but not authorized
 			if(packet instanceof PacketProxyInAuthorize) {
+				PacketProxyInAuthorize authIn = (PacketProxyInAuthorize) packet;
 				// compare results (return true if both are equal) 
-				authorized = bungeeID.compareTo(((PacketProxyInAuthorize) packet).getProxyID()) == 0;
+				authorized = bungeeID.compareTo(authIn.getProxyID()) == 0;
 				// send result to remote
 				PacketRemoteInAuthorize authorize = new PacketRemoteInAuthorize(authorized);
 				ctx.writeAndFlush(authorize, ctx.voidPromise());
@@ -46,7 +47,7 @@ public class AuthorizeHandler extends SimpleChannelInboundHandler<Packet<?>> {
 					Sudo.log().log(Level.INFO, "&cPlease have a look at https://www.spigotmc.org/wiki/firewall-guide/ and activate a firewall for this server too!");
 				} else {
 					// authorize in bungeecord
-					main.getNettyServer().authorize(ctx);
+					main.getNettyServer().authorize(authIn.getRemotePort(), ctx);
 					// log
 					Sudo.log().log(Level.INFO, String.format("&2Remote-Server &a%s &7was &asuccessfully authorized.", remote));
 				}

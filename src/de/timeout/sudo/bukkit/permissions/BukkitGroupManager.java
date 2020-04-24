@@ -19,6 +19,7 @@ import com.google.gson.JsonObject;
 
 import de.timeout.sudo.bukkit.Sudo;
 import de.timeout.sudo.bukkit.listener.VanillaPermissionOverrider;
+import de.timeout.sudo.bukkit.security.BukkitSudoer;
 import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.groups.User;
 import de.timeout.sudo.groups.exception.CircularInheritanceException;
@@ -208,11 +209,12 @@ public class BukkitGroupManager extends GroupManager<ServerOperator> {
 
 	@Override
 	public void upgradeUser(Sudoer superUser, Sudoer executor) {
-		Validate.notNull(superUser);
-		Validate.notNull(object);
-		// if executor is authorized
-		if(executor.isAuthorized()) {
-			// 
+		Validate.notNull(superUser, "Superuser cannot be null");
+		Validate.notNull(executor, "Executor cannot be null");
+		// do nothing if executor is not authorized or superuser is not a bukkitsudoer
+		if(executor.isAuthorized() && superUser instanceof BukkitSudoer) {
+			// update profile
+			this.profiles.replace((BukkitUser) superUser.getUser(), (BukkitSudoer) superUser);
 		}
 	}
 }

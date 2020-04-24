@@ -4,3 +4,7 @@ version: 0.1
 description: A Permission System for BungeeCord / Bukkit which is inspired by Linux sudo system
 
 main: de.timeout.sudo.bungee.Sudo
+
+commands:
+  sudo:
+    description: Executes a command as a superuser

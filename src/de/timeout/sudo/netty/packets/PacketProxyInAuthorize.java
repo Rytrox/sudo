@@ -3,6 +3,13 @@ package de.timeout.sudo.netty.packets;
 import java.io.IOException;
 import java.util.UUID;
 
+import javax.annotation.Nonnegative;
+import javax.annotation.Nonnull;
+
+import org.bukkit.craftbukkit.libs.org.apache.commons.lang3.Validate;
+
+import net.jafama.FastMath;
+
 import io.netty.buffer.ByteBuf;
 
 /**
@@ -13,6 +20,7 @@ import io.netty.buffer.ByteBuf;
 public class PacketProxyInAuthorize extends Packet<PacketProxyInAuthorize> {
 	
 	private UUID proxyID;
+	private int remotePort;
 
 	/**
 	 * Constructor for Spigot-Servers
@@ -20,9 +28,13 @@ public class PacketProxyInAuthorize extends Packet<PacketProxyInAuthorize> {
 	 *
 	 * @param proxyID the uuid you are going to send
 	 */
-	public PacketProxyInAuthorize(UUID proxyID) {
+	public PacketProxyInAuthorize(@Nonnull UUID proxyID, @Nonnegative int port) {
 		super(PacketProxyInAuthorize.class);
+		// Validate
+		Validate.notNull(proxyID, "Proxy-UUID cannot be null");
+		
 		this.proxyID = proxyID;
+		this.remotePort = FastMath.abs(port);
 	}
 	
 	/**
@@ -38,6 +50,8 @@ public class PacketProxyInAuthorize extends Packet<PacketProxyInAuthorize> {
 	public void decode(ByteBuf input) throws IOException {
 		// read string
 		proxyID = UUID.fromString(readString(input));
+		// read port
+		remotePort = input.readInt();
 	}
 
 	@Override
@@ -46,6 +60,8 @@ public class PacketProxyInAuthorize extends Packet<PacketProxyInAuthorize> {
 		super.encode(output);
 		// write uuid into packet
 		writeString(output, proxyID.toString());
+		// write port
+		output.writeInt(remotePort);
 	}
 
 	/**
@@ -54,8 +70,19 @@ public class PacketProxyInAuthorize extends Packet<PacketProxyInAuthorize> {
 	 * 
 	 * @return the proxy id which is located in the configuration file
 	 */
+	@Nonnull
 	public UUID getProxyID() {
 		return proxyID;
 	}
 
+	/**
+	 * Get spigot remote port
+	 * @author Timeout
+	 * 
+	 * @return spigot remote port
+	 */
+	@Nonnegative
+	public int getRemotePort() {
+		return remotePort;
+	}
 }

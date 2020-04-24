@@ -1,5 +1,7 @@
 package de.timeout.sudo.netty.bungeecord;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 
 import javax.annotation.Nonnegative;
@@ -14,6 +16,7 @@ import de.timeout.sudo.netty.PacketToByteEncoder;
 import de.timeout.sudo.netty.packets.Packet;
 
 import net.jafama.FastMath;
+import net.md_5.bungee.api.connection.Server;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -25,18 +28,15 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
-import io.netty.channel.group.ChannelGroup;
-import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.util.concurrent.GlobalEventExecutor;
 
 public class BungeeSocketServer implements Runnable, Closeable {
 	
 	private static final boolean EPOLL = Epoll.isAvailable();
 	
-	private final ChannelGroup connections = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
+	private final Map<Integer, Channel> connections = new HashMap<>();
 	
 	private int port;	
 	
@@ -89,7 +89,12 @@ public class BungeeSocketServer implements Runnable, Closeable {
 						@Override
 						public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
 							// remove channelhandlercontext from initializer
-							connections.remove(ctx.channel());
+							connections.entrySet().forEach(entry -> {
+								if(entry.getValue().equals(ctx.channel())) {
+									// remove key
+									connections.remove(entry.getKey());
+								}	
+							});
 						}
 					})
 					.option(ChannelOption.SO_BACKLOG, 128)
@@ -108,15 +113,16 @@ public class BungeeSocketServer implements Runnable, Closeable {
 	 * Authorize a ChannelHandlerContext and adds it to collections
 	 * @author Timeout
 	 * 
+	 * @param port the port of the connection
 	 * @param ctx the new connection
 	 * @throws IllegalArgumentException if the connection is null
 	 * @return if the connection could be added
 	 */
-	public boolean authorize(@Nonnull ChannelHandlerContext ctx) {
+	public boolean authorize(@Nonnegative int port, @Nonnull ChannelHandlerContext ctx) {
 		// Validate
 		Validate.notNull(ctx, "ChannelHandlerContext cannot be null");
 		// add to set
-		return connections.add(ctx.channel());
+		return connections.put(FastMath.abs(port), ctx.channel()) != null;
 	}
 	
 	/**
@@ -130,14 +136,33 @@ public class BungeeSocketServer implements Runnable, Closeable {
 		// do nothing if the packet is null
 		if(packet != null)
 			// for each connection
-			connections.forEach(connection -> {
-				connection.writeAndFlush(packet, connection.voidPromise());
-			});
+			connections.values().forEach(connection -> 
+				connection.writeAndFlush(packet, connection.voidPromise())
+			);
 	}
 
+	/**
+	 * Sends a packet to a certain server
+	 * @author Timeout
+	 * 
+	 * @param server the server you want to send the packet
+	 * @param packet the packet you want to send
+	 * @throws IllegalStateException if the server is not connected with this SocketServer
+	 */
+	public void sendPacket(Server server, Packet<?> packet) {
+		// do nothing if any argument is null
+		if(server != null && packet != null) {
+			// get port
+			Channel channel = connections.get(Integer.parseInt(server.getSocketAddress().toString().split(":")[1]));
+			// send packet if channel is not null
+			if(channel != null) channel.writeAndFlush(packet, channel.voidPromise());
+			else throw new IllegalStateException("A Server with that port is not connected with Sudo-SocketServer");
+		}
+	}
+	
 	@Override
 	public void close() {
 		// disconnect to all connections
-		connections.forEach(Channel::close);
+		connections.values().forEach(Channel::close);
 	}
 }
