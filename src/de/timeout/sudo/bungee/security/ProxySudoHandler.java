@@ -68,7 +68,7 @@ public class ProxySudoHandler implements Listener {
 				}
 				// remove from map
 				passwordAwaiting.remove(sudoer);
-			} p.sendMessage(new TextComponent(
+			} else p.sendMessage(new TextComponent(
 					ChatColor.translateAlternateColorCodes('&', 
 					String.join("&8[&6Sudo&8] &c%s is not in the sudoers file. This incident will be reported", p.getName()))));
 		}

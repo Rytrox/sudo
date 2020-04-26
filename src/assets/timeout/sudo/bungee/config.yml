@@ -10,3 +10,11 @@ sudo:
   maxAttempts: 3
   # lock users after to many attempts
   lock: true
+  
+  # blocked permissions
+  permissions:
+  - 'minecraft.command.stop'
+  - 'minecraft.command.gamemode'
+  - 'bukkit.command.reload'
+  - 'bukkit.command.reload'
+  - 'bukkit.command.timings'

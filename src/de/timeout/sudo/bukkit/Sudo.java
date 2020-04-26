@@ -40,7 +40,7 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 	
 	private BukkitSocket netty;
 	private BukkitGroupManager groupManager;
-	private BukkitSudoerManager sudoermanager;
+	private BukkitSudoerManager sudoerManager;
 	private BukkitSudoHandler sudoHandler;
 
 	/**
@@ -96,17 +96,6 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 	}
 	
 	/**
-	 * Returns sudo's sudoer manager. Cannot be null
-	 * @author Timeout
-	 * 
-	 * @return the sudoer manager. Cannot be null
-	 */
-	@Nonnull
-	public BukkitSudoerManager getSudoerManager() {
-		return sudoermanager;
-	}
-	
-	/**
 	 * Returns the sudo handler. Cannot be null
 	 * @author Timeout
 	 * 
@@ -115,6 +104,17 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 	@Nonnull
 	public BukkitSudoHandler getSudoHandler() {
 		return sudoHandler;
+	}
+	
+	/**
+	 * Returns the sudoer manager. Cannot be null
+	 * @author Timeout
+	 * 
+	 * @return the sudoer manager. Cannot be null
+	 */
+	@Nonnull
+	public BukkitSudoerManager getSudoerManager() {
+		return sudoerManager;
 	}
 	
 	private void startSocketClient() {
@@ -155,7 +155,8 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 		Bukkit.getPluginManager().registerEvents(new VanillaPermissionOverrider(), this);
 		
 		// create BukkitSudoerManager
-		sudoermanager = new BukkitSudoerManager();
+		sudoerManager = new BukkitSudoerManager();
+		
 		// create BukkitSudoHandler
 		sudoHandler = new BukkitSudoHandler();
 		Bukkit.getPluginManager().registerEvents(sudoHandler, this);

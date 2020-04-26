@@ -13,12 +13,12 @@ import de.timeout.sudo.netty.packets.Packet;
 import de.timeout.sudo.netty.packets.PacketRemoteInAuthorizeSudoer;
 import de.timeout.sudo.netty.packets.PacketRemoteInAuthorizeSudoer.AuthorizationResult;
 import de.timeout.sudo.netty.packets.PacketRemoteInSudoUsage;
-import de.timeout.sudo.security.Sudoer;
+import de.timeout.sudo.security.Root;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
-class SudoPacketHandler extends SimpleChannelInboundHandler<Packet<?>> implements Sudoer {
+class SudoPacketHandler extends SimpleChannelInboundHandler<Packet<?>> implements Root {
 	
 	private static final Field authorizedField = Reflections.getField(BukkitSudoer.class, "authorized");
 	
@@ -51,28 +51,18 @@ class SudoPacketHandler extends SimpleChannelInboundHandler<Packet<?>> implement
 	}
 
 	@Override
-	public boolean authorize(String password) {
+	public boolean enableRoot() {
+		return false;
+	}
+
+	@Override
+	public boolean disableRoot() {
+		return false;
+	}
+
+	@Override
+	public boolean isRoot() {
 		return true;
-	}
-
-	@Override
-	public void deauthorize() {
-		/* NO AUTHORIZE FOR THIS CLASS REQUIRED */
-	}
-
-	@Override
-	public boolean isAuthorized() {
-		return true;
-	}
-
-	@Override
-	public boolean setPassword(String password, Sudoer executor) {
-		return true;
-	}
-
-	@Override
-	public User getUser() {
-		return null;
 	}
 
 }

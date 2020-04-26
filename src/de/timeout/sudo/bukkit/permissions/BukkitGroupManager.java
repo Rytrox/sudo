@@ -25,6 +25,7 @@ import de.timeout.sudo.groups.User;
 import de.timeout.sudo.groups.exception.CircularInheritanceException;
 import de.timeout.sudo.netty.packets.PacketRemoteInGroupInheritances;
 import de.timeout.sudo.permissions.GroupManager;
+import de.timeout.sudo.security.Root;
 import de.timeout.sudo.security.Sudoer;
 
 public class BukkitGroupManager extends GroupManager<ServerOperator> {
@@ -208,13 +209,13 @@ public class BukkitGroupManager extends GroupManager<ServerOperator> {
 	}
 
 	@Override
-	public void upgradeUser(Sudoer superUser, Sudoer executor) {
+	public void upgradeUser(Sudoer superUser, Root executor) {
 		Validate.notNull(superUser, "Superuser cannot be null");
 		Validate.notNull(executor, "Executor cannot be null");
 		// do nothing if executor is not authorized or superuser is not a bukkitsudoer
-		if(executor.isAuthorized() && superUser instanceof BukkitSudoer) {
+		if(executor.isRoot() && superUser instanceof BukkitSudoer) {
 			// update profile
-			this.profiles.replace((BukkitUser) superUser.getUser(), (BukkitSudoer) superUser);
+			this.profiles.replace((BukkitUser) superUser, (BukkitSudoer) superUser);
 		}
 	}
 }

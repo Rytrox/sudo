@@ -42,7 +42,7 @@ public class ProxyUser implements User, Storable, Customizable {
 	private static final String GROUPS_FIELD = "groups";
 	private static final String PERMISSIONS_FIELD = "permissions";
 	
-	private static final Sudo main = Sudo.getInstance();
+	protected static final Sudo main = Sudo.getInstance();
 	
 	private final PermissionTree permissions = new PermissionTree();
 	private final List<Group> groups = new ArrayList<>();
@@ -134,13 +134,15 @@ public class ProxyUser implements User, Storable, Customizable {
 
 	@Override
 	public boolean hasPermission(String permission) {
-		// check for own permission
-		if(!permissions.contains(permission)) {
-			// search in group
-			for(Group group : groups) if(group.hasPermission(permission)) return true;
-			// return false for not found
-			return false;
-		} else return true;
+		// return false if sudo-group has permission
+		
+			// check for own permission
+			if(!permissions.contains(permission)) {
+				// search in group
+				for(Group group : groups) if(group.hasPermission(permission)) return true;
+				// return false for not found
+				return false;
+			} else return true;
 	}
 
 	@Override

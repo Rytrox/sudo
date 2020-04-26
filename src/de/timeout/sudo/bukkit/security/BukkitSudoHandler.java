@@ -12,7 +12,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 
 import de.timeout.sudo.groups.User;
-import de.timeout.sudo.security.Sudoer;
 
 public class BukkitSudoHandler implements Listener {
 

@@ -5,8 +5,9 @@ import javax.annotation.Nonnull;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 
+import de.timeout.sudo.bukkit.Sudo;
 import de.timeout.sudo.bukkit.permissions.BukkitUser;
-import de.timeout.sudo.groups.User;
+import de.timeout.sudo.security.Root;
 import de.timeout.sudo.security.Sudoer;
 import de.timeout.sudo.utils.PasswordCryptor;
 
@@ -17,7 +18,10 @@ import de.timeout.sudo.utils.PasswordCryptor;
  */
 public final class BukkitSudoer extends BukkitUser implements Sudoer {
 	
+	private static final Sudo main = Sudo.getInstance();
+	
 	private boolean authorized;
+	private boolean root;
 	private String password;
 	
 	/**
@@ -47,14 +51,20 @@ public final class BukkitSudoer extends BukkitUser implements Sudoer {
 	 * @throws IllegalArgumentException if any argument is null or the executor is not authorized
 	 * @return the new BukkitSudoer
 	 */
-	public static BukkitSudoer upgradeUserToSudoer(@Nonnull BukkitUser user, @Nonnull String password, @Nonnull Sudoer executor) {
+	public static BukkitSudoer upgradeUserToSudoer(@Nonnull BukkitUser user, @Nonnull String password, @Nonnull Root executor) {
 		// Validate
 		Validate.notNull(user, "BukkitUser cannot be null");
 		Validate.notNull(password, "Sudoer cannot be null");
 		Validate.notNull(executor, "Executor cannot be null");
-		Validate.isTrue(executor.isAuthorized(), "Executor must be authorized to create a new sudoer");
+		Validate.isTrue(executor.isRoot(), "Executor must be root to create a new sudoer");
+		
 		// create new BukkitSudoer
-		return new BukkitSudoer(user, password);
+		BukkitSudoer sudoer = new BukkitSudoer(user, password);
+		// add to sudo group
+		main.getSudoerManager().getSudoGroup().join(sudoer);
+		
+		// return sudoer
+		return sudoer;
 	}
 	
 	@Override
@@ -93,7 +103,29 @@ public final class BukkitSudoer extends BukkitUser implements Sudoer {
 	}
 
 	@Override
-	public User getUser() {
-		return this;
+	public boolean enableRoot() {
+		// return false if root is already enabled
+		if(!root) {
+			// change value
+			root = true;
+			// return success
+			return true;
+		} else return false;
+	}
+
+	@Override
+	public boolean disableRoot() {
+		// return false if root is already disabled
+		if(root) {
+			// change value
+			root = false;
+			// return success
+			return true;
+		} else return false;
+	}
+
+	@Override
+	public boolean isRoot() {
+		return root && isAuthorized();
 	}
 }

@@ -9,7 +9,7 @@ import de.timeout.sudo.groups.User;
  * @author Timeout
  *
  */
-public interface Sudoer {
+public interface Sudoer extends Root, User {
 
 	/**
 	 * Method to authorize or deauthorize user
@@ -47,12 +47,4 @@ public interface Sudoer {
 	 */
 	public boolean setPassword(@Nonnull String password, @Nonnull Sudoer executor);
 	
-	/**
-	 * Returns the user of the sudoer
-	 * @author Timeout
-	 * 
-	 * @return the user of the sudoer. Cannot be null
-	 */
-	@Nonnull
-	public User getUser();
 }

@@ -24,13 +24,12 @@ public class PacketRemoteInAuthorizeSudoer extends Packet<PacketRemoteInAuthoriz
 		super(PacketRemoteInAuthorizeSudoer.class);
 	}
 	
-	public PacketRemoteInAuthorizeSudoer(@Nonnull UUID uuid, @Nonnull String encodedPassword, @Nonnull AuthorizationResult result) {
+	public PacketRemoteInAuthorizeSudoer(@Nonnull UUID uuid, @Nonnull AuthorizationResult result) {
 		super(PacketRemoteInAuthorizeSudoer.class);
 		
 		// Validate
 		Validate.notNull(uuid, "UUID cannot be null");
 		Validate.notNull(result, "Result cannot be null");
-		Validate.notEmpty(encodedPassword, "Password cannot be empty");
 		
 		this.sudoer = uuid;
 		this.authorized = result;

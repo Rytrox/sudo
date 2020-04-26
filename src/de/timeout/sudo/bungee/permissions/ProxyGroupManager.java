@@ -21,6 +21,7 @@ import de.timeout.sudo.netty.packets.PacketRemoteInLoadUser;
 import de.timeout.sudo.netty.packets.PacketRemoteInUnloadUser;
 import de.timeout.sudo.permissions.GroupManager;
 import de.timeout.sudo.permissions.UserConfigHandler;
+import de.timeout.sudo.security.Root;
 import de.timeout.sudo.security.Sudoer;
 
 import net.md_5.bungee.api.CommandSender;
@@ -179,10 +180,10 @@ public class ProxyGroupManager extends GroupManager<UUID> implements Listener, U
 	}
 
 	@Override
-	public void upgradeUser(Sudoer superUser, Sudoer executor) {
+	public void upgradeUser(Sudoer superUser, Root executor) {
 		// only continue if the executor is authrized
-		Validate.isTrue(executor.isAuthorized(), "For promoting a user to a sudoer the executor must be authorized");
+		Validate.isTrue(executor.isRoot(), "For promoting a user to a sudoer the executor must be root");
 		// replace user with superuser
-		
+		profiles.replace(superUser.getUniqueID(), superUser);
 	}
 }

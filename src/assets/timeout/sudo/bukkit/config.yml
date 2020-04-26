@@ -12,9 +12,16 @@ bungeecord:
   # enter how many times a bukkit server attempts to reconnect after losing connection (negative numbers for infinite)
   reconnect: 10
 
-# This setting will only be necessary if bungeecord is disabled
-# commands which require sudo
-required:
-- 'op'
-- 'stop'
-- 'gamemode'
+sudo:
+  # maximum attempts after lock
+  maxAttempts: 3
+  # lock users after to many attempts
+  lock: true
+  
+  # blocked permissions
+  permissions:
+  - 'minecraft.command.stop'
+  - 'minecraft.command.gamemode'
+  - 'bukkit.command.reload'
+  - 'bukkit.command.reload'
+  - 'bukkit.command.timings'

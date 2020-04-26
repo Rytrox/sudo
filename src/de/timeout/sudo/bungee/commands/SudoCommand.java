@@ -18,7 +18,7 @@ import net.md_5.bungee.api.plugin.Command;
 public class SudoCommand extends Command {
 	
 	private static final Sudo main = Sudo.getInstance();
-
+	
 	public SudoCommand() {
 		super("sudo");
 	}
