@@ -4,12 +4,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
-import de.timeout.sudo.groups.BaseGroup;
+import de.timeout.sudo.groups.UserGroup;
 
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.config.Configuration;
 
-public class ProxyGroup extends BaseGroup {
+public class ProxyGroup extends UserGroup {
 		
 	public ProxyGroup(String name, Configuration groupConfiguration) {
 		super(name, groupConfiguration.getString("options.prefix"),
@@ -33,7 +33,7 @@ public class ProxyGroup extends BaseGroup {
 		JsonObject options = new JsonObject();
 		// write name and options in object
 		options.addProperty("name", name);	
-		options.addProperty("default", isDefault);
+		options.addProperty("default", def);
 		options.addProperty("prefix", prefix.replace(ChatColor.COLOR_CHAR, '&'));
 		options.addProperty("suffix", prefix.replace(ChatColor.COLOR_CHAR, '&'));
 		// write options into object

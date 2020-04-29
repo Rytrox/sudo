@@ -27,7 +27,7 @@ import com.google.gson.JsonPrimitive;
 
 import de.timeout.libs.config.JsonConfig;
 import de.timeout.sudo.bukkit.Sudo;
-import de.timeout.sudo.groups.BaseGroup;
+import de.timeout.sudo.groups.UserGroup;
 import de.timeout.sudo.groups.Customizable;
 import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.groups.User;
@@ -261,8 +261,8 @@ public class BukkitUser extends PermissibleBase implements User, Storable, Custo
 			if(group != null) join(group);
 		});
 		// add him to default group if he has no group
-		if(groups.isEmpty()) join(BaseGroup.getDefaultGroup());
-		System.out.println(BaseGroup.getDefaultGroup().getName());
+		if(groups.isEmpty()) join(UserGroup.getDefaultGroup());
+		System.out.println(UserGroup.getDefaultGroup().getName());
 		
 		// load permissions
 		userConfig.getStringList(PERMISSIONS_FIELD).forEach(this::addPermission);

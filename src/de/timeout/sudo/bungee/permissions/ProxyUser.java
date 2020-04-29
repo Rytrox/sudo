@@ -22,7 +22,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
 import de.timeout.sudo.bungee.Sudo;
-import de.timeout.sudo.groups.BaseGroup;
+import de.timeout.sudo.groups.UserGroup;
 import de.timeout.sudo.groups.Customizable;
 import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.groups.User;
@@ -89,7 +89,7 @@ public class ProxyUser implements User, Storable, Customizable {
 			section.getStringList(PERMISSIONS_FIELD).forEach(this.permissions::add);
 		} else {
 			// add default group to groups
-			groups.add(BaseGroup.getDefaultGroup());
+			groups.add(UserGroup.getDefaultGroup());
 		}
 	}
 		

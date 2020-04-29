@@ -6,9 +6,9 @@ import org.bukkit.configuration.ConfigurationSection;
 
 import com.google.gson.JsonObject;
 
-import de.timeout.sudo.groups.BaseGroup;
+import de.timeout.sudo.groups.UserGroup;
 
-public class BukkitGroup extends BaseGroup {
+public class BukkitGroup extends UserGroup {
 	
 	private static final String OPTIONS = "options";
 	

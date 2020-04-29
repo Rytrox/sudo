@@ -17,9 +17,9 @@ import com.google.common.io.Files;
 import de.timeout.libs.config.JsonConfig;
 import de.timeout.sudo.bukkit.Sudo;
 import de.timeout.sudo.bukkit.permissions.BukkitUser;
+import de.timeout.sudo.groups.SudoGroup;
 import de.timeout.sudo.groups.User;
 import de.timeout.sudo.security.Root;
-import de.timeout.sudo.security.SudoGroup;
 import de.timeout.sudo.security.Sudoer;
 import de.timeout.sudo.security.SudoerConfigurable;
 

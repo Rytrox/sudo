@@ -10,24 +10,6 @@ import javax.annotation.Nonnull;
  *
  */
 public interface PermissibleBase {
-
-	/**
-	 * Adds a permission to this group. <br>
-	 * Returns false if the permission is null
-	 * 
-	 * @param permission the permission to add
-	 * @return if it succeed
-	 */
-	public boolean addPermission(String permission);
-	
-	/**
-	 * Remove a permission from this group. <br>
-	 * Returns false if the permission is null
-	 * 
-	 * @param permission the permission to remove
-	 * @return if it succeed
-	 */
-	public boolean removePermission(String permission);
 	
 	/**
 	 * Checks if this group has the permission.

@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.apache.commons.lang.Validate;
 
@@ -14,64 +15,45 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
-import de.timeout.sudo.utils.PermissionTree;
-
-public class BaseGroup implements Group, Comparable<Group>, Customizable {
+public class UserGroup extends Group implements Customizable, Inheritable<UserGroup> {
+		
+	protected final Set<UserGroup> groups = new HashSet<>();
 	
-	protected static Group defaultGroup;
-	
-	protected final PermissionTree permissions = new PermissionTree();
-	protected final Set<User> members = new HashSet<>();
-	protected final Set<Group> groups = new HashSet<>();
-	
-	protected String name;
 	protected String prefix;
 	protected String suffix;
-	protected boolean isDefault;
+	protected boolean def;
 	
 	/**
 	 * Constructor for inheritances
 	 */
-	protected BaseGroup(String name, String prefix, String suffix, boolean isDefault) {
-		this.name = name;
+	protected UserGroup(@Nonnull String name, @Nullable String prefix, @Nullable String suffix, boolean isDefault) {
+		super(name);
 		this.prefix = prefix;
 		this.suffix = suffix;
-		this.isDefault = isDefault;
-			
-		// select first loaded group as default group
-		if(defaultGroup != null) {
-			// select new default group if this group is default
-			if(isDefault) defaultGroup = this;
-		} else defaultGroup = this;
+		this.def = isDefault;
+	}
+	
+	@Override
+	public boolean hasPermission(String permission) {
+		// return true if this group has permission
+		if(!super.hasPermission(permission)) {
+			// search in extended groups
+			for(Group extended : getExtendedGroups()) {
+				// search for permission, return true if found
+				if(extended.hasPermission(permission)) return true;
+			}
+			// not found. return false
+			return false;
+		} else return true;
 	}
 	
 	/**
-	 * Returns the default group 
-	 * @author Timeout
+	 * Adds a permission to this group. <br>
+	 * Returns false if the permission is null
 	 * 
-	 * @return
+	 * @param permission the permission to add
+	 * @return if it succeed
 	 */
-	@Nonnull
-	public static Group getDefaultGroup() {
-		return defaultGroup;
-	}
-	
-	@Override
-	public boolean isMember(User user) {
-		return members.contains(user);
-	}
-
-	@Override
-	public boolean join(User user) {
-		return members.add(user);
-	}
-
-	@Override
-	public boolean kick(User user) {
-		return members.remove(user);
-	}
-
-	@Override
 	public boolean addPermission(String permission) {
 		// if permission is not null or empty
 		if(permission != null && !permission.isEmpty()) {
@@ -82,7 +64,13 @@ public class BaseGroup implements Group, Comparable<Group>, Customizable {
 		return false;
 	}
 
-	@Override
+	/**
+	 * Remove a permission from this group. <br>
+	 * Returns false if the permission is null
+	 * 
+	 * @param permission the permission to remove
+	 * @return if it succeed
+	 */
 	public boolean removePermission(String permission) {
 		// if permission is not null
 		if(permission != null) {
@@ -93,31 +81,28 @@ public class BaseGroup implements Group, Comparable<Group>, Customizable {
 		return false;
 	}
 
-	@Override
-	public boolean hasPermission(String permission) {
-		// return true if this group has permission
-		if(!permissions.contains(permission)) {
-			// search in extended groups
-			for(Group extended : getExtendedGroups()) {
-				// search for permission, return true if found
-				if(extended.hasPermission(permission)) return true;
-			}
-			// not found. return false
-			return false;
-		} else return true;
+	/**
+	 * Adds a user to this group. <br>
+	 * Returns false if the user is null
+	 * 
+	 * @param user the user
+	 * @return true if the remove succeed else false
+	 */
+	public boolean join(User user) {
+		return members.add(user);
 	}
 
-	@Override
-	public Set<String> getPermissions() {
-		// return list
-		return permissions.toSet();
+	/**
+	 * Removes a user from this group <br>
+	 * Returns false if the user is null
+	 * 
+	 * @param user the user
+	 * @return true if the remove succeed else false
+	 */
+	public boolean kick(User user) {
+		return members.remove(user);
 	}
-
-	@Override
-	public String getName() {
-		return name;
-	}
-
+	
 	@Override
 	public String getPrefix() {
 		return prefix;
@@ -128,13 +113,12 @@ public class BaseGroup implements Group, Comparable<Group>, Customizable {
 		return suffix;
 	}
 
-	@Override
 	public boolean isDefault() {
-		return isDefault;
+		return def;
 	}
 
 	@Override
-	public Collection<Group> getExtendedGroups() {
+	public Collection<UserGroup> getExtendedGroups() {
 		return new ArrayList<>(groups);
 	}
 
@@ -156,7 +140,7 @@ public class BaseGroup implements Group, Comparable<Group>, Customizable {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		BaseGroup other = (BaseGroup) obj;
+		UserGroup other = (UserGroup) obj;
 		return Objects.equals(name, other.name) && Objects.equals(permissions, other.permissions);
 	}
 
@@ -166,7 +150,7 @@ public class BaseGroup implements Group, Comparable<Group>, Customizable {
 		JsonObject object = new JsonObject();
 		// write primitives in object
 		object.addProperty("name", name);
-		object.addProperty("default", isDefault);
+		object.addProperty("default", def);
 		object.addProperty("prefix", prefix);
 		object.addProperty("suffix", suffix);
 		
@@ -199,7 +183,7 @@ public class BaseGroup implements Group, Comparable<Group>, Customizable {
 	}
 
 	@Override
-	public void extend(Group other) {
+	public void extend(UserGroup other) {
 		// Validate
 		Validate.notNull(other, "Other group cannot be null");
 		// add to set

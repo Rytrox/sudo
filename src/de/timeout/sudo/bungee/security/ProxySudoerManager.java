@@ -13,7 +13,7 @@ import com.google.common.io.Files;
 
 import de.timeout.libs.Reflections;
 import de.timeout.sudo.bungee.Sudo;
-import de.timeout.sudo.security.SudoGroup;
+import de.timeout.sudo.groups.SudoGroup;
 import de.timeout.sudo.security.SudoerConfigurable;
 
 import net.md_5.bungee.config.Configuration;

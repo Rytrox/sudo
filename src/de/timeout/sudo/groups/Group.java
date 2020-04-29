@@ -1,49 +1,95 @@
 package de.timeout.sudo.groups;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
 import javax.annotation.Nonnull;
 
+import org.apache.commons.lang.Validate;
+
 import com.google.gson.JsonObject;
+
+import de.timeout.sudo.utils.PermissionTree;
 
 /**
  * Represents a group which handles permissions 
  * @author Timeout
  *
  */
-public interface Group extends PermissibleBase, Collectable<User> {
+public abstract class Group implements Comparable<Group>, PermissibleBase, Collectable<User> {
 	
+	protected final Set<User> members = new HashSet<>();
+
+	protected final PermissionTree permissions = new PermissionTree();
+	
+	protected String name;
+	
+	public Group(@Nonnull String name) {
+		// Validate
+		Validate.notEmpty(name, "Groupname can neither be null nor empty");
+		this.name = name;
+	}
+
+	@Override
+	public boolean hasPermission(String permission) {
+		// return true if this group has permission
+		return permissions.contains(permission);
+	}
+
+	@Override
+	public Set<String> getPermissions() {
+		// return list
+		return permissions.toSet();
+	}
+		
 	/**
 	 * Returns the name of this instance
 	 * @return the name of this instance
 	 */
 	@Nonnull
-	public String getName();
+	public String getName() {
+		return name;
+	}
 	
-	/**
-	 * Returns a list of extended group of this group. <br>
-	 * Is empty of the group has no inheritance
-	 * 
-	 * @return the super group or null
-	 */
 	@Nonnull
-	public Collection<Group> getExtendedGroups();
+	public Collection<User> getMembers() {
+		return new ArrayList<>(members);
+	}
 	
-	/**
-	 * Extends this group from another (Syntax "this extends other")
-	 * @author Timeout
-	 * 
-	 * @param other the other group
-	 * @throws IllegalArgumentException if the other group is null
-	 */
-	public void extend(@Nonnull Group other);
+	@Override
+	public boolean isMember(User user) {
+		return members.contains(user);
+	}
+
+	@Override
+	public int compareTo(Group arg0) {
+		// Validate
+		Validate.notNull(arg0, "Other group cannot be null");
+		
+		return this.name.compareTo(arg0.name);
+	}
 	
-	/**
-	 * Checks if this group is a default group
-	 * @return if this group is a default group
-	 */
-	public boolean isDefault();
-	
+	@Override
+	public int hashCode() {
+		return Objects.hash(members, name, permissions);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Group other = (Group) obj;
+		return Objects.equals(members, other.members) && Objects.equals(name, other.name)
+				&& Objects.equals(permissions, other.permissions);
+	}
+
 	/**
 	 * Compiles the group into Json-Objects
 	 * @author Timeout
@@ -51,5 +97,5 @@ public interface Group extends PermissibleBase, Collectable<User> {
 	 * @return the group as JsonObject
 	 */
 	@Nonnull
-	public JsonObject toJson();
+	public abstract JsonObject toJson();
 }
