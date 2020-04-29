@@ -1,8 +1,6 @@
-package de.timeout.sudo.security;
+package de.timeout.sudo.users;
 
 import javax.annotation.Nonnull;
-
-import de.timeout.sudo.groups.User;
 
 /**
  * Interface for Sudoers

@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import de.timeout.sudo.bungee.Sudo;
-import de.timeout.sudo.groups.User;
 import de.timeout.sudo.netty.packets.PacketRemoteInSudoUsage;
-import de.timeout.sudo.security.Sudoer;
+import de.timeout.sudo.users.Sudoer;
+import de.timeout.sudo.users.User;
 
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;

@@ -28,9 +28,9 @@ import com.google.gson.JsonPrimitive;
 import de.timeout.libs.config.JsonConfig;
 import de.timeout.sudo.bukkit.Sudo;
 import de.timeout.sudo.groups.UserGroup;
-import de.timeout.sudo.groups.Customizable;
+import de.timeout.sudo.users.User;
 import de.timeout.sudo.groups.Group;
-import de.timeout.sudo.groups.User;
+import de.timeout.sudo.utils.Customizable;
 import de.timeout.sudo.utils.PermissionTree;
 import de.timeout.sudo.utils.Storable;
 

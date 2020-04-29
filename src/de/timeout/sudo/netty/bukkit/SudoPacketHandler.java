@@ -8,12 +8,12 @@ import de.timeout.libs.Reflections;
 import de.timeout.sudo.bukkit.Sudo;
 import de.timeout.sudo.bukkit.permissions.BukkitUser;
 import de.timeout.sudo.bukkit.security.BukkitSudoer;
-import de.timeout.sudo.groups.User;
 import de.timeout.sudo.netty.packets.Packet;
 import de.timeout.sudo.netty.packets.PacketRemoteInAuthorizeSudoer;
 import de.timeout.sudo.netty.packets.PacketRemoteInAuthorizeSudoer.AuthorizationResult;
 import de.timeout.sudo.netty.packets.PacketRemoteInSudoUsage;
-import de.timeout.sudo.security.Root;
+import de.timeout.sudo.users.Root;
+import de.timeout.sudo.users.User;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;

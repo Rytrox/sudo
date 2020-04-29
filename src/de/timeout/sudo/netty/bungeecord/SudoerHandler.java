@@ -1,11 +1,11 @@
 package de.timeout.sudo.netty.bungeecord;
 
 import de.timeout.sudo.bungee.Sudo;
-import de.timeout.sudo.groups.User;
 import de.timeout.sudo.netty.packets.PacketProxyInAuthorizeSudoer;
 import de.timeout.sudo.netty.packets.PacketRemoteInAuthorizeSudoer;
 import de.timeout.sudo.netty.packets.PacketRemoteInAuthorizeSudoer.AuthorizationResult;
-import de.timeout.sudo.security.Sudoer;
+import de.timeout.sudo.users.Sudoer;
+import de.timeout.sudo.users.User;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;

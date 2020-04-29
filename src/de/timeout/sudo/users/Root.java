@@ -1,4 +1,4 @@
-package de.timeout.sudo.security;
+package de.timeout.sudo.users;
 
 public interface Root {
 

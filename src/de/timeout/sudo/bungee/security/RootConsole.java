@@ -1,6 +1,6 @@
 package de.timeout.sudo.bungee.security;
 
-import de.timeout.sudo.security.Root;
+import de.timeout.sudo.users.Root;
 
 /**
  * Implementation for RootConsole

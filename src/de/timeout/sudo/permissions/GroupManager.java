@@ -15,12 +15,15 @@ import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableGraph;
 
 import de.timeout.sudo.groups.Group;
-import de.timeout.sudo.groups.User;
+import de.timeout.sudo.groups.UserGroup;
 import de.timeout.sudo.groups.exception.CircularInheritanceException;
-import de.timeout.sudo.security.Root;
-import de.timeout.sudo.security.Sudoer;
+import de.timeout.sudo.users.Root;
+import de.timeout.sudo.users.Sudoer;
+import de.timeout.sudo.users.User;
 
 public abstract class GroupManager<T> {
+	
+	protected static UserGroup defaultGroup;
 
 	protected final MutableGraph<Group> groups = GraphBuilder.directed().build();
 	protected final Map<T, User> profiles = new HashMap<>();
@@ -84,7 +87,7 @@ public abstract class GroupManager<T> {
 	 * 
 	 * @param name the name of the group
 	 */
-	protected abstract Group loadGroup(String name);
+	protected abstract UserGroup loadGroup(String name);
 	
 	/**
 	 * Upgrades a normal User to super-user
@@ -104,7 +107,7 @@ public abstract class GroupManager<T> {
 	 * @throws CircularInheritanceException if the group has a circular dependency
 	 * @throws IllegalArgumentException if any group is null
 	 */
-	protected void bindInheritance(@Nonnull Group group, @Nonnull Group extend) throws CircularInheritanceException {
+	protected void bindInheritance(@Nonnull UserGroup group, @Nonnull UserGroup extend) throws CircularInheritanceException {
 		// Validate
 		Validate.notNull(group, "Group cannot be null");
 		Validate.notNull(extend, "Extends group cannot be null");

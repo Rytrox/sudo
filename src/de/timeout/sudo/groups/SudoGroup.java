@@ -9,8 +9,8 @@ import org.apache.commons.lang.Validate;
 
 import com.google.gson.JsonObject;
 
-import de.timeout.sudo.security.Root;
-import de.timeout.sudo.security.Sudoer;
+import de.timeout.sudo.users.Root;
+import de.timeout.sudo.users.Sudoer;
 
 /**
  * Representation of the SudoGroup

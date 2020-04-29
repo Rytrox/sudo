@@ -16,7 +16,7 @@ import de.timeout.libs.BukkitReflections;
 import de.timeout.libs.Reflections;
 import de.timeout.sudo.bukkit.Sudo;
 import de.timeout.sudo.bukkit.permissions.BukkitUser;
-import de.timeout.sudo.groups.User;
+import de.timeout.sudo.users.User;
 
 public class VanillaPermissionOverrider implements Listener {
 

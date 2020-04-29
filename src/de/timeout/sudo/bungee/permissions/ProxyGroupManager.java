@@ -15,14 +15,14 @@ import org.apache.commons.lang.Validate;
 
 import de.timeout.sudo.bungee.Sudo;
 import de.timeout.sudo.groups.Group;
-import de.timeout.sudo.groups.User;
 import de.timeout.sudo.groups.exception.CircularInheritanceException;
 import de.timeout.sudo.netty.packets.PacketRemoteInLoadUser;
 import de.timeout.sudo.netty.packets.PacketRemoteInUnloadUser;
 import de.timeout.sudo.permissions.GroupManager;
 import de.timeout.sudo.permissions.UserConfigHandler;
-import de.timeout.sudo.security.Root;
-import de.timeout.sudo.security.Sudoer;
+import de.timeout.sudo.users.Root;
+import de.timeout.sudo.users.Sudoer;
+import de.timeout.sudo.users.User;
 
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;

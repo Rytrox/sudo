@@ -11,8 +11,8 @@ import org.apache.commons.lang.Validate;
 
 import de.timeout.libs.Reflections;
 import de.timeout.sudo.bungee.permissions.ProxyUser;
-import de.timeout.sudo.security.Root;
-import de.timeout.sudo.security.Sudoer;
+import de.timeout.sudo.users.Root;
+import de.timeout.sudo.users.Sudoer;
 import de.timeout.sudo.utils.PasswordCryptor;
 
 import net.md_5.bungee.config.Configuration;

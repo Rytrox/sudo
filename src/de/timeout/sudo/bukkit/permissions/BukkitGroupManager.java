@@ -21,12 +21,12 @@ import de.timeout.sudo.bukkit.Sudo;
 import de.timeout.sudo.bukkit.listener.VanillaPermissionOverrider;
 import de.timeout.sudo.bukkit.security.BukkitSudoer;
 import de.timeout.sudo.groups.Group;
-import de.timeout.sudo.groups.User;
 import de.timeout.sudo.groups.exception.CircularInheritanceException;
 import de.timeout.sudo.netty.packets.PacketRemoteInGroupInheritances;
 import de.timeout.sudo.permissions.GroupManager;
-import de.timeout.sudo.security.Root;
-import de.timeout.sudo.security.Sudoer;
+import de.timeout.sudo.users.Root;
+import de.timeout.sudo.users.Sudoer;
+import de.timeout.sudo.users.User;
 
 public class BukkitGroupManager extends GroupManager<ServerOperator> {
 	

@@ -7,7 +7,7 @@ import javax.annotation.Nonnull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import de.timeout.sudo.groups.User;
+import de.timeout.sudo.users.User;
 
 import io.netty.buffer.ByteBuf;
 

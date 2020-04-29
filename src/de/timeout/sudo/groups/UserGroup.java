@@ -15,6 +15,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
+import de.timeout.sudo.users.User;
+import de.timeout.sudo.utils.Customizable;
+
 public class UserGroup extends Group implements Customizable, Inheritable<UserGroup> {
 		
 	protected final Set<UserGroup> groups = new HashSet<>();

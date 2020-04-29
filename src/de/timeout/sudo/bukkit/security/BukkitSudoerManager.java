@@ -18,10 +18,10 @@ import de.timeout.libs.config.JsonConfig;
 import de.timeout.sudo.bukkit.Sudo;
 import de.timeout.sudo.bukkit.permissions.BukkitUser;
 import de.timeout.sudo.groups.SudoGroup;
-import de.timeout.sudo.groups.User;
-import de.timeout.sudo.security.Root;
-import de.timeout.sudo.security.Sudoer;
 import de.timeout.sudo.security.SudoerConfigurable;
+import de.timeout.sudo.users.Root;
+import de.timeout.sudo.users.Sudoer;
+import de.timeout.sudo.users.User;
 
 public class BukkitSudoerManager implements SudoerConfigurable {
 

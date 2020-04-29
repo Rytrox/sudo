@@ -12,6 +12,9 @@ import org.apache.commons.lang.Validate;
 
 import com.google.gson.JsonObject;
 
+import de.timeout.sudo.users.User;
+import de.timeout.sudo.utils.Collectable;
+import de.timeout.sudo.utils.PermissibleBase;
 import de.timeout.sudo.utils.PermissionTree;
 
 /**

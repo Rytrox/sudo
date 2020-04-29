@@ -13,8 +13,8 @@ import javax.annotation.Nonnull;
 import org.apache.commons.lang.Validate;
 
 import de.timeout.sudo.bungee.Sudo;
-import de.timeout.sudo.groups.User;
-import de.timeout.sudo.security.Sudoer;
+import de.timeout.sudo.users.Sudoer;
+import de.timeout.sudo.users.User;
 
 import net.jafama.FastMath;
 import net.md_5.bungee.api.ChatColor;

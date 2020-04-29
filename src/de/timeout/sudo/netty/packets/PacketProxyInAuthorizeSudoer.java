@@ -7,7 +7,7 @@ import javax.annotation.Nonnull;
 
 import org.apache.commons.lang.Validate;
 
-import de.timeout.sudo.groups.User;
+import de.timeout.sudo.users.User;
 import de.timeout.sudo.utils.PasswordCryptor;
 
 import io.netty.buffer.ByteBuf;

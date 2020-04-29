@@ -5,7 +5,7 @@ import java.util.List;
 
 import de.timeout.sudo.bukkit.security.RootRequiredCommand;
 import de.timeout.sudo.groups.Group;
-import de.timeout.sudo.security.Root;
+import de.timeout.sudo.users.Root;
 
 import net.md_5.bungee.api.CommandSender;
 

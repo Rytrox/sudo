@@ -1,4 +1,4 @@
-package de.timeout.sudo.groups;
+package de.timeout.sudo.users;
 
 import java.util.Collection;
 import java.util.UUID;
@@ -6,6 +6,10 @@ import java.util.UUID;
 import javax.annotation.Nonnull;
 
 import com.google.gson.JsonObject;
+
+import de.timeout.sudo.groups.Group;
+import de.timeout.sudo.utils.Collectable;
+import de.timeout.sudo.utils.PermissibleBase;
 
 /**
  * Represents User which can be managed in groups

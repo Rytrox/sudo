@@ -8,7 +8,7 @@ import org.bukkit.permissions.Permission;
 
 import de.timeout.libs.BukkitReflections;
 import de.timeout.libs.Reflections;
-import de.timeout.sudo.security.Root;
+import de.timeout.sudo.users.Root;
 
 /**
  * Permissions for Console which is the only root console

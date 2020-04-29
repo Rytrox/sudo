@@ -1,4 +1,4 @@
-package de.timeout.sudo.groups;
+package de.timeout.sudo.utils;
 
 import java.util.Set;
 
