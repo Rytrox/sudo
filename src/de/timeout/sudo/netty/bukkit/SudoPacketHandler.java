@@ -30,7 +30,10 @@ class SudoPacketHandler extends SimpleChannelInboundHandler<Packet<?>> implement
 		if(raw instanceof PacketRemoteInSudoUsage) {
 			// get Packet
 			PacketRemoteInSudoUsage packet = (PacketRemoteInSudoUsage) raw;
+			// get User
+			User user = main.getGroupManager().getUser(packet.getUniqueID());
 			// await sudo authentification
+			main.getSudoHandler().awaitAuthentification(user, packet.getCommand());
 		} else if(raw instanceof PacketRemoteInAuthorizeSudoer) {
 			// get Packet
 			PacketRemoteInAuthorizeSudoer packet = (PacketRemoteInAuthorizeSudoer) raw;
@@ -44,12 +47,12 @@ class SudoPacketHandler extends SimpleChannelInboundHandler<Packet<?>> implement
 				BukkitSudoer sudoer = BukkitSudoer.upgradeUserToSudoer((BukkitUser) user, "", this);
 				// set authorized to true
 				Reflections.setField(authorizedField, sudoer, true);
-				// upgrade user
-				main.getGroupManager().upgradeUser(sudoer, this);
+				// enables root access
+				sudoer.enableRoot();
 			}
 		}
 	}
-
+	
 	@Override
 	public boolean enableRoot() {
 		return false;

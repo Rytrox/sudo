@@ -1,10 +1,17 @@
 package de.timeout.sudo.bukkit.security;
 
+import java.lang.reflect.Field;
+
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.permissions.Permission;
 
+import de.timeout.libs.Reflections;
+import de.timeout.libs.config.JsonConfig;
 import de.timeout.sudo.bukkit.Sudo;
 import de.timeout.sudo.bukkit.permissions.BukkitUser;
 import de.timeout.sudo.security.Root;
@@ -19,6 +26,8 @@ import de.timeout.sudo.utils.PasswordCryptor;
 public final class BukkitSudoer extends BukkitUser implements Sudoer {
 	
 	private static final Sudo main = Sudo.getInstance();
+	
+	private static final Field decodedsudoersField = Reflections.getField(BukkitSudoerManager.class, "decodedSudoers");
 	
 	private boolean authorized;
 	private boolean root;
@@ -67,6 +76,37 @@ public final class BukkitSudoer extends BukkitUser implements Sudoer {
 		return sudoer;
 	}
 	
+	/**
+	 * Loads a Sudoer from the configuration. Only works if the server runs in Bukkit-Mode
+	 * @author Timeout
+	 * 
+	 * @param user the user you want to load
+	 * @return the superuser of the user
+	 */
+	@Nullable
+	public static BukkitSudoer loadSudoerFromConfiguration(@Nonnull BukkitUser user) {
+		// Validate
+		Validate.notNull(user, "User cannot be null");
+		Validate.isTrue(!main.bungeecordEnabled(), "File-Support is disabled while using BungeeCord-Mode!");
+		
+		// check if user is not already a sudoer
+		if(!(user instanceof BukkitSudoer)) {
+			// get Configuration from user
+			JsonConfig sudoers = (JsonConfig) Reflections.getValue(decodedsudoersField, main.getSudoerManager());
+			// get ConfigurationSection
+			ConfigurationSection section = sudoers.getConfigurationSection(user.getUniqueID().toString());
+			
+			// return null if the section is found
+			if(section != null) {
+				// create Sudoer
+				BukkitSudoer sudoer = new BukkitSudoer(user, section.getString("password"));
+				// add to sudo group
+				main.getSudoerManager().getSudoGroup().join(sudoer);
+			}
+			return null;
+		} else return (BukkitSudoer) user;
+	}
+	
 	@Override
 	public boolean isAuthorized() {
 		return authorized;
@@ -79,8 +119,6 @@ public final class BukkitSudoer extends BukkitUser implements Sudoer {
 		// return authorized
 		return authorized;
 	}
-	
-	
 
 	@Override
 	public void deauthorize() {
@@ -127,5 +165,21 @@ public final class BukkitSudoer extends BukkitUser implements Sudoer {
 	@Override
 	public boolean isRoot() {
 		return root && isAuthorized();
+	}
+
+	@Override
+	public boolean isOp() {
+		return root && isAuthorized();
+	}
+
+	@Override
+	public boolean hasPermission(Permission perm) {
+		return this.hasPermission(perm.getName());
+	}
+
+	@Override
+	public boolean hasPermission(String inName) {
+		// return true if user is authorized
+		return isOp() || super.hasPermission(inName);
 	}
 }

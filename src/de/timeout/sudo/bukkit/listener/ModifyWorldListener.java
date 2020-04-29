@@ -8,10 +8,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 
-import de.timeout.sudo.bukkit.Sudo;
-
 import net.md_5.bungee.api.ChatColor;
-
 
 public class ModifyWorldListener implements Listener {
 
@@ -39,7 +36,6 @@ public class ModifyWorldListener implements Listener {
 		if(!event.isCancelled()) {
 			// get Player
 			Player p = event.getPlayer();
-			Sudo.getInstance().getGroupManager().getUserFromOperator(p).getGroups().forEach(group -> System.out.println(group.toJson()));
 			// get permission
 			String permission = String.format("minecraft.modifyworld.%s", event.getBlock().getType().name().toLowerCase(Locale.ENGLISH));
 			// continue if player has permission

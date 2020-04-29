@@ -5,13 +5,15 @@ import java.util.UUID;
 
 import javax.annotation.Nonnull;
 
+import org.apache.commons.lang.Validate;
+
+import de.timeout.sudo.groups.User;
+import de.timeout.sudo.utils.PasswordCryptor;
+
 import io.netty.buffer.ByteBuf;
-import io.netty.util.internal.ThreadLocalRandom;
 
 public class PacketProxyInAuthorizeSudoer extends Packet<PacketProxyInAuthorizeSudoer> {
-	
-	private static final ThreadLocalRandom random = ThreadLocalRandom.current();
-		
+			
 	private UUID uuid;
 	private String password;
 	
@@ -22,6 +24,23 @@ public class PacketProxyInAuthorizeSudoer extends Packet<PacketProxyInAuthorizeS
 	 */
 	public PacketProxyInAuthorizeSudoer() {
 		super(PacketProxyInAuthorizeSudoer.class);
+	}
+	
+	/**
+	 * Creates a new Packet which authorizes the Packet
+	 * @author Timeout
+	 *
+	 * @param user the user you want to authorize
+	 * @param password the password uncrypted
+	 */
+	public PacketProxyInAuthorizeSudoer(@Nonnull User user, @Nonnull String password) {
+		super(PacketProxyInAuthorizeSudoer.class);
+		// Validate
+		Validate.notNull(user, "User cannot be null");
+		Validate.notEmpty(password, "Password can neither be null nor empty");
+		
+		this.uuid = user.getUniqueID();
+		this.password = PasswordCryptor.encode(password);
 	}
 
 	@Override

@@ -9,6 +9,8 @@ import javax.annotation.Nullable;
 
 import de.timeout.libs.config.ColoredLogger;
 import de.timeout.libs.config.ConfigCreator;
+import de.timeout.sudo.bungee.commands.GroupaddCommand;
+import de.timeout.sudo.bungee.commands.SudoCommand;
 import de.timeout.sudo.bungee.permissions.ProxyGroupManager;
 import de.timeout.sudo.bungee.security.ProxySudoHandler;
 import de.timeout.sudo.bungee.security.ProxySudoerManager;
@@ -111,6 +113,8 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 		startSocketServer();
 		// initialize manager
 		initializeManager();
+		// initialize command
+		registerCommands();
 	}
 
 	private void initializeManager() {
@@ -123,6 +127,11 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 		// initialize sudo handler
 		sudoHandler = new ProxySudoHandler();
 		this.getProxy().getPluginManager().registerListener(this, sudoHandler);
+	}
+	
+	private void registerCommands() {
+		this.getProxy().getPluginManager().registerCommand(instance, new SudoCommand());
+		this.getProxy().getPluginManager().registerCommand(instance, new GroupaddCommand());
 	}
 
 	@Override
@@ -147,14 +156,14 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 	
 	private void loadConfigurations() {
 		// load ConfigCreator
-		ConfigCreator creator = new ConfigCreator(getDataFolder(), "assets/rytrox/sudo/bungee");
+		ConfigCreator creator = new ConfigCreator(getDataFolder(), "/assets/timeout/sudo/bungee");
 		// create configs
 		try {
 			creator.loadRessource(CONFIG_YML);
 			creator.loadRessource(GROUPS_YML);
 			creator.loadRessource("sudoers.out");
 		} catch (IOException e) {
-			LOG.log(Level.WARNING, "&cCannot load configurations from Plugin.");
+			LOG.log(Level.WARNING, "&cCannot load configurations from Plugin.", e);
 		}
 	}
 	

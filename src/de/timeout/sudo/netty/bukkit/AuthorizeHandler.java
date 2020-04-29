@@ -34,6 +34,12 @@ public class AuthorizeHandler extends SimpleChannelInboundHandler<PacketRemoteIn
 		}
 	}
 	
+	@Override
+	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+		success = false;
+	}
+
+
 	/**
 	 * Send packet to next handler if the connection is authorized!
 	 */

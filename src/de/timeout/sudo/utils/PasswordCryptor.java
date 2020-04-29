@@ -74,11 +74,9 @@ public final class PasswordCryptor {
 	    try {
 	      SecretKeyFactory f = SecretKeyFactory.getInstance(ALGORITHM);
 	      return f.generateSecret(spec).getEncoded();
-	    }
-	    catch (NoSuchAlgorithmException ex) {
+	    } catch (NoSuchAlgorithmException ex) {
 	      throw new IllegalStateException("Missing algorithm: " + ALGORITHM, ex);
-	    }
-	    catch (InvalidKeySpecException ex) {
+	    } catch (InvalidKeySpecException ex) {
 	      throw new IllegalStateException("Invalid SecretKeyFactory", ex);
 	    }
 	}

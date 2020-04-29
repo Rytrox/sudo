@@ -12,6 +12,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
+import de.timeout.libs.BukkitReflections;
 import de.timeout.libs.Reflections;
 import de.timeout.sudo.bukkit.Sudo;
 import de.timeout.sudo.bukkit.permissions.BukkitUser;
@@ -19,7 +20,7 @@ import de.timeout.sudo.groups.User;
 
 public class VanillaPermissionOverrider implements Listener {
 
-	private static final Class<?> crafthumanentityClass = Reflections.getCraftBukkitClass("entity.CraftHumanEntity");
+	private static final Class<?> crafthumanentityClass = BukkitReflections.getCraftBukkitClass("entity.CraftHumanEntity");
 	private static final Field permField = Reflections.getField(crafthumanentityClass, "perm");
 	
 	private static final Sudo main = Sudo.getInstance();
@@ -29,7 +30,7 @@ public class VanillaPermissionOverrider implements Listener {
 		// get Player
 		Player player = event.getPlayer();
 		// try to load profile
-		BukkitUser user = (BukkitUser) main.getGroupManager().getUserFromOperator(player);
+		BukkitUser user = (BukkitUser) main.getGroupManager().getUser(player);
 		// if user could be loaded
 		overridePermissionSystem(player, user);
 	}
