@@ -1,4 +1,4 @@
-package de.timeout.sudo.bukkit.security;
+package de.timeout.sudo.bungee.security;
 
 import java.util.Objects;
 
@@ -61,7 +61,7 @@ public abstract class RootRequiredCommand extends Command {
 		// return root console if sender is console
 		if(!sender.equals(main.getProxy().getConsole())) {
 			// get User of the player
-			User user = main.getGroupManager().getUser((ProxiedPlayer) sender);
+			User user = main.getUserManager().getUser((ProxiedPlayer) sender);
 			// return sudoer if the user is a sudoer and authorized. Else return null
 			return user instanceof Sudoer && ((Sudoer) user).isAuthorized() ? (Sudoer) user : null;
 		} return console;

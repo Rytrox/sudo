@@ -30,7 +30,6 @@ import de.timeout.sudo.bukkit.Sudo;
 import de.timeout.sudo.groups.UserGroup;
 import de.timeout.sudo.users.User;
 import de.timeout.sudo.groups.Group;
-import de.timeout.sudo.utils.Customizable;
 import de.timeout.sudo.utils.PermissionTree;
 import de.timeout.sudo.utils.Storable;
 
@@ -41,7 +40,7 @@ import net.md_5.bungee.api.ChatColor;
  * @author Timeout
  *
  */
-public class BukkitUser extends PermissibleBase implements User, Storable, Customizable {
+public class BukkitUser extends PermissibleBase implements User, Storable {
 	
 	private static final String PERMISSIONS_FIELD = "permissions";
 	private static final String GROUPS_FIELD = "groups";
@@ -50,7 +49,7 @@ public class BukkitUser extends PermissibleBase implements User, Storable, Custo
 	private static final Gson JSON_BUILDER = new GsonBuilder().setPrettyPrinting().create();
 		
 	protected final PermissionTree permissions = new PermissionTree();
-	protected final Set<Group> groups = new HashSet<>();
+	protected final Set<UserGroup> groups = new HashSet<>();
 	
 	protected OfflinePlayer operator;
 	protected String prefix;
@@ -65,7 +64,7 @@ public class BukkitUser extends PermissibleBase implements User, Storable, Custo
 	protected BukkitUser(ServerOperator opable) {
 		super(opable);
 		// add him to default group
-		join(BukkitGroup.getDefaultGroup());
+		join(main.getGroupManager().getDefaultGroup());
 	}
 	
 	/**
@@ -99,7 +98,7 @@ public class BukkitUser extends PermissibleBase implements User, Storable, Custo
 			// get group
 			Group group = main.getGroupManager().getGroupByName(groupname.getAsString());
 			// join if group yould be found
-			if(group != null) join(group);
+			if(group instanceof UserGroup) join((UserGroup) group);
 		});
 		
 		// load own permissions
@@ -117,12 +116,10 @@ public class BukkitUser extends PermissibleBase implements User, Storable, Custo
 		/* DO NOTHING. SUDO DOES NOT ALLOW OP */
 	}
 
-	@Override
 	public boolean addPermission(String permission) {
 		return permissions.add(permission);
 	}
 
-	@Override
 	public boolean removePermission(String permission) {
 		return permissions.remove(permission);
 	}
@@ -154,8 +151,7 @@ public class BukkitUser extends PermissibleBase implements User, Storable, Custo
 		return this.getUniqueID().compareTo(o.getUniqueID());
 	}
 
-	@Override
-	public boolean join(@Nonnull Group element) {
+	public boolean join(@Nonnull UserGroup element) {
 		// add to set
 		if(groups.add(element)) {
 			// apply group
@@ -165,8 +161,7 @@ public class BukkitUser extends PermissibleBase implements User, Storable, Custo
 		return true;
 	}
 
-	@Override
-	public boolean kick(@Nonnull Group element) {
+	public boolean kick(@Nonnull UserGroup element) {
 		// remove from group
 		if(element.kick(this)) {
 			// apply remove
@@ -176,7 +171,7 @@ public class BukkitUser extends PermissibleBase implements User, Storable, Custo
 	}
 
 	@Override
-	public boolean isMember(@Nonnull Group element) {
+	public boolean isMember(@Nonnull UserGroup element) {
 		return groups.contains(element);
 	}
 
@@ -258,11 +253,10 @@ public class BukkitUser extends PermissibleBase implements User, Storable, Custo
 			// get group
 			Group group = main.getGroupManager().getGroupByName(groupname);
 			// add to group if group has been found
-			if(group != null) join(group);
+			if(group instanceof UserGroup) join((UserGroup) group);
 		});
 		// add him to default group if he has no group
-		if(groups.isEmpty()) join(UserGroup.getDefaultGroup());
-		System.out.println(UserGroup.getDefaultGroup().getName());
+		if(groups.isEmpty()) join(main.getGroupManager().getDefaultGroup());
 		
 		// load permissions
 		userConfig.getStringList(PERMISSIONS_FIELD).forEach(this::addPermission);
@@ -284,7 +278,7 @@ public class BukkitUser extends PermissibleBase implements User, Storable, Custo
 	}
 
 	@Override
-	public Collection<Group> getGroups() {
+	public Collection<UserGroup> getMembers() {
 		return new ArrayList<>(groups);
 	}
 

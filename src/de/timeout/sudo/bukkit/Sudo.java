@@ -17,8 +17,8 @@ import de.timeout.sudo.bukkit.listener.BukkitModeListener;
 import de.timeout.sudo.bukkit.listener.ModifyWorldListener;
 import de.timeout.sudo.bukkit.listener.VanillaPermissionOverrider;
 import de.timeout.sudo.bukkit.permissions.BukkitGroupManager;
+import de.timeout.sudo.bukkit.permissions.BukkitUserManager;
 import de.timeout.sudo.bukkit.security.BukkitSudoHandler;
-import de.timeout.sudo.bukkit.security.BukkitSudoerManager;
 import de.timeout.sudo.netty.bukkit.BukkitSocket;
 import de.timeout.sudo.permissions.GroupConfigurable;
 
@@ -40,7 +40,7 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 	
 	private BukkitSocket netty;
 	private BukkitGroupManager groupManager;
-	private BukkitSudoerManager sudoerManager;
+	private BukkitUserManager userManager;
 	private BukkitSudoHandler sudoHandler;
 
 	/**
@@ -107,14 +107,14 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 	}
 	
 	/**
-	 * Returns the sudoer manager. Cannot be null
+	 * Returns the user manager. Cannot be null
 	 * @author Timeout
 	 * 
-	 * @return the sudoer manager. Cannot be null
+	 * @return the user manager. Cannot be null
 	 */
 	@Nonnull
-	public BukkitSudoerManager getSudoerManager() {
-		return sudoerManager;
+	public BukkitUserManager getUserManager() {
+		return userManager;
 	}
 	
 	private void startSocketClient() {
@@ -155,7 +155,7 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 		Bukkit.getPluginManager().registerEvents(new VanillaPermissionOverrider(), this);
 		
 		// create BukkitSudoerManager
-		sudoerManager = new BukkitSudoerManager();
+		userManager = new BukkitUserManager();
 		
 		// create BukkitSudoHandler
 		sudoHandler = new BukkitSudoHandler();

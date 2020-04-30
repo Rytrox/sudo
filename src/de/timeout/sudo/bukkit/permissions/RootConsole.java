@@ -1,4 +1,4 @@
-package de.timeout.sudo.bukkit.security;
+package de.timeout.sudo.bukkit.permissions;
 
 import java.lang.reflect.Field;
 

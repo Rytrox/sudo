@@ -31,7 +31,7 @@ public class BukkitSudoHandler implements Listener {
 	@EventHandler
 	public void onPasswordInput(AsyncPlayerChatEvent event) {
 		// get User
-		User user = main.getGroupManager().getUser(event.getPlayer());
+		User user = main.getUserManager().getUser(event.getPlayer());
 		// check if a password is awaiting
 		if(passwordAwaiting.containsKey(user.getUniqueID())) {
 			// break if user is blocked
@@ -58,7 +58,7 @@ public class BukkitSudoHandler implements Listener {
 	@EventHandler
 	public void onDeauthorize(PlayerQuitEvent event) {
 		// get User
-		User user = main.getGroupManager().getUser(event.getPlayer());
+		User user = main.getUserManager().getUser(event.getPlayer());
 		// if user is a sudoer
 		if(user instanceof Sudoer) {
 			// deauthorize

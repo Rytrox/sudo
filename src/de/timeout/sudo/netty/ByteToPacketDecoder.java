@@ -1,17 +1,11 @@
 package de.timeout.sudo.netty;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import de.timeout.sudo.netty.packets.Packet;
-import de.timeout.sudo.netty.packets.PacketProxyInAuthorize;
-import de.timeout.sudo.netty.packets.PacketProxyInAuthorizeSudoer;
-import de.timeout.sudo.netty.packets.PacketProxyInLogin;
-import de.timeout.sudo.netty.packets.PacketRemoteInAuthorize;
-import de.timeout.sudo.netty.packets.PacketRemoteInAuthorizeSudoer;
-import de.timeout.sudo.netty.packets.PacketRemoteInGroupInheritances;
-import de.timeout.sudo.netty.packets.PacketRemoteInInitializeGroup;
-import de.timeout.sudo.netty.packets.PacketRemoteInLoadUser;
-import de.timeout.sudo.netty.packets.PacketRemoteInUnloadUser;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -43,27 +37,28 @@ public class ByteToPacketDecoder extends ByteToMessageDecoder {
 	 * @return the packet or null
 	 */
 	private static Packet<?> getPacketByName(String name) {
-		switch(name) {
-		case "PacketProxyInAuthorize":
-			return new PacketProxyInAuthorize();
-		case "PacketProxyInAuthorizeSudoer":
-			return new PacketProxyInAuthorizeSudoer();
-		case "PacketProxyInLogin":
-			return new PacketProxyInLogin();
-		case "PacketRemoteInAuthorize":
-			return new PacketRemoteInAuthorize();
-		case "PacketRemoteInAuthorizeSudoer":
-			return new PacketRemoteInAuthorizeSudoer();
-		case "PacketRemoteInGroupInheritances":
-			return new PacketRemoteInGroupInheritances();
-		case "PacketRemoteInInitializeGroup":
-			return new PacketRemoteInInitializeGroup();
-		case "PacketRemoteInLoadUser":
-			return new PacketRemoteInLoadUser();
-		case "PacketRemoteInUnloadUser":
-			return new PacketRemoteInUnloadUser();
-		default: 
-			return null;
+		// return null if the name is null
+		if(name != null && !name.isEmpty()) {
+			try {
+				// get Class
+				Class<?> packetClass = Thread.currentThread().getContextClassLoader().loadClass(
+						String.format("de.timeout.sudo.netty.packets.%s", name));
+				// load class
+				return (Packet<?>) packetClass.getConstructor().newInstance();
+			} catch (ClassNotFoundException e) {
+				Logger.getGlobal().log(Level.WARNING, String.format("Cannot find Class %s", name), e);
+			} catch (InstantiationException e) {
+				Logger.getGlobal().log(Level.WARNING, String.format("Cannot create instance of class %s", name), e);
+			} catch (IllegalAccessException e) {
+				Logger.getGlobal().log(Level.WARNING, String.format("Unable to get access of class %s", name), e);
+			} catch (InvocationTargetException e) {
+				Logger.getGlobal().log(Level.WARNING, String.format("Unable to create a target for class %s", name), e);
+			} catch (NoSuchMethodException e) {
+				Logger.getGlobal().log(Level.WARNING, String.format("Class %s has no required default constructor", name), e);
+			} catch (SecurityException e) {
+				Logger.getGlobal().log(Level.WARNING, String.format("Unhandled security error while accessing class %s", name), e);
+			}
 		}
+		return null;
 	}
 }

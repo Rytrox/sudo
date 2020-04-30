@@ -14,6 +14,7 @@ import de.timeout.libs.Reflections;
 import de.timeout.libs.config.JsonConfig;
 import de.timeout.sudo.bukkit.Sudo;
 import de.timeout.sudo.bukkit.permissions.BukkitUser;
+import de.timeout.sudo.bukkit.permissions.BukkitUserManager;
 import de.timeout.sudo.users.Root;
 import de.timeout.sudo.users.Sudoer;
 import de.timeout.sudo.utils.PasswordCryptor;
@@ -27,7 +28,7 @@ public final class BukkitSudoer extends BukkitUser implements Sudoer {
 	
 	private static final Sudo main = Sudo.getInstance();
 	
-	private static final Field decodedsudoersField = Reflections.getField(BukkitSudoerManager.class, "decodedSudoers");
+	private static final Field decodedsudoersField = Reflections.getField(BukkitUserManager.class, "decodedSudoer");
 	
 	private boolean authorized;
 	private boolean root;
@@ -44,7 +45,7 @@ public final class BukkitSudoer extends BukkitUser implements Sudoer {
 		// write attributes in upgrade
 		this.prefix = user.getPrefix();
 		this.suffix = user.getSuffix();
-		this.groups.addAll(user.getGroups());
+		this.groups.addAll(user.getMembers());
 		user.getPermissions().forEach(this::addPermission);
 		// write password
 		this.password = password;
@@ -70,7 +71,7 @@ public final class BukkitSudoer extends BukkitUser implements Sudoer {
 		// create new BukkitSudoer
 		BukkitSudoer sudoer = new BukkitSudoer(user, password);
 		// add to sudo group
-		main.getSudoerManager().getSudoGroup().join(sudoer);
+		main.getGroupManager().getSudoGroup().join(sudoer, executor);
 		
 		// return sudoer
 		return sudoer;
@@ -84,15 +85,17 @@ public final class BukkitSudoer extends BukkitUser implements Sudoer {
 	 * @return the superuser of the user
 	 */
 	@Nullable
-	public static BukkitSudoer loadSudoerFromConfiguration(@Nonnull BukkitUser user) {
+	public static BukkitSudoer loadSudoerFromConfiguration(@Nonnull BukkitUser user, @Nonnull Root executor) {
 		// Validate
 		Validate.notNull(user, "User cannot be null");
 		Validate.isTrue(!main.bungeecordEnabled(), "File-Support is disabled while using BungeeCord-Mode!");
+		Validate.notNull(executor, "Executor cannot be null");
+		Validate.isTrue(executor.isRoot(), "Executor must be root to create a new sudoer");
 		
 		// check if user is not already a sudoer
 		if(!(user instanceof BukkitSudoer)) {
 			// get Configuration from user
-			JsonConfig sudoers = (JsonConfig) Reflections.getValue(decodedsudoersField, main.getSudoerManager());
+			JsonConfig sudoers = (JsonConfig) Reflections.getValue(decodedsudoersField, main.getUserManager());
 			// get ConfigurationSection
 			ConfigurationSection section = sudoers.getConfigurationSection(user.getUniqueID().toString());
 			
@@ -101,7 +104,7 @@ public final class BukkitSudoer extends BukkitUser implements Sudoer {
 				// create Sudoer
 				BukkitSudoer sudoer = new BukkitSudoer(user, section.getString("password"));
 				// add to sudo group
-				main.getSudoerManager().getSudoGroup().join(sudoer);
+				main.getGroupManager().getSudoGroup().join(sudoer, executor);
 			}
 			return null;
 		} else return (BukkitSudoer) user;

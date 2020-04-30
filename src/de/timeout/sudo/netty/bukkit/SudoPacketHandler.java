@@ -31,14 +31,14 @@ class SudoPacketHandler extends SimpleChannelInboundHandler<Packet<?>> implement
 			// get Packet
 			PacketRemoteInSudoUsage packet = (PacketRemoteInSudoUsage) raw;
 			// get User
-			User user = main.getGroupManager().getUser(packet.getUniqueID());
+			User user = main.getUserManager().getUser(packet.getUniqueID());
 			// await sudo authentification
 			main.getSudoHandler().awaitAuthentification(user, packet.getCommand());
 		} else if(raw instanceof PacketRemoteInAuthorizeSudoer) {
 			// get Packet
 			PacketRemoteInAuthorizeSudoer packet = (PacketRemoteInAuthorizeSudoer) raw;
 			// get User and result
-			User user = main.getGroupManager().getUser(Bukkit.getOfflinePlayer(packet.getUniqueID()));
+			User user = main.getUserManager().getUser(Bukkit.getOfflinePlayer(packet.getUniqueID()));
 			AuthorizationResult result = packet.getAuthResult();
 			
 			// upgrade to sudoer if the result id success

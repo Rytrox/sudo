@@ -31,6 +31,9 @@ public class UserGroup extends Group implements Customizable, Inheritable<UserGr
 	 */
 	protected UserGroup(@Nonnull String name, @Nullable String prefix, @Nullable String suffix, boolean isDefault) {
 		super(name);
+		// Validate and ban sudo name
+		Validate.isTrue(!"sudo".equalsIgnoreCase(name), "UserGroup cannot be named with sudo");
+		
 		this.prefix = prefix;
 		this.suffix = suffix;
 		this.def = isDefault;

@@ -20,6 +20,17 @@ public class ProxyGroup extends UserGroup {
 	}
 	
 	/**
+	 * Creates a new ProxyGroup
+	 * @author Timeout
+	 *
+	 * @param name the name of the group
+	 * @throws IllegalArgumentException if the name equals sudo
+	 */
+	public ProxyGroup(String name) {
+		super(name, "", "", false);
+	}
+	
+	/**
 	 * Converts the current ProxyGroup into a JsonObject and returns it
 	 * @author Timeout
 	 * 

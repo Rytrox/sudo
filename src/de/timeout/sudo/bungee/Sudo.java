@@ -13,7 +13,7 @@ import de.timeout.sudo.bungee.commands.GroupaddCommand;
 import de.timeout.sudo.bungee.commands.SudoCommand;
 import de.timeout.sudo.bungee.permissions.ProxyGroupManager;
 import de.timeout.sudo.bungee.security.ProxySudoHandler;
-import de.timeout.sudo.bungee.security.ProxySudoerManager;
+import de.timeout.sudo.bungee.security.ProxyUserManager;
 import de.timeout.sudo.netty.bungeecord.BungeeSocketServer;
 import de.timeout.sudo.permissions.GroupConfigurable;
 
@@ -36,7 +36,7 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 	private static Sudo instance;
 	
 	private ProxyGroupManager groupManager;
-	private ProxySudoerManager sudoerManager;
+	private ProxyUserManager userManager;
 	private ProxySudoHandler sudoHandler;
 	private BungeeSocketServer netty;
 	
@@ -78,14 +78,14 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 	}
 	
 	/**
-	 * Returns the sudoer manager. Cannot be null
+	 * Returns the user manager. Cannot be null
 	 * @author Timeout
 	 * 
-	 * @return the sudoer manager. Cannot be null
+	 * @return the user manager. Cannot be null
 	 */
 	@Nonnull
-	public ProxySudoerManager getSudoerManager() {
-		return sudoerManager;
+	public ProxyUserManager getUserManager() {
+		return userManager;
 	}
 	
 	/**
@@ -120,10 +120,10 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 	private void initializeManager() {
 		// initialize group manager
 		groupManager = new ProxyGroupManager();
-		// register listener
-		this.getProxy().getPluginManager().registerListener(this, groupManager);
+		
 		// initialize sudoer manager
-		sudoerManager = new ProxySudoerManager();
+		userManager = new ProxyUserManager();
+		
 		// initialize sudo handler
 		sudoHandler = new ProxySudoHandler();
 		this.getProxy().getPluginManager().registerListener(this, sudoHandler);

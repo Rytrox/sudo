@@ -41,7 +41,7 @@ public class ProxySudoHandler implements Listener {
 			// get proxiedplayer
 			ProxiedPlayer p = (ProxiedPlayer) event.getSender();
 			// get proxiedplayers profile
-			User user = main.getGroupManager().getUser(p);
+			User user = main.getUserManager().getUser(p);
 			// check if user is sudoer
 			if(user instanceof Sudoer) {
 				// get sudoer

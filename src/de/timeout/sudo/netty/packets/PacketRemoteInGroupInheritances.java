@@ -8,7 +8,7 @@ import javax.annotation.Nonnull;
 
 import org.apache.commons.lang.Validate;
 
-import de.timeout.sudo.groups.Group;
+import de.timeout.sudo.groups.UserGroup;
 
 import io.netty.buffer.ByteBuf;
 
@@ -29,7 +29,7 @@ public class PacketRemoteInGroupInheritances extends Packet<PacketRemoteInGroupI
 	 *
 	 * @param group the group to convert
 	 */
-	public PacketRemoteInGroupInheritances(@Nonnull Group group) {
+	public PacketRemoteInGroupInheritances(@Nonnull UserGroup group) {
 		super(PacketRemoteInGroupInheritances.class);
 		// Validate
 		Validate.notNull(group, "Group cannot be null");

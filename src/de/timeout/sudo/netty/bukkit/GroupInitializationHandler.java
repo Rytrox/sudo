@@ -31,7 +31,7 @@ public class GroupInitializationHandler extends SimpleChannelInboundHandler<Pack
 			main.getGroupManager().loadInheritances(inheritances.getName(), inheritances.getInheritances());
 		} else if(packet instanceof PacketRemoteInLoadUser) {
 			// get Packet
-			main.getGroupManager().loadUserFromBungeecord(((PacketRemoteInLoadUser) packet).getUserData());
+			main.getUserManager().loadUserFromBungeecord(((PacketRemoteInLoadUser) packet).getUserData());
 		}
 	}
 

@@ -48,12 +48,12 @@ public class BukkitModeListener implements Listener {
 		// Validate
 		Validate.notNull(uuid, "UUID cannot be null");
 		// load user
-		main.getGroupManager().loadUserFromFile(uuid);
+		main.getUserManager().loadUserFromFile(uuid);
 	}
 	
 	@EventHandler
 	public void onUserUnload(PlayerQuitEvent event) {
 		// save in file
-		main.getGroupManager().unloadUserToFile(event.getPlayer());
+		main.getUserManager().unloadUserToFile(event.getPlayer());
 	}
 }

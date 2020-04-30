@@ -24,7 +24,7 @@ public class SudoerHandler extends SimpleChannelInboundHandler<PacketProxyInAuth
 		// create answer-packet
 		PacketRemoteInAuthorizeSudoer authorize;
 		// get User from packet
-		User user = main.getGroupManager().getUser(packet.getUniqueID());
+		User user = main.getUserManager().getUser(packet.getUniqueID());
 		
 		// check if user is a sudoer
 		if(user instanceof Sudoer) {

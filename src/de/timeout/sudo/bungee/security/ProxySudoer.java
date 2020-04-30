@@ -19,7 +19,7 @@ import net.md_5.bungee.config.Configuration;
 
 public final class ProxySudoer extends ProxyUser implements Sudoer {
 	
-	private static final Field sudoersConfig = Reflections.getField(ProxySudoerManager.class, "decodedSudoers");
+	private static final Field sudoersConfig = Reflections.getField(ProxyUserManager.class, "decodedSudoers");
 		
 	private boolean authorized;
 	private boolean root;
@@ -62,7 +62,7 @@ public final class ProxySudoer extends ProxyUser implements Sudoer {
 		// create a new ProxySudoer
 		ProxySudoer sudoer = new ProxySudoer(user, password);
 		// add sudoer to sudo group
-		main.getSudoerManager().getSudoGroup().join(sudoer);
+		main.getGroupManager().getSudoGroup().join(sudoer, executor);
 		
 		// return the new sudoer
 		return sudoer;
@@ -77,9 +77,11 @@ public final class ProxySudoer extends ProxyUser implements Sudoer {
 	 * @throws IOException
 	 */
 	@Nullable
-	public static ProxySudoer loadSudoerFromFile(@Nonnull ProxyUser user) throws IOException {
+	public static ProxySudoer loadSudoerFromFile(@Nonnull ProxyUser user, @Nonnull Root executor) throws IOException {
 		// Validate
 		Validate.notNull(user, "ProxyUser cannot be null");
+		Validate.notNull(executor, "Executor cannot be null");
+		Validate.isTrue(executor.isRoot(), "Executor must be root for loading a Sudoer");
 		// get Configuration
 		Configuration config = getSudoerConfiguration(user.getUniqueID());
 		// if it is a sudoer
@@ -87,7 +89,7 @@ public final class ProxySudoer extends ProxyUser implements Sudoer {
 			// create sudoer
 			ProxySudoer sudoer = new ProxySudoer(user, config.getString("password"));
 			// add sudoer to sudo group
-			main.getSudoerManager().getSudoGroup().join(sudoer);
+			main.getGroupManager().getSudoGroup().join(sudoer, executor);
 			
 			// return sudoer
 			return sudoer;
@@ -104,7 +106,7 @@ public final class ProxySudoer extends ProxyUser implements Sudoer {
 	@Nullable
 	private static Configuration getSudoerConfiguration(UUID uuid) {
 		// get Sudoers
-		Configuration sudoers = (Configuration) Reflections.getValue(sudoersConfig, main.getSudoerManager());
+		Configuration sudoers = (Configuration) Reflections.getValue(sudoersConfig, main.getUserManager());
 		// return configuration if exists, otherwise null
 		return sudoers.contains(uuid.toString()) ? sudoers.getSection(uuid.toString()) : null;
 	}
@@ -142,7 +144,7 @@ public final class ProxySudoer extends ProxyUser implements Sudoer {
 	@Override
 	public boolean hasPermission(String permission) {
 		// check if permission is in Sudo-Group
-		return !main.getSudoerManager().getSudoGroup().hasPermission(permission) ? super.hasPermission(permission) : isAuthorized();
+		return !main.getGroupManager().getSudoGroup().hasPermission(permission) ? super.hasPermission(permission) : isAuthorized();
 	}
 
 	@Override

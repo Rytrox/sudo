@@ -1,8 +1,8 @@
 package de.timeout.sudo.bungee.commands;
 
-import de.timeout.sudo.bukkit.security.RootRequiredCommand;
 import de.timeout.sudo.bungee.Sudo;
 import de.timeout.sudo.bungee.permissions.ProxyGroup;
+import de.timeout.sudo.bungee.security.RootRequiredCommand;
 import de.timeout.sudo.users.Root;
 
 import net.md_5.bungee.api.ChatColor;

@@ -25,7 +25,6 @@ import de.timeout.sudo.bungee.Sudo;
 import de.timeout.sudo.groups.UserGroup;
 import de.timeout.sudo.users.User;
 import de.timeout.sudo.groups.Group;
-import de.timeout.sudo.utils.Customizable;
 import de.timeout.sudo.utils.PermissionTree;
 import de.timeout.sudo.utils.Storable;
 
@@ -34,7 +33,7 @@ import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.config.Configuration;
 
-public class ProxyUser implements User, Storable, Customizable {
+public class ProxyUser implements User, Storable {
 		
 	private static final String NAME_FIELD = "name";
 	private static final String PREFIX_FIELD = "prefix";
@@ -45,7 +44,7 @@ public class ProxyUser implements User, Storable, Customizable {
 	protected static final Sudo main = Sudo.getInstance();
 	
 	private final PermissionTree permissions = new PermissionTree();
-	private final List<Group> groups = new ArrayList<>();
+	private final List<UserGroup> groups = new ArrayList<>();
 	
 	private UUID playerID;
 	private String name;
@@ -75,7 +74,7 @@ public class ProxyUser implements User, Storable, Customizable {
 	public ProxyUser(UUID uuid) throws IOException {
 		this.playerID = uuid;
 		// load data
-		Configuration section = main.getGroupManager().getUserConfiguration(uuid);
+		Configuration section = main.getUserManager().getUserConfiguration(uuid);
 		// if configuration could be loaded
 		if(section != null) {
 			// load values from file
@@ -84,17 +83,23 @@ public class ProxyUser implements User, Storable, Customizable {
 			this.suffix = section.getString(SUFFIX_FIELD);
 			
 			// load groups
-			section.getStringList(GROUPS_FIELD).forEach(group -> this.groups.add(main.getGroupManager().getGroupByName(group)));
+			section.getStringList(GROUPS_FIELD).forEach(groupname -> {
+				// get Group
+				Group group = main.getGroupManager().getGroupByName(groupname);
+				// add if the group is a sudo group
+				if(group instanceof UserGroup) this.groups.add((UserGroup) group);
+			});
+			
 			// load own permissions
 			section.getStringList(PERMISSIONS_FIELD).forEach(this.permissions::add);
 		} else {
 			// add default group to groups
-			groups.add(UserGroup.getDefaultGroup());
+			groups.add(main.getGroupManager().getDefaultGroup());
 		}
 	}
 		
 	@Override
-	public boolean isMember(Group element) {
+	public boolean isMember(UserGroup element) {
 		return groups.contains(element);
 	}
 	
@@ -103,8 +108,7 @@ public class ProxyUser implements User, Storable, Customizable {
 		return playerID.compareTo(o.getUniqueID());
 	}
 
-	@Override
-	public boolean join(Group group) {
+	public boolean join(UserGroup group) {
 		// check if group is not null
 		Validate.notNull(group, "Group cannot be null");
 		// remove from old group
@@ -117,17 +121,19 @@ public class ProxyUser implements User, Storable, Customizable {
 		return true;
 	}
 	
-	@Override
-	public boolean kick(Group element) {
+	
+	public boolean kick(UserGroup element) {
+		// Validate
+		Validate.notNull(element, "Group cannot be null");
 		return false;
 	}
 
-	@Override
+	
 	public boolean addPermission(String permission) {
 		return permissions.add(permission);
 	}
 
-	@Override
+
 	public boolean removePermission(String permission) {
 		return permissions.remove(permission);
 	}
@@ -226,7 +232,7 @@ public class ProxyUser implements User, Storable, Customizable {
 	@Override
 	public void load() throws IOException {
 		// get configuration
-		Configuration config = main.getGroupManager().getUserConfiguration(playerID);
+		Configuration config = main.getUserManager().getUserConfiguration(playerID);
 		// load prefix suffix from confoguration
 		this.prefix = ChatColor.translateAlternateColorCodes('&', config.getString(PREFIX_FIELD));
 		this.suffix = ChatColor.translateAlternateColorCodes('&', config.getString(SUFFIX_FIELD));
@@ -237,7 +243,7 @@ public class ProxyUser implements User, Storable, Customizable {
 			// get group
 			Group group = main.getGroupManager().getGroupByName(groupname);
 			// only join if group can be found
-			if(group != null) join(group);
+			if(group instanceof UserGroup) join((UserGroup) group);
 		});
 		// load permissions from configuration
 		config.getStringList(PERMISSIONS_FIELD).forEach(this::addPermission);
@@ -254,7 +260,7 @@ public class ProxyUser implements User, Storable, Customizable {
 	}
 
 	@Override
-	public Collection<Group> getGroups() {
+	public Collection<UserGroup> getMembers() {
 		return new ArrayList<>(groups);
 	}
 }

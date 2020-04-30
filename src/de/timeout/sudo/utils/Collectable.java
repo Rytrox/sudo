@@ -1,5 +1,7 @@
 package de.timeout.sudo.utils;
 
+import java.util.Collection;
+
 import javax.annotation.Nonnull;
 
 /**
@@ -18,5 +20,14 @@ public interface Collectable<T> {
 	 * @return true if the user is a member otherwise false
 	 */
 	public boolean isMember(@Nonnull T element);
+	
+	/**
+	 * Returns a collection with all groups of the user
+	 * @author Timeout
+	 * 
+	 * @return a collection containing all groups of the user
+	 */
+	@Nonnull
+	public Collection<T> getMembers();
 	
 }

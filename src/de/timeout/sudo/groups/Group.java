@@ -89,8 +89,7 @@ public abstract class Group implements Comparable<Group>, PermissibleBase, Colle
 		if (getClass() != obj.getClass())
 			return false;
 		Group other = (Group) obj;
-		return Objects.equals(members, other.members) && Objects.equals(name, other.name)
-				&& Objects.equals(permissions, other.permissions);
+		return Objects.equals(name, other.name);
 	}
 
 	/**

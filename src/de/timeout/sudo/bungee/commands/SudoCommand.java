@@ -34,7 +34,7 @@ public class SudoCommand extends Command {
 				List<String> commandArgs = Arrays.stream(args).filter(element -> !"sudo".equalsIgnoreCase(element)).collect(Collectors.toList());
 				
 				// get user
-				User user = main.getGroupManager().getUser(p);
+				User user = main.getUserManager().getUser(p);
 				// check if user is a sudoer
 				if(user instanceof Sudoer) {
 					// check if command is bukkit command

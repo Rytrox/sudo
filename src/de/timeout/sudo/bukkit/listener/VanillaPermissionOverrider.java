@@ -30,7 +30,7 @@ public class VanillaPermissionOverrider implements Listener {
 		// get Player
 		Player player = event.getPlayer();
 		// try to load profile
-		BukkitUser user = (BukkitUser) main.getGroupManager().getUser(player);
+		BukkitUser user = (BukkitUser) main.getUserManager().getUser(player);
 		// if user could be loaded
 		overridePermissionSystem(player, user);
 	}
@@ -46,7 +46,7 @@ public class VanillaPermissionOverrider implements Listener {
 	@Nullable
 	private User searchProfile(UUID uuid) {
 		// search in users
-		for(User user : main.getGroupManager().getUsers()) {
+		for(User user : main.getUserManager().getUsers()) {
 			// return true if uuid is equal
 			if(user.getUniqueID().compareTo(uuid) == 0) return user;
 		}

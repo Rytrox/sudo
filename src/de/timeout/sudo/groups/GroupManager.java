@@ -1,9 +1,7 @@
-package de.timeout.sudo.permissions;
+package de.timeout.sudo.groups;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -14,20 +12,20 @@ import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableGraph;
 
-import de.timeout.sudo.groups.Group;
-import de.timeout.sudo.groups.UserGroup;
 import de.timeout.sudo.groups.exception.CircularInheritanceException;
-import de.timeout.sudo.users.Root;
-import de.timeout.sudo.users.Sudoer;
-import de.timeout.sudo.users.User;
 
-public abstract class GroupManager<T> {
+public abstract class GroupManager {
 	
-	protected static UserGroup defaultGroup;
-
-	protected final MutableGraph<Group> groups = GraphBuilder.directed().build();
-	protected final Map<T, User> profiles = new HashMap<>();
+	protected final MutableGraph<UserGroup> groups = GraphBuilder.directed().build();
+	protected final SudoGroup sudoGroup;
 	
+	protected UserGroup defaultGroup;
+	
+	public GroupManager(@Nonnull List<String> sudopermissions) {
+		Validate.notNull(sudopermissions, "Sudopermissions cannot be null");
+		sudoGroup = new SudoGroup(sudopermissions);
+	}
+		
 	/**
 	 * Returns all loaded groups in a list
 	 * @author Timeout
@@ -35,32 +33,30 @@ public abstract class GroupManager<T> {
 	 * @return a list containing all loaded groups
 	 */
 	@Nonnull
-	public List<Group> getGroups() {
+	public List<UserGroup> getGroups() {
 		return new ArrayList<>(groups.nodes());
 	}
 	
 	/**
-	 * Returns all loaded user profiles
+	 * Returns the current default group. Cannot be null
 	 * @author Timeout
 	 * 
-	 * @return a list containing all loaded user profiles
+	 * @return the current default group. Cannot be null
 	 */
 	@Nonnull
-	public List<User> getUsers() {
-		return new ArrayList<>(profiles.values());
+	public UserGroup getDefaultGroup() {
+		return defaultGroup;
 	}
 	
 	/**
-	 * Returns the user of a certain key. <br>
-	 * Can be null if the user is not loaded yet
+	 * Returns the Sudo group. Cannot be null
 	 * @author Timeout
 	 * 
-	 * @param key the key you want to load.
-	 * @return the user or null if the user is not loaded yet or the key is null
+	 * @return the sudo group. Cannot be null
 	 */
-	@Nullable
-	public User getUser(T key) {
-		return profiles.get(key);
+	@Nonnull
+	public SudoGroup getSudoGroup() {
+		return sudoGroup;
 	}
 	
 	/**
@@ -90,15 +86,6 @@ public abstract class GroupManager<T> {
 	protected abstract UserGroup loadGroup(String name);
 	
 	/**
-	 * Upgrades a normal User to super-user
-	 * @author Timeout
-	 * 
-	 * @param superUser the new superuser
-	 * @param executor the executor of the command
-	 */
-	public abstract void upgradeUser(@Nonnull Sudoer superUser, @Nonnull Root executor);
-	
-	/**
 	 * Binds the group extension to the extended group
 	 * @author Timeout
 	 * 
@@ -123,5 +110,19 @@ public abstract class GroupManager<T> {
 			// add extension to group
 			group.extend(extend);
 		}
+	}
+	
+	/**
+	 * Adds a new Group to Graph
+	 * @author Timeout
+	 * 
+	 * @param group the group you want to add. Cannot be null
+	 * @return if the group could be added
+	 */
+	public boolean addGroup(@Nonnull UserGroup group) {
+		// Validate
+		Validate.notNull(group, "Group cannot be null");
+		// adds to graph
+		return groups.addNode(group);
 	}
 }

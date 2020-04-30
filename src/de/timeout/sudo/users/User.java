@@ -1,14 +1,14 @@
 package de.timeout.sudo.users;
 
-import java.util.Collection;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
 
 import com.google.gson.JsonObject;
 
-import de.timeout.sudo.groups.Group;
+import de.timeout.sudo.groups.UserGroup;
 import de.timeout.sudo.utils.Collectable;
+import de.timeout.sudo.utils.Customizable;
 import de.timeout.sudo.utils.PermissibleBase;
 
 /**
@@ -16,7 +16,7 @@ import de.timeout.sudo.utils.PermissibleBase;
  * @author Timeout
  *
  */
-public interface User extends Comparable<User>, PermissibleBase, Collectable<Group> {
+public interface User extends Comparable<User>, PermissibleBase, Collectable<UserGroup>, Customizable {
 	
 	/**
 	 * Returns the name of this instance
@@ -30,15 +30,6 @@ public interface User extends Comparable<User>, PermissibleBase, Collectable<Gro
 	 * @return true if the user is online otherwise false
 	 */
 	public boolean isOnline();
-	
-	/**
-	 * Returns a collection with all groups of the user
-	 * @author Timeout
-	 * 
-	 * @return a collection containing all groups of the user
-	 */
-	@Nonnull
-	public Collection<Group> getGroups();
 	
 	/**
 	 * Returns the unique id of the player
