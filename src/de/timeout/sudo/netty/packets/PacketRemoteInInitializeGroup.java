@@ -9,7 +9,7 @@ import org.apache.commons.lang.Validate;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import de.timeout.sudo.groups.Group;
+import de.timeout.sudo.groups.UserGroup;
 
 import io.netty.buffer.ByteBuf;
 
@@ -37,7 +37,7 @@ public class PacketRemoteInInitializeGroup extends Packet<PacketRemoteInInitiali
 	 *
 	 * @param group the group you want to compile. Cannot be null
 	 */
-	public PacketRemoteInInitializeGroup(@Nonnull Group group) {
+	public PacketRemoteInInitializeGroup(@Nonnull UserGroup group) {
 		super(PacketRemoteInInitializeGroup.class);
 		// Validate
 		Validate.notNull(group, "Group cannot be null");

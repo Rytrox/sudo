@@ -81,7 +81,7 @@ public class PacketRemoteInAuthorizeSudoer extends Packet<PacketRemoteInAuthoriz
 	 *
 	 */
 	public enum AuthorizationResult {
-		SUCCESS(0), PASSWORD_FAILED(1), NO_SUDOER(2);
+		SUCCESS(0), PASSWORD_FAILED(1), NO_SUDOER(2), BLOCKED(3);
 		
 		private int id;
 		
@@ -98,7 +98,7 @@ public class PacketRemoteInAuthorizeSudoer extends Packet<PacketRemoteInAuthoriz
 		 */
 		@Nullable
 		public static AuthorizationResult getResultByID(int id) {
-			return id >= 0 && id < 3 ? values()[id] : null;
+			return id >= 0 && id < 4 ? values()[id] : null;
 		}
 		
 		/**

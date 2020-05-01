@@ -4,6 +4,7 @@ import de.timeout.sudo.bungee.Sudo;
 import de.timeout.sudo.netty.packets.PacketProxyInLogin;
 import de.timeout.sudo.netty.packets.PacketRemoteInGroupInheritances;
 import de.timeout.sudo.netty.packets.PacketRemoteInInitializeGroup;
+import de.timeout.sudo.netty.packets.PacketRemoteInInitializeSudoGroup;
 import de.timeout.sudo.netty.packets.PacketRemoteInLoadUser;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -15,23 +16,25 @@ public class LoginHandler extends SimpleChannelInboundHandler<PacketProxyInLogin
 	
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, PacketProxyInLogin packet) throws Exception {
-		// sending packet to server
+		// sending sudo group
+		ctx.writeAndFlush(new PacketRemoteInInitializeSudoGroup(main.getGroupManager().getSudoGroup().getPermissions()));
+		
+		// sending usergroup initializsation packet to client
 		main.getGroupManager().getGroups().forEach(group -> 
 			// create packet
 			ctx.writeAndFlush(new PacketRemoteInInitializeGroup(group))
 		);
-		// sending linkings to server
+		// sending usergroup inheritance to client
 		main.getGroupManager().getGroups().forEach(group -> 
 			// create packet
 			ctx.writeAndFlush(new PacketRemoteInGroupInheritances(group))
 		);
+		
 		// sending all current users to server
 		main.getUserManager().getUsers().forEach(user -> 
 			// create packet
 			ctx.writeAndFlush(new PacketRemoteInLoadUser(user))
 		);
-		// sending sudo group
-		
 	}
 
 }

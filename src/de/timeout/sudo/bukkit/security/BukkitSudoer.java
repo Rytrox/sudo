@@ -56,13 +56,14 @@ public final class BukkitSudoer extends BukkitUser implements Sudoer {
 	 * @author Timeout
 	 * 
 	 * @param user the user you want to upgrade. Cannot be null
-	 * @param password the password of the user. Cannot be null or empty
+	 * @param password the password of the user. Cannot be null
 	 * @param executor the authorized executor
 	 * @throws IllegalArgumentException if any argument is null or the executor is not authorized
 	 * @return the new BukkitSudoer
 	 */
 	public static BukkitSudoer upgradeUserToSudoer(@Nonnull BukkitUser user, @Nonnull String password, @Nonnull Root executor) {
 		// Validate
+		Validate.isTrue(!main.bungeecordEnabled(), "For creating a BukkitSudoer with password bungeecord mode must be disabled");
 		Validate.notNull(user, "BukkitUser cannot be null");
 		Validate.notNull(password, "Sudoer cannot be null");
 		Validate.notNull(executor, "Executor cannot be null");
@@ -70,6 +71,31 @@ public final class BukkitSudoer extends BukkitUser implements Sudoer {
 		
 		// create new BukkitSudoer
 		BukkitSudoer sudoer = new BukkitSudoer(user, password);
+		// add to sudo group
+		main.getGroupManager().getSudoGroup().join(sudoer, executor);
+		
+		// return sudoer
+		return sudoer;
+	}
+	
+	/**
+	 * Creates a new Sudoer of an already existing Bukkit-User. 
+	 * @author Timeout
+	 * 
+	 * @param user the user you want to upgrade. Cannot be null
+	 * @param executor the executor you want to upgrade. Cannot be null
+	 * @throws IllegalArgumentException if the server runs in bukkit-mode, any argument is null or executor is not a root
+	 * @return the new sudoer
+	 */
+	public static BukkitSudoer upgradeUserToSudoer(@Nonnull BukkitUser user, @Nonnull Root executor) {
+		// Validate
+		Validate.isTrue(main.bungeecordEnabled(), "For creating a BukkitSudoer without password, bungeecord mode must be enabled");
+		Validate.notNull(user, "User cannot be null");
+		Validate.notNull(executor, "Executor cannot be null");
+		Validate.isTrue(executor.isRoot(), "Executor must be root to create a new sudoer");
+		
+		// create new BukkutSudoer
+		BukkitSudoer sudoer = new BukkitSudoer(user, "");
 		// add to sudo group
 		main.getGroupManager().getSudoGroup().join(sudoer, executor);
 		
@@ -117,8 +143,8 @@ public final class BukkitSudoer extends BukkitUser implements Sudoer {
 
 	@Override
 	public boolean authorize(String password) {
-		// only perform if user is not authorized
-		if(!authorized) authorized = PasswordCryptor.authenticate(password, this.password);
+		// only perform if user is not authorized and bukkit mode is enabled
+		if(!main.bungeecordEnabled() && !authorized) authorized = PasswordCryptor.authenticate(password, this.password);
 		// return authorized
 		return authorized;
 	}
