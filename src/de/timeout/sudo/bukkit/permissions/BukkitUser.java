@@ -30,6 +30,7 @@ import de.timeout.sudo.bukkit.Sudo;
 import de.timeout.sudo.groups.UserGroup;
 import de.timeout.sudo.users.User;
 import de.timeout.sudo.groups.Group;
+import de.timeout.sudo.utils.Customizable;
 import de.timeout.sudo.utils.PermissionTree;
 import de.timeout.sudo.utils.Storable;
 
@@ -40,7 +41,7 @@ import net.md_5.bungee.api.ChatColor;
  * @author Timeout
  *
  */
-public class BukkitUser extends PermissibleBase implements User, Storable {
+public class BukkitUser extends PermissibleBase implements User, Storable, Customizable {
 	
 	private static final String PERMISSIONS_FIELD = "permissions";
 	private static final String GROUPS_FIELD = "groups";
@@ -137,6 +138,7 @@ public class BukkitUser extends PermissibleBase implements User, Storable {
 
 	@Override
 	public boolean hasPermission(String inName) {
+		System.out.println("Check permission 0" + inName);
 		// return true if the user has this permission
 		if(!this.permissions.contains(inName)) {
 			// run through groups
@@ -168,6 +170,10 @@ public class BukkitUser extends PermissibleBase implements User, Storable {
 			return groups.remove(element);
 		}
 		return false;
+	}
+	
+	public boolean isSudoer() {
+		return main.getGroupManager().getSudoGroup().isMember(this);
 	}
 
 	@Override

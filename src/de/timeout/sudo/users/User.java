@@ -8,7 +8,6 @@ import com.google.gson.JsonObject;
 
 import de.timeout.sudo.groups.UserGroup;
 import de.timeout.sudo.utils.Collectable;
-import de.timeout.sudo.utils.Customizable;
 import de.timeout.sudo.utils.PermissibleBase;
 
 /**
@@ -16,7 +15,7 @@ import de.timeout.sudo.utils.PermissibleBase;
  * @author Timeout
  *
  */
-public interface User extends Comparable<User>, PermissibleBase, Collectable<UserGroup>, Customizable {
+public interface User extends Comparable<User>, PermissibleBase, Collectable<UserGroup> {
 	
 	/**
 	 * Returns the name of this instance

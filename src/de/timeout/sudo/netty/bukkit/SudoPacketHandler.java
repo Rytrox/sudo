@@ -90,5 +90,4 @@ class SudoPacketHandler extends SimpleChannelInboundHandler<Packet<?>> implement
 	public boolean isRoot() {
 		return true;
 	}
-
 }

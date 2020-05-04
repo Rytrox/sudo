@@ -123,6 +123,7 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 		
 		// initialize sudoer manager
 		userManager = new ProxyUserManager();
+		this.getProxy().getPluginManager().registerListener(instance, userManager);
 		
 		// initialize sudo handler
 		sudoHandler = new ProxySudoHandler();

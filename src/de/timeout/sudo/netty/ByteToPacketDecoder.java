@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import de.timeout.libs.Reflections;
 import de.timeout.sudo.netty.packets.Packet;
 
 import io.netty.buffer.ByteBuf;
@@ -12,7 +13,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 
 public class ByteToPacketDecoder extends ByteToMessageDecoder {
-	
+		
 	@Override
 	protected void decode(ChannelHandlerContext ctx, ByteBuf input, List<Object> messages) throws Exception {
 		System.out.println("Decoder decode packet...");
@@ -41,12 +42,10 @@ public class ByteToPacketDecoder extends ByteToMessageDecoder {
 		if(name != null && !name.isEmpty()) {
 			try {
 				// get Class
-				Class<?> packetClass = Thread.currentThread().getContextClassLoader().loadClass(
+				Class<?> packetClass = Reflections.getClass(
 						String.format("de.timeout.sudo.netty.packets.%s", name));
 				// load class
 				return (Packet<?>) packetClass.getConstructor().newInstance();
-			} catch (ClassNotFoundException e) {
-				Logger.getGlobal().log(Level.WARNING, String.format("Cannot find Class %s", name), e);
 			} catch (InstantiationException e) {
 				Logger.getGlobal().log(Level.WARNING, String.format("Cannot create instance of class %s", name), e);
 			} catch (IllegalAccessException e) {

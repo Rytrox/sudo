@@ -193,6 +193,7 @@ public class ProxyUserManager extends UserManager<UUID, Configuration> implement
 
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onPermissionCheck(PermissionCheckEvent event) {
+		System.out.println(event.getPermission());
 		// get ProxiedPlayer
 		CommandSender sender = event.getSender();
 		// if sender is a player

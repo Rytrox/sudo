@@ -46,6 +46,7 @@ public class BukkitSocket implements Runnable, Closeable {
 	
 	private Bootstrap boot;
 	private ChannelFuture channel;
+	private ReconnectOnCloseListener reconnectListener;
 		
 	public BukkitSocket(@Nonnull String host, @Nonnegative int port) {
 		// Validate
@@ -66,6 +67,7 @@ public class BukkitSocket implements Runnable, Closeable {
 	 * @return
 	 */
 	public void createBootstrap() {
+		this.reconnectListener = new ReconnectOnCloseListener(this);
 		boot = new Bootstrap();
 		// create loop group
 		EventLoopGroup group = EPOLL ? new EpollEventLoopGroup() : new NioEventLoopGroup();
@@ -149,6 +151,22 @@ public class BukkitSocket implements Runnable, Closeable {
 				}).syncUninterruptibly();
 			}
 		}
+	}
+	
+	public void connect() {
+		// connect to bungeecord
+		this.channel = boot.connect(host, port);
+		// add reconnect listener
+		channel.addListener(future -> {
+			// reconnect if channel is not reconnected
+			if(channel.isSuccess()) {
+				// 
+			} else reconnectListener.scheduleReconnect();
+		});
+	}
+	
+	public boolean isConnected() {
+		return this.channel != null && this.channel.isSuccess();
 	}
 	
 	private boolean authorize() {

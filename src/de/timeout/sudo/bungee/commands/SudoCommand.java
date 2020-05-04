@@ -1,8 +1,7 @@
 package de.timeout.sudo.bungee.commands;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import de.timeout.sudo.bungee.Sudo;
 import de.timeout.sudo.netty.packets.PacketRemoteInSudoUsage;
@@ -15,7 +14,16 @@ import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 
+/**
+ * Executes a command as root
+ * 
+ * Syntax: sudo [COMMAND]
+ * @author Timeout
+ *
+ */
 public class SudoCommand extends Command {
+	
+	private static final String NO_SUDOER = ChatColor.translateAlternateColorCodes('&', "&8[&6Sudo&8] &c%s is not in the sudoers file. This incident will be reported");
 	
 	private static final Sudo main = Sudo.getInstance();
 	
@@ -25,38 +33,63 @@ public class SudoCommand extends Command {
 
 	@Override
 	public void execute(CommandSender sender, String[] args) {
-		// write error if the executor is no player
-		if(sender instanceof ProxiedPlayer) {
-			ProxiedPlayer p = (ProxiedPlayer) sender;
-			// send help if command has no arguments
-			if(args.length > 0) { 
-				// filter command (remove all overused sudos)
-				List<String> commandArgs = Arrays.stream(args).filter(element -> !"sudo".equalsIgnoreCase(element)).collect(Collectors.toList());
-				
-				// get user
-				User user = main.getUserManager().getUser(p);
-				// check if user is a sudoer
-				if(user instanceof Sudoer) {
-					// check if command is bukkit command
-					if(main.getProxy().getPluginManager().isExecutableCommand(args[0], sender)) {
-						// get sudoer
-						Sudoer sudoer = (Sudoer) user;
-						// execute command if sudoer is already authorized
-						if(!sudoer.isAuthorized()) {
-							// await authorisation
-							main.getSudoHandler().awaitAuthorization(sudoer, String.join(" ", commandArgs));
-						} else main.getProxy().getPluginManager().dispatchCommand(p, String.join(" ", commandArgs));
-					} else {
-						// send to bukkit-server
-						PacketRemoteInSudoUsage sudo = new PacketRemoteInSudoUsage(p.getUniqueId(), String.join(" ", commandArgs));
-						main.getNettyServer().sendPacket(p.getServer(), sudo);
-					}
-				} else p.sendMessage(new TextComponent(
-							ChatColor.translateAlternateColorCodes('&', 
-									String.join("&8[&6Sudo&8] &c%s is not in the sudoers file. This incident will be reported", p.getName()))));
-
-			} else sendHelp(sender);
-		} else sender.sendMessage(new TextComponent(ChatColor.translateAlternateColorCodes('&', "&8[&6Sudo&8] &cOnly players can perform sudo on bungeecord")));
+		// Validate arguments
+		if(args.length > 0) {	
+			if(sender instanceof ProxiedPlayer) {
+				// get sudoer
+				Sudoer sudoer = getSudoer((ProxiedPlayer) sender);
+				if(sudoer != null) { 
+					// check if user uses -i
+					if(!"-i".equalsIgnoreCase(args[0])) {
+						// get Command
+						String command = String.join(" ", args);
+						// if command is a bungeecord command
+						if(main.getProxy().getPluginManager().isExecutableCommand(command, sender)) {
+							// execute command
+							if(awaitingAuthorization(sudoer, command)) {
+								// enable root
+								sudoer.enableRoot();
+								// execute command
+								main.getProxy().getPluginManager().dispatchCommand(sender, command);
+								// disable root after execution
+								sudoer.disableRoot();
+							}
+						} else {
+							// send to bukkit
+							PacketRemoteInSudoUsage packet = new PacketRemoteInSudoUsage(((ProxiedPlayer) sender).getUniqueId(), command);
+							main.getNettyServer().sendPacket(((ProxiedPlayer) sender).getServer(), packet);
+						}
+					} else if(awaitingAuthorization(sudoer, "sudo -i")) {
+						// enabled root permanently
+						sudoer.enableRoot();
+					} 
+				}
+			} else main.getProxy().getPluginManager().dispatchCommand(sender, String.join(" ", args));
+		} else sendHelp(sender);
+	}
+	
+	private boolean awaitingAuthorization(@Nonnull Sudoer sudoer, String command) {
+		// return true if the sudoer is authorized
+		if(!sudoer.isAuthorized()) {
+			main.getSudoHandler().awaitAuthorization(sudoer, command);
+			return false;
+		}
+		
+		return true;
+	}
+	
+	@Nullable
+	private Sudoer getSudoer(ProxiedPlayer player) {
+		// get User
+		User user = main.getUserManager().getUser(player);
+		// stop if user is no sudoer
+		if(user instanceof Sudoer) {
+			// get Sudoer
+			return (Sudoer) user;
+		} else player.sendMessage(new TextComponent(String.format(NO_SUDOER, player.getName())));
+		
+		// return false
+		return null;
 	}
 
 	private void sendHelp(CommandSender sender) {
