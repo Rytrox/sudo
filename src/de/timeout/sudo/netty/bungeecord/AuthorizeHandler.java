@@ -29,9 +29,11 @@ public class AuthorizeHandler extends SimpleChannelInboundHandler<Packet<?>> {
 		// send packet to next handler if the client is authorized
 		if(!authorized) {
 			// get IP
-			String remote = ctx.channel().remoteAddress().toString();
+			String remote = ctx.channel().remoteAddress().toString().split(":")[0];
 			// block pipeline if packet is send but not authorized
 			if(packet instanceof PacketProxyInAuthorize) {
+				// get port
+				int port = ((PacketProxyInAuthorize) packet).getRemotePort();
 				PacketProxyInAuthorize authIn = (PacketProxyInAuthorize) packet;
 				// compare results (return true if both are equal) 
 				authorized = bungeeID.compareTo(authIn.getProxyID()) == 0;
@@ -39,19 +41,20 @@ public class AuthorizeHandler extends SimpleChannelInboundHandler<Packet<?>> {
 				PacketRemoteInAuthorize authorize = new PacketRemoteInAuthorize(authorized);
 				ctx.writeAndFlush(authorize, ctx.voidPromise());
 				
-				// drop connection if authorization failed
+				// Authorize if result is true
 				if(!authorized) {
+					// drop connection 
 					ctx.close();
+					
 					// log result
-					Sudo.log().log(Level.INFO, String.format("&2Remote-Server &a%s &7was trying to connect &cwithout authorization&7. &cDropping connection immediately", remote));
+					Sudo.log().log(Level.INFO, String.format("&2Remote-Server &a%s:%d &7was trying to connect &cwithout authorization&7. &cDropping connection immediately", remote, port));
 					Sudo.log().log(Level.INFO, "&cPlease have a look at https://www.spigotmc.org/wiki/firewall-guide/ and activate a firewall for this server too!");
-				} else {
-					// authorize in bungeecord
-					main.getNettyServer().authorize(authIn.getRemotePort(), ctx);
-					// log
-					Sudo.log().log(Level.INFO, String.format("&2Remote-Server &a%s &7was &asuccessfully authorized.", remote));
-				}
-			} else Sudo.log().log(Level.WARNING, String.format("&cRemote %s tries to send %s without being authorized!", remote, packet.getClass().getSimpleName()));
+				} else main.getNettyServer().authorize(authIn.getRemotePort(), ctx);
+			} else {
+				Sudo.log().log(Level.WARNING, String.format("&cRemote %s tries to send %s without being authorized!", remote, packet.getClass().getSimpleName()));
+				// break connection
+				ctx.close();
+			}
 		} 
 	}
 	

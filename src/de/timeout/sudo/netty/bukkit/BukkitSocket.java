@@ -6,7 +6,6 @@ import java.util.logging.Level;
 
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
@@ -25,7 +24,7 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.FixedRecvByteBufAllocator;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollSocketChannel;
@@ -37,7 +36,6 @@ public class BukkitSocket implements Runnable, Closeable {
 	
 	private static final Sudo main = Sudo.getInstance();
 	private static final boolean EPOLL = Epoll.isAvailable();
-	private static final String UUID_REGEX = "[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}";
 	
 	private final int maxAttempts = main.getConfig().getInt("bungeecord.reconnect", 100);
 	
@@ -46,7 +44,7 @@ public class BukkitSocket implements Runnable, Closeable {
 	
 	private Bootstrap boot;
 	private ChannelFuture channel;
-	private ReconnectOnCloseListener reconnectListener;
+	private boolean shutdown = false;
 		
 	public BukkitSocket(@Nonnull String host, @Nonnegative int port) {
 		// Validate
@@ -67,21 +65,20 @@ public class BukkitSocket implements Runnable, Closeable {
 	 * @return
 	 */
 	public void createBootstrap() {
-		this.reconnectListener = new ReconnectOnCloseListener(this);
 		boot = new Bootstrap();
-		// create loop group
-		EventLoopGroup group = EPOLL ? new EpollEventLoopGroup() : new NioEventLoopGroup();
 		// check for OS
 		Sudo.log().log(Level.INFO, String.format("&9%s &adetected&7, using &3%s-ServerSockets", (EPOLL ? "Linux" : "Windows"), (EPOLL ? "Epoll" : "NIO")));
 		
-		boot.group(group);
+		boot.group(EPOLL ? new EpollEventLoopGroup() : new NioEventLoopGroup());
 		boot.channel(EPOLL ? EpollSocketChannel.class : NioSocketChannel.class);
 		boot.option(ChannelOption.SO_KEEPALIVE, true);
 		// register Handler
 		boot.handler(new ChannelInitializer<SocketChannel>() {
 
 			@Override
-			protected void initChannel(SocketChannel channel) throws Exception {				
+			protected void initChannel(SocketChannel channel) throws Exception {	
+				channel.config().setRecvByteBufAllocator(new FixedRecvByteBufAllocator(2048));
+				
 				// register decoder and encoder
 				channel.pipeline().addLast("decoder", new ByteToPacketDecoder());
 				channel.pipeline().addLast("encoder", new PacketToByteEncoder());
@@ -129,79 +126,34 @@ public class BukkitSocket implements Runnable, Closeable {
 		} else {
 			channel = channel.channel().closeFuture();
 			// authorize
-			if(authorize()) {
-				// add reconnect listener and sync to server
-				channel.addListener(new ChannelFutureListener() {
-						
-					@Override
-					public void operationComplete(ChannelFuture future) throws Exception {
-						// if future lost connection
-						if(!future.channel().isOpen() && !future.channel().eventLoop().isShuttingDown()) {
-							// log
-							Sudo.log().log(Level.WARNING, "&cLost connection to Bungeecord. Start reconnecting");
-							// sleep for 5 seconds
-							Thread.sleep(5 * 1000L);
-							// create new bootstrap
-							createBootstrap();
-							// reconnect
-							run();
-						}
+			authorize();
+			// add reconnect listener and sync to server
+			channel.addListener(new ChannelFutureListener() {
+					
+				@Override
+				public void operationComplete(ChannelFuture future) throws Exception {
+					// if future lost connection
+					if(!shutdown) {
+						// log
+						Sudo.log().log(Level.WARNING, "&cLost connection to Bungeecord. Start reconnecting");
+						// sleep for 5 seconds
+						Thread.sleep(5 * 1000L);
+						// create new bootstrap
+						createBootstrap();
+						// reconnect
+						run();
 					}
-						
-				}).syncUninterruptibly();
-			}
+				}
+					
+			}).syncUninterruptibly();
 		}
 	}
 	
-	public void connect() {
-		// connect to bungeecord
-		this.channel = boot.connect(host, port);
-		// add reconnect listener
-		channel.addListener(future -> {
-			// reconnect if channel is not reconnected
-			if(channel.isSuccess()) {
-				// 
-			} else reconnectListener.scheduleReconnect();
-		});
-	}
-	
-	public boolean isConnected() {
-		return this.channel != null && this.channel.isSuccess();
-	}
-	
-	private boolean authorize() {
-		// get UUID
-		UUID uuid = getBungeeCordID();
-		// check if settings could be read
-		if(uuid != null) {
-			sendPacket(new PacketProxyInAuthorize(uuid, main.getServer().getPort()));
-			// connection succeed. log
-			Sudo.log().log(Level.INFO, "&aConnected to &2BungeeCord! &7Sending &5Authentification");
-			// return true for success
-			return true;
-		} else close();
-		
-		return false;
-	}
-	
-	/**
-	 * Returns the uuid of the config or null if the UUID is incorrect
-	 * @author Timeout
-	 * 
-	 * @return the uuid from config or null if the config cannot be converted
-	 */
-	@Nullable
-	private UUID getBungeeCordID() {
-		// get String
-		String idString = main.getConfig().getString("bungeecord.uuid", "NOT_FOUND");
-		System.out.println(idString);
-		// check if uuid is valid
-		if(idString.matches(UUID_REGEX)) {
-			Sudo.log().log(Level.INFO, "Passt");
-			// return uuid
-			return UUID.fromString(idString);
-		} else Sudo.log().log(Level.WARNING, "&cUnable to use uuid from config. Invalid format. Please check your config.yml");
-		return null;
+	private void authorize() {
+		sendPacket(new PacketProxyInAuthorize(
+				UUID.fromString(main.getConfig().getString("bungeecord.uuid")), main.getServer().getPort()));
+		// connection succeed. log
+		Sudo.log().log(Level.INFO, "&aConnected to &2BungeeCord! &7Sending &5Authentification");
 	}
 		
 	public void sendPacket(Packet<?> packet) {
@@ -210,12 +162,11 @@ public class BukkitSocket implements Runnable, Closeable {
 	
 	@Override
 	public void close() {
+		shutdown = true;
 		// close if connection is not already closed
 		if(this.channel != null && this.channel.channel().isOpen()) {
-			this.channel.channel().close();
 			this.channel.channel().eventLoop().shutdownGracefully();
-			// shutdown plugin
-			Bukkit.getScheduler().runTask(main, () -> Bukkit.getPluginManager().disablePlugin(main));
+			this.channel.channel().close();
 		}
 	}
 }

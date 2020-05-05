@@ -2,6 +2,7 @@ package de.timeout.sudo.netty.bungeecord;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 
 import javax.annotation.Nonnegative;
@@ -21,6 +22,7 @@ import net.md_5.bungee.api.connection.Server;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -68,9 +70,7 @@ public class BungeeSocketServer implements Runnable, Closeable {
 					.childHandler(new ChannelInitializer<SocketChannel>() {
 
 						@Override
-						protected void initChannel(SocketChannel channel) throws Exception {			
-							// Wird aufgerufen, wenn verbunden wird
-							
+						protected void initChannel(SocketChannel channel) throws Exception {							
 							// link decoder and encoder
 							channel.pipeline().addLast("encoder", new PacketToByteEncoder());
 							channel.pipeline().addLast("decoder", new ByteToPacketDecoder());
@@ -78,31 +78,14 @@ public class BungeeSocketServer implements Runnable, Closeable {
 							// link handlers
 							channel.pipeline().addLast("authorize", new AuthorizeHandler());
 							channel.pipeline().addLast("login", new LoginHandler());
-							
-							
-							Sudo.log().log(Level.INFO, String.format("&aBukkit-Server %s connected!", channel.remoteAddress().toString()));
 						}
 
-						/**
-						 * Remove channel from connection if this connection is closed
-						 */
-						@Override
-						public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
-							// remove channelhandlercontext from initializer
-							connections.entrySet().forEach(entry -> {
-								if(entry.getValue().equals(ctx.channel())) {
-									// remove key
-									connections.remove(entry.getKey());
-								}	
-							});
-						}
 					})
-					.option(ChannelOption.SO_BACKLOG, 128)
 					.childOption(ChannelOption.SO_KEEPALIVE, true)
-					.bind(port).sync().channel().closeFuture();
-			
-			// sync
-			channelFuture.syncUninterruptibly();
+					.bind(port).sync();
+			 
+			 // sync
+			 channelFuture.syncUninterruptibly();
 		} catch (InterruptedException e) {
 			Sudo.log().log(Level.SEVERE, "&4Unable to start Netty-Server. Thread interrupted...", e);
 			Thread.currentThread().interrupt();
@@ -121,6 +104,34 @@ public class BungeeSocketServer implements Runnable, Closeable {
 	public boolean authorize(@Nonnegative int port, @Nonnull ChannelHandlerContext ctx) {
 		// Validate
 		Validate.notNull(ctx, "ChannelHandlerContext cannot be null");
+		// log
+		Sudo.log().log(Level.INFO, String.format("&aBukkit-Server %s:%d connected!", ctx.channel().remoteAddress().toString().split(":")[0], port));
+		
+		// close old connection if channel is reconnecting
+		ctx.channel().closeFuture().addListener(new ChannelFutureListener() {
+			
+			/**
+			 * Will be executed when the connection close
+			 */
+			@Override
+			public void operationComplete(ChannelFuture arg0) throws Exception {
+				// remove channelhandlercontext from initializer
+				for(Entry<Integer, Channel> entry : connections.entrySet()) {
+					if(entry.getValue().equals(ctx.channel())) {
+						// Log disconnection
+						Sudo.log().log(Level.INFO, 
+								String.format("&cBukkit-Server %s:%d disconnected!",
+									arg0.channel().remoteAddress().toString().split(":")[0], entry.getKey()));
+						// remove key
+						connections.remove(entry.getKey());
+					}	
+				}
+			}
+		});
+		
+		// disconnect old connection if there was an old connection
+		if(connections.containsKey(port)) connections.remove(port).close();
+		
 		// add to set
 		return connections.put(FastMath.abs(port), ctx.channel()) != null;
 	}

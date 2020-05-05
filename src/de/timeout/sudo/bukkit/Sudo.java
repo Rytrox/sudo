@@ -71,7 +71,9 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 	@Override
 	public void onDisable() {
 		// disable connection to bungeecord server
-		if(this.netty != null) this.netty.close();
+		if(this.netty != null) {
+			this.netty.close();
+		}
 	}
 
 	@Override
@@ -120,14 +122,14 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 	private void startSocketClient() {
 		// only start if bungeecord is enabled
 		if(bungeecordEnabled()) {
-			// create server
+			// declare server
 			netty = new BukkitSocket(
 					getConfig().getString("bungeecord.host", "localhost"),
 					getConfig().getInt("bungeecord.port", 10020));
 			// start server
-			Thread clientThread = new Thread(netty);
-			clientThread.setName("Sudo-SocketClient Thread");
-			clientThread.start();
+			Thread serverthread = new Thread(netty, "Sudo Socket-Thread");
+			// start bootstrap
+			serverthread.start();
 		}
 	}
 	

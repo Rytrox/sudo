@@ -2,7 +2,7 @@ package de.timeout.sudo.netty.bukkit;
 
 import de.timeout.sudo.bukkit.Sudo;
 import de.timeout.sudo.netty.packets.Packet;
-import de.timeout.sudo.netty.packets.PacketRemoteInGroupInheritances;
+import de.timeout.sudo.netty.packets.PacketRemoteInGroupInheritance;
 import de.timeout.sudo.netty.packets.PacketRemoteInInitializeGroup;
 import de.timeout.sudo.netty.packets.PacketRemoteInLoadUser;
 
@@ -24,11 +24,11 @@ public class GroupInitializationHandler extends SimpleChannelInboundHandler<Pack
 		if(packet instanceof PacketRemoteInInitializeGroup) {
 			// group initialization
 			main.getGroupManager().loadGroupFromBungeecord(((PacketRemoteInInitializeGroup) packet).getGroupData());
-		} else if(packet instanceof PacketRemoteInGroupInheritances) {
+		} else if(packet instanceof PacketRemoteInGroupInheritance) {
 			// get Packet
-			PacketRemoteInGroupInheritances inheritances = (PacketRemoteInGroupInheritances) packet;
+			PacketRemoteInGroupInheritance inheritances = (PacketRemoteInGroupInheritance) packet;
 			// linking groups
-			main.getGroupManager().loadInheritances(inheritances.getName(), inheritances.getInheritances());
+			main.getGroupManager().loadInheritance(inheritances.getName(), inheritances.getInheritance());
 		} else if(packet instanceof PacketRemoteInLoadUser) {
 			// get Packet
 			main.getUserManager().loadUserFromBungeecord(((PacketRemoteInLoadUser) packet).getUserData());

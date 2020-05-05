@@ -1,8 +1,6 @@
 package de.timeout.sudo.netty.packets;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.annotation.Nonnull;
 
@@ -17,11 +15,10 @@ import io.netty.buffer.ByteBuf;
  * @author Timeout
  *
  */
-public class PacketRemoteInGroupInheritances extends Packet<PacketRemoteInGroupInheritances> {
-	
-	private final Set<String> inheritances = new HashSet<>();
-	
+public class PacketRemoteInGroupInheritance extends Packet<PacketRemoteInGroupInheritance> {
+		
 	private String name;
+	private String inheritance;
 
 	/**
 	 * Constructor to create a new Packet. BungeeCord only!
@@ -29,14 +26,14 @@ public class PacketRemoteInGroupInheritances extends Packet<PacketRemoteInGroupI
 	 *
 	 * @param group the group to convert
 	 */
-	public PacketRemoteInGroupInheritances(@Nonnull UserGroup group) {
-		super(PacketRemoteInGroupInheritances.class);
+	public PacketRemoteInGroupInheritance(@Nonnull UserGroup group, @Nonnull String inheritance) {
+		super(PacketRemoteInGroupInheritance.class);
 		// Validate
 		Validate.notNull(group, "Group cannot be null");
+		Validate.notNull(inheritance, "Inheritance cannot be null");
 		
 		this.name = group.getName();
-		// add extended group
-		group.getExtendedGroups().forEach(extend -> inheritances.add(extend.getName()));
+		this.inheritance = inheritance;
 	}
 	
 	/**
@@ -44,18 +41,16 @@ public class PacketRemoteInGroupInheritances extends Packet<PacketRemoteInGroupI
 	 * @author Timeout
 	 *
 	 */
-	public PacketRemoteInGroupInheritances() {
-		super(PacketRemoteInGroupInheritances.class);
+	public PacketRemoteInGroupInheritance() {
+		super(PacketRemoteInGroupInheritance.class);
 	}
 
 	@Override
 	public void decode(ByteBuf input) throws IOException {
 		// read name
 		name = readString(input);
-		// read length of groups
-		int length = input.readInt();
-		// continue after finish
-		for(int i = 0; i < length; i++) inheritances.add(readString(input));
+		// read inheritance
+		inheritance = readString(input);
 	}
 
 	@Override
@@ -65,10 +60,8 @@ public class PacketRemoteInGroupInheritances extends Packet<PacketRemoteInGroupI
 		
 		// write group name
 		writeString(output, name);
-		// add length to output
-		output.writeInt(inheritances.size());
-		// add each element
-		for(String group : inheritances) writeString(output, group);
+		// write inheritance
+		writeString(output, inheritance);
 	}
 	
 	@Nonnull
@@ -77,7 +70,7 @@ public class PacketRemoteInGroupInheritances extends Packet<PacketRemoteInGroupI
 	}
 	
 	@Nonnull
-	public Set<String> getInheritances() {
-		return new HashSet<>(inheritances);
+	public String getInheritance() {
+		return inheritance;
 	}
 }

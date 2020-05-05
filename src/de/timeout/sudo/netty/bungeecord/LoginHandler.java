@@ -2,7 +2,7 @@ package de.timeout.sudo.netty.bungeecord;
 
 import de.timeout.sudo.bungee.Sudo;
 import de.timeout.sudo.netty.packets.PacketProxyInLogin;
-import de.timeout.sudo.netty.packets.PacketRemoteInGroupInheritances;
+import de.timeout.sudo.netty.packets.PacketRemoteInGroupInheritance;
 import de.timeout.sudo.netty.packets.PacketRemoteInInitializeGroup;
 import de.timeout.sudo.netty.packets.PacketRemoteInInitializeSudoGroup;
 import de.timeout.sudo.netty.packets.PacketRemoteInLoadUser;
@@ -26,8 +26,10 @@ public class LoginHandler extends SimpleChannelInboundHandler<PacketProxyInLogin
 		);
 		// sending usergroup inheritance to client
 		main.getGroupManager().getGroups().forEach(group -> 
-			// create packet
-			ctx.writeAndFlush(new PacketRemoteInGroupInheritances(group))
+			group.getExtendedGroups().forEach(inheritance -> 
+				// create packet
+				ctx.writeAndFlush(new PacketRemoteInGroupInheritance(group, inheritance.getName()))
+			)
 		);
 		
 		// sending all current users to server

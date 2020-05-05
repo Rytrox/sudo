@@ -2,7 +2,6 @@ package de.timeout.sudo.bukkit.permissions;
 
 import java.util.ArrayList;
 import java.util.Optional;
-import java.util.Set;
 import java.util.logging.Level;
 
 import javax.annotation.Nonnull;
@@ -17,7 +16,6 @@ import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.groups.GroupManager;
 import de.timeout.sudo.groups.UserGroup;
 import de.timeout.sudo.groups.exception.CircularInheritanceException;
-import de.timeout.sudo.netty.packets.PacketRemoteInGroupInheritances;
 
 public class BukkitGroupManager extends GroupManager {
 	
@@ -51,31 +49,28 @@ public class BukkitGroupManager extends GroupManager {
 	 * @author Timeout
 	 * 
 	 * @param name the name of the group. Cannot be null
-	 * @param inheritances a list of inheritances of the group. Cannot be null
+	 * @param inheritances the name of the extended group. Cannot be null
 	 * @throws IllegalArgumentException if the group with the name cannot be found or any argument is null
 	 */
-	public void loadInheritances(@Nonnull String name, @Nonnull Set<String> inheritances) {
+	public void loadInheritance(@Nonnull String name, @Nonnull String inheritance) {
 		// Validate
 		Validate.notNull(name, "Group name cannot be null");
-		Validate.notNull(inheritances, "Inheritances cannot be null");
+		Validate.notNull(inheritance, "Inheritance cannot be null");
 		// get Group for name
 		Group group = getGroupByName(name);
 		// throw exception if the name cannot be found
 		if(group != null) {
-			// load inheritances
-			inheritances.forEach(extendName -> {
-				// get group
-				Group extend = getGroupByName(extendName);
-				// log if group cannot be found
-				if(extend != null) {
-					// bind inheritance
-					try {
-						bindInheritance((UserGroup) group, (UserGroup) extend);
-					} catch (CircularInheritanceException e) {
-						Sudo.log().log(Level.WARNING, String.format("&cUnable to bind inheritances from group %s to group %s. A circular inheritance is detected!", name, extendName), e);
-					}
-				} else Sudo.log().log(Level.WARNING, String.format("&cTry to load group %s but this group does not exist", extendName));
-			});
+			// get group
+			Group extend = getGroupByName(inheritance);
+			// log if group cannot be found
+			if(extend != null) {
+				// bind inheritance
+				try {
+					bindInheritance((UserGroup) group, (UserGroup) extend);
+				} catch (CircularInheritanceException e) {
+					Sudo.log().log(Level.WARNING, String.format("&cUnable to bind inheritances from group %s to group %s. A circular inheritance is detected!", name, inheritance), e);
+				}
+			} else Sudo.log().log(Level.WARNING, String.format("&cTry to load group %s but this group does not exist", inheritance));
 		} else throw new IllegalArgumentException("Group cannot not be found");
 	}
 	
