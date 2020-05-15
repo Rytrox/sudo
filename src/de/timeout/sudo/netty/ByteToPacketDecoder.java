@@ -28,6 +28,10 @@ public class ByteToPacketDecoder extends ByteToMessageDecoder {
 			// add packet to received messages
 			messages.add(packet);
 		}
+		
+		// release bytebuf
+		input.retain();
+		input.release();
 	}
 
 	/**

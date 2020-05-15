@@ -77,7 +77,7 @@ public class BukkitSocket implements Runnable, Closeable {
 
 			@Override
 			protected void initChannel(SocketChannel channel) throws Exception {	
-				channel.config().setRecvByteBufAllocator(new FixedRecvByteBufAllocator(2048));
+				channel.config().setRecvByteBufAllocator(new FixedRecvByteBufAllocator(1024));
 				
 				// register decoder and encoder
 				channel.pipeline().addLast("decoder", new ByteToPacketDecoder());

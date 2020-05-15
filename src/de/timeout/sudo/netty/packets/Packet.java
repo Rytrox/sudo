@@ -47,12 +47,10 @@ public abstract class Packet<T> {
 		Validate.notNull(input, "Input cannot be null");
 		// check if bytebuf is writeable
 		if(data.isWritable()) {
-			// convert String into bytes
-			byte[] bytes = input.getBytes(StandardCharsets.UTF_8);
-			// write length first into bytebuf
-			data.writeInt(bytes.length);
-			// then write string's byte
-			data.writeBytes(bytes);
+			// write int length
+			data.writeInt(input.getBytes(StandardCharsets.UTF_8).length);
+			// write char sequence
+			data.writeCharSequence(input, StandardCharsets.UTF_8);
 		} else throw new IOException("ByteBuf is not writable");
 	}
 	
@@ -63,8 +61,8 @@ public abstract class Packet<T> {
 		if(data.isReadable()) {
 			// read int length first
 			int length = data.readInt();
-			// read bytes
-			return data.readBytes(length).toString(StandardCharsets.UTF_8);
+			// read string
+			return data.readCharSequence(length, StandardCharsets.UTF_8).toString();
 		} else throw new IOException("ByteBuf is not readable");
 	}	
 }
