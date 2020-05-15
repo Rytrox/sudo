@@ -7,10 +7,12 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.apache.commons.lang.Validate;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 import de.timeout.libs.BukkitReflections;
 import de.timeout.libs.Reflections;
@@ -33,6 +35,15 @@ public class VanillaPermissionOverrider implements Listener {
 		BukkitUser user = (BukkitUser) main.getUserManager().getUser(player);
 		// if user could be loaded
 		overridePermissionSystem(player, user);
+	}
+	
+	@EventHandler
+	public void onLeave(PlayerQuitEvent event) {
+		// start remove a tick later
+		Bukkit.getScheduler().runTaskLaterAsynchronously(main, () ->
+			// remove user
+			main.getUserManager().unloadUser(main.getUserManager().getUser(event.getPlayer())),
+		1L);
 	}
 	
 	/**

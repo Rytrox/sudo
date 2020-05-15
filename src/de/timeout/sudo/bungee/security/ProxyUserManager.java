@@ -20,7 +20,6 @@ import de.timeout.libs.Reflections;
 import de.timeout.sudo.bungee.Sudo;
 import de.timeout.sudo.bungee.permissions.ProxyUser;
 import de.timeout.sudo.netty.packets.PacketRemoteInLoadUser;
-import de.timeout.sudo.netty.packets.PacketRemoteInUnloadUser;
 import de.timeout.sudo.users.Root;
 import de.timeout.sudo.users.Sudoer;
 import de.timeout.sudo.users.User;
@@ -43,7 +42,7 @@ import net.md_5.bungee.event.EventPriority;
  * @author Timeout
  *
  */
-public class ProxyUserManager extends UserManager<UUID, Configuration> implements Listener {
+public class ProxyUserManager extends UserManager<Configuration> implements Listener {
 	
 	private static final Sudo main = Sudo.getInstance();
 	
@@ -179,21 +178,12 @@ public class ProxyUserManager extends UserManager<UUID, Configuration> implement
 	@EventHandler
 	public void onUserSave(PlayerDisconnectEvent event) {
 		// removes user from cache
-		User user = profiles.remove(event.getPlayer().getUniqueId());
-		try {
-			// save data
-			((ProxyUser) user).save();
-		} catch (IOException e) {
-			Sudo.log().log(Level.WARNING, String.format("&cUnable to save user %s.", event.getPlayer().getName()), e);
-		}
-		// send unloadpacket to all bukkit-server
-		main.getProxy().getScheduler().runAsync(main, () -> main.getNettyServer().broadcastPacket(
-				new PacketRemoteInUnloadUser(user.getUniqueID())));
+		unloadUser(getUser(event.getPlayer()));
+
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onPermissionCheck(PermissionCheckEvent event) {
-		System.out.println(event.getPermission());
 		// get ProxiedPlayer
 		CommandSender sender = event.getSender();
 		// if sender is a player
@@ -203,5 +193,30 @@ public class ProxyUserManager extends UserManager<UUID, Configuration> implement
 			// override permissions
 			event.setHasPermission(getUser(player.getUniqueId()).hasPermission(event.getPermission()));
 		}
+	}
+
+	@Override
+	public void unloadUser(User user) {
+		// Validate
+		Validate.notNull(user, "User cannot be null");
+		
+		// check if user is not null online
+		if(main.getProxy().getPlayer(user.getUniqueID()) == null) {
+			// remove from all groups
+			user.getMembers().forEach(group -> group.kick(user));
+			
+			// remove from sudogroup if user is a sudoer
+			if(user instanceof Sudoer) main.getGroupManager().getSudoGroup().kick((Sudoer) user, console);
+			
+			// remove from cache
+			profiles.remove(user.getUniqueID());
+			
+			// save to file
+			try {
+				((ProxyUser) user).save();
+			} catch (IOException e) {
+				Sudo.log().log(Level.WARNING, "&cUnable to save user.", e);
+			}
+		} else throw new IllegalStateException("Unable to unload a player who is still online!");
 	}
 }

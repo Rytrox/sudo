@@ -15,7 +15,6 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
-import org.bukkit.permissions.ServerOperator;
 
 import com.google.common.io.Files;
 import com.google.gson.JsonObject;
@@ -29,26 +28,27 @@ import de.timeout.sudo.users.Sudoer;
 import de.timeout.sudo.users.User;
 import de.timeout.sudo.users.UserManager;
 
-public class BukkitUserManager extends UserManager<ServerOperator, JsonConfig> {
+public class BukkitUserManager extends UserManager<JsonConfig> {
 	
 	private static final Sudo main = Sudo.getInstance();
 	
 	public BukkitUserManager() {
 		super(new RootConsole());
 	}
-
+	
 	/**
-	 * Returns the User of the operator. Can be null
+	 * Get a user from cache if the user is loaded
 	 * @author Timeout
 	 * 
-	 * @param operator the id of the player
-	 * @return the
+	 * @param player the player. Cannot be null
+	 * @throws IllegalArgumentException if the player is null
+	 * @return the user profile of the player. Returns null if the profile is not loaded yet
 	 */
 	@Nullable
-	public User getUser(UUID operator) {
-		OfflinePlayer player = Bukkit.getServer().getOfflinePlayer(operator);
-		// returns from cache if user is loaded. else load him before
-		return Optional.ofNullable(profiles.get(player)).orElse(new BukkitUser(player));
+	public User getUser(@Nonnull OfflinePlayer player) {
+		// Validate
+		Validate.notNull(player);
+		return getUser(player.getUniqueId());
 	}
 	
 	/**
@@ -65,7 +65,7 @@ public class BukkitUserManager extends UserManager<ServerOperator, JsonConfig> {
 		// get OfflinePlayer
 		OfflinePlayer op = Bukkit.getOfflinePlayer(user.getUniqueID());
 		// cache user
-		profiles.put(op, user);
+		profiles.put(op.getUniqueId(), user);
 		// overrides profile if user is already online
 		if(op.isOnline()) VanillaPermissionOverrider.overridePermissionSystem(op.getPlayer(), user);
 	}
@@ -88,12 +88,12 @@ public class BukkitUserManager extends UserManager<ServerOperator, JsonConfig> {
 			// get OfflinePlayer
 			OfflinePlayer player = Bukkit.getServer().getOfflinePlayer(uuid);
 			// get User and load from file
-			User user = Optional.ofNullable(profiles.get(player)).orElse(new BukkitUser(player));
+			User user = Optional.ofNullable(profiles.get(player.getUniqueId())).orElse(new BukkitUser(player));
 			// apply user to online player
 			Player p = player.getPlayer();
 			if(p != null) VanillaPermissionOverrider.overridePermissionSystem(p, (BukkitUser) user);
 			// cache in database
-			profiles.putIfAbsent(player, user);
+			profiles.putIfAbsent(player.getUniqueId(), user);
 		} else throw new IllegalStateException("Users cannot be loaded from files while bungeecord is enabled!");
 	}
 	
@@ -111,7 +111,7 @@ public class BukkitUserManager extends UserManager<ServerOperator, JsonConfig> {
 		// throws illegal state exception if bukkit mode is disabled
 		if(!main.bungeecordEnabled() && !player.isOnline()) {
 			// unload user from profiles
-			BukkitUser user = (BukkitUser) profiles.remove(player);
+			BukkitUser user = (BukkitUser) profiles.remove(player.getUniqueId());
 			// save in file
 			try {
 				user.save();
@@ -126,9 +126,9 @@ public class BukkitUserManager extends UserManager<ServerOperator, JsonConfig> {
 		Validate.notNull(superUser, "Superuser cannot be null");
 		Validate.notNull(executor, "Executor cannot be null");
 		// do nothing if executor is not authorized or superuser is not a bukkitsudoer
-		if(executor.isRoot() && superUser instanceof BukkitSudoer) {
+		if(executor.isRoot()) {
 			// update profile
-			this.profiles.replace((BukkitUser) superUser, (BukkitSudoer) superUser);
+			this.profiles.replace(superUser.getUniqueID(), superUser);
 		}
 	}
 	
@@ -226,5 +226,23 @@ public class BukkitUserManager extends UserManager<ServerOperator, JsonConfig> {
 	@Override
 	public JsonConfig getUserConfiguration(UUID uuid) throws IOException {
 		return null;
+	}
+
+	@Override
+	public void unloadUser(User user) {
+		// Validate
+		Validate.notNull(user, "User cannot be null");
+		
+		// check if user is not online
+		if(Bukkit.getPlayer(user.getUniqueID()) == null) {
+			// remove from all groups
+			user.getMembers().forEach(group -> group.kick(user));
+			
+			// remove from sudogroup if user is a sudoer
+			if(user instanceof Sudoer) main.getGroupManager().getSudoGroup().kick((Sudoer) user, console);
+			
+			// remove from cache
+			profiles.remove(user.getUniqueID());
+		} else throw new IllegalStateException("Unable to unload a player who is still online!");
 	}
 }
