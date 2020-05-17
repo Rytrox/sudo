@@ -27,6 +27,7 @@ import de.timeout.sudo.users.Root;
 import de.timeout.sudo.users.Sudoer;
 import de.timeout.sudo.users.User;
 import de.timeout.sudo.users.UserManager;
+import de.timeout.sudo.utils.PasswordCryptor;
 
 public class BukkitUserManager extends UserManager<JsonConfig> {
 	
@@ -122,14 +123,27 @@ public class BukkitUserManager extends UserManager<JsonConfig> {
 	}
 	
 	@Override
-	public void upgradeUser(Sudoer superUser, Root executor) {
-		Validate.notNull(superUser, "Superuser cannot be null");
+	public Sudoer upgradeUser(User user, String password, Root executor) throws IOException {
+		Validate.notNull(user, "User cannot be null");
 		Validate.notNull(executor, "Executor cannot be null");
-		// do nothing if executor is not authorized or superuser is not a bukkitsudoer
-		if(executor.isRoot()) {
-			// update profile
-			this.profiles.replace(superUser.getUniqueID(), superUser);
-		}
+		Validate.notEmpty(password, "Password can neither be null nor empty");
+		Validate.isTrue(executor.isRoot(), "For promoting a user to a sudoer the executor must be root");
+		
+		// create Sudoer
+		Sudoer sudoer;
+		
+		if(!main.bungeecordEnabled()) {
+			sudoer = BukkitSudoer.upgradeUserToSudoer((BukkitUser) user, password, executor);
+			
+			// write data in sudoers
+			decodedSudoer.set(user.getUniqueID().toString(), PasswordCryptor.encode(password));
+		} else sudoer = BukkitSudoer.upgradeUserToSudoer((BukkitUser) user, executor);
+		
+		// update profile
+		this.profiles.replace(user.getUniqueID(), sudoer);
+		
+		// return sudoer
+		return sudoer;
 	}
 	
 	@Override
@@ -190,37 +204,10 @@ public class BukkitUserManager extends UserManager<JsonConfig> {
 			// load Sudoer
 			Sudoer sudoer = BukkitSudoer.loadSudoerFromConfiguration((BukkitUser) user, console);
 			// update in group manager if sudoer could be loaded
-			if(sudoer != null) upgradeUser(sudoer, console);
+			if(sudoer != null) this.profiles.put(sudoer.getUniqueID(), sudoer);
 			// return sudoer
 			return sudoer;
 		} else return (Sudoer) user;
-	}
-	
-	/**
-	 * Upgrades a User to a Sudoer
-	 * @author Timeout
-	 * 
-	 * @param user the user you want to upgrade. Cannot be null
-	 * @param password the password of the user. Cannot be null nor empty
-	 * @param executor the executor of the command. Cannot be null
-	 * @throws IllegalArgumentException if any argument is null, the password is empty or {@link Root#isRoot()} returns false
-	 * @return the Sudoer of the user. Cannot be null
-	 */
-	@Nonnull
-	public Sudoer upgradeUserToSudoer(@Nonnull User user, @Nonnull String password, @Nonnull Root executor) {
-		// Validate
-		Validate.notNull(user, "User cannot be null");
-		Validate.notNull(executor, "Executor cannot be null");
-		Validate.notEmpty(password, "Password can neither be null nor empty");
-		Validate.isTrue(executor.isRoot(), "Unable to acquire the sudo frontend lock. Are you root?");
-		Validate.isTrue(user instanceof BukkitUser, "User must be an instance of BukkitUser");
-		
-		// create Sudoer
-		Sudoer sudoer = BukkitSudoer.upgradeUserToSudoer((BukkitUser) user, password, executor);
-		// upgrade in group manager
-		upgradeUser(sudoer, executor);
-		// return user
-		return sudoer;
 	}
 
 	@Override

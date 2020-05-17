@@ -24,6 +24,7 @@ import de.timeout.sudo.users.Root;
 import de.timeout.sudo.users.Sudoer;
 import de.timeout.sudo.users.User;
 import de.timeout.sudo.users.UserManager;
+import de.timeout.sudo.utils.PasswordCryptor;
 
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
@@ -48,9 +49,7 @@ public class ProxyUserManager extends UserManager<Configuration> implements List
 	
 	private static final Field passwordField = Reflections.getField(ProxySudoer.class, "password");
 	private static final File userFolder = new File(main.getDataFolder(), "users");
-	
-	private Configuration decodedSudoers;
-	
+		
 	/**
 	 * Create a new ProxySudoerManager
 	 * @author Timeout
@@ -66,7 +65,7 @@ public class ProxyUserManager extends UserManager<Configuration> implements List
 	public void reloadSudoerConfig() {
 		// load configuration
 		try {
-			decodedSudoers = ConfigurationProvider.getProvider(JsonConfiguration.class).load(new String(
+			decodedSudoer = ConfigurationProvider.getProvider(JsonConfiguration.class).load(new String(
 						Base64.getDecoder().decode(
 								String.join("", Files.readLines(new File(main.getDataFolder(), "sudoers.out"),
 										StandardCharsets.UTF_8)))));
@@ -80,7 +79,7 @@ public class ProxyUserManager extends UserManager<Configuration> implements List
 		// save all new users in sudoers config
 		main.getGroupManager().getSudoGroup().getMembers().forEach(sudoer -> 
 			// create a new Configuration
-			decodedSudoers.set(String.format("%s.password", sudoer.getUniqueID().toString()), Reflections.getValue(passwordField, sudoer))
+			decodedSudoer.set(String.format("%s.password", sudoer.getUniqueID().toString()), Reflections.getValue(passwordField, sudoer))
 		);
 		
 		// define new file
@@ -92,7 +91,7 @@ public class ProxyUserManager extends UserManager<Configuration> implements List
 			// create file
 			Files.touch(file);
 			// write data into file
-			ConfigurationProvider.getProvider(JsonConfiguration.class).save(decodedSudoers, file);
+			ConfigurationProvider.getProvider(JsonConfiguration.class).save(decodedSudoer, file);
 			// encode data
 			Files.write(Base64.getEncoder().encodeToString(Files.toByteArray(file)), file, StandardCharsets.UTF_8);
 		} catch (IOException e) {
@@ -128,12 +127,21 @@ public class ProxyUserManager extends UserManager<Configuration> implements List
 	}
 	
 	@Override
-	public void upgradeUser(Sudoer superUser, Root executor) {
+	public Sudoer upgradeUser(User user, String password, Root executor) throws IOException {
 		// only continue if the executor is authrized
 		Validate.isTrue(executor.isRoot(), "For promoting a user to a sudoer the executor must be root");
 		
+		// create Sudoer
+		Sudoer sudoer = ProxySudoer.upgradeUserToSudoer((ProxyUser) user, password, executor);
+		
 		// replace user with superuser
-		profiles.replace(superUser.getUniqueID(), superUser);
+		profiles.replace(sudoer.getUniqueID(), sudoer);
+		
+		// write data into sudoers
+		decodedSudoer.set(user.getUniqueID().toString(), PasswordCryptor.encode(password));
+		
+		// return sudoer
+		return sudoer;
 	}
 	
 	@Override

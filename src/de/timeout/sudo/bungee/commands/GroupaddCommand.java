@@ -39,5 +39,10 @@ public class GroupaddCommand extends RootRequiredCommand {
 					SUCCESS : FAILED));
 		}
 	}
+
+	@Override
+	public Iterable<String> onTabComplete(CommandSender sender, String[] args) {
+		return null;
+	}
 	
 }

@@ -23,7 +23,7 @@ public interface User extends Comparable<User>, PermissibleBase, Collectable<Use
 	 */
 	@Nonnull
 	public String getName();
-	
+		
 	/**
 	 * Checks if the user is currently online
 	 * @return true if the user is online otherwise false

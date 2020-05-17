@@ -1,5 +1,6 @@
 package de.timeout.sudo.users;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -57,8 +58,9 @@ public abstract class UserManager<C> implements SudoerConfigurable, UserConfigHa
 	 * 
 	 * @param superUser the new superuser
 	 * @param executor the executor of the command
+	 * @throws IOException if an unexpected IO-Error appears
 	 */
-	public abstract void upgradeUser(@Nonnull Sudoer superUser, @Nonnull Root executor);
+	public abstract Sudoer upgradeUser(@Nonnull User user, @Nonnull String password, @Nonnull Root executor) throws IOException;
 	
 	/**
 	 * Unloads a user in cache.
