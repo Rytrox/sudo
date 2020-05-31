@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.bukkit.craftbukkit.libs.org.apache.commons.lang3.Validate;
 
@@ -49,7 +50,7 @@ public class PacketProxyInAuthorize extends Packet<PacketProxyInAuthorize> {
 	@Override
 	public void decode(ByteBuf input) throws IOException {
 		// read string
-		proxyID = UUID.fromString(readString(input));
+		proxyID = readUUID(input);
 		// read port
 		remotePort = input.readInt();
 	}
@@ -65,12 +66,12 @@ public class PacketProxyInAuthorize extends Packet<PacketProxyInAuthorize> {
 	}
 
 	/**
-	 * Get the UUID from configuration
+	 * Get the UUID from configuration. Is null if the uuid could not be read
 	 * @author Timeout
 	 * 
 	 * @return the proxy id which is located in the configuration file
 	 */
-	@Nonnull
+	@Nullable
 	public UUID getProxyID() {
 		return proxyID;
 	}

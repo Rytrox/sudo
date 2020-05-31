@@ -1,9 +1,5 @@
 package de.timeout.sudo.bungee.security;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import javax.annotation.Nonnull;
@@ -49,42 +45,6 @@ public abstract class RootRequiredCommand extends Command implements TabExecutor
 		if(superuser != null && superuser.isRoot()) {
 			execute(sender, superuser, args);
 		} else sender.sendMessage(new TextComponent(NO_ROOT)); 
-	}
-	
-	/**
-	 * Checks for Parameters and splits them into their parts
-	 * @author Timeout
-	 * 
-	 * @param args the arguments you want to check
-	 * @return a map sorted by all params
-	 */
-	protected Map<Character, List<String>> solveParams(String[] args) {
-		// create map for output
-		Map<Character, List<String>> out = new HashMap<>();
-		
-		// create list for parametered command
-		List<String> arguments = new ArrayList<>();
-		char argumentParam = '\u0000';
-		// run through args
-		for(int i = 0; i < args.length; i++) {
-			// add to arguments if the current word is not a parameter and another parameter requires an argument
-			if(args[i].startsWith("-")) {
-				// try to split param
-				char[] params = args[i].substring(1).toCharArray();
-				
-				// add all params empty except for last one
-				for(int j = 0; j < params.length -1; j++) out.put(params[i], new ArrayList<>());
-				
-				// set argumentParam
-				argumentParam = params[params.length];
-			} else if(argumentParam != Character.MIN_VALUE) arguments.add(args[i]);
-		}
-		
-		// add last parameter
-		out.put(argumentParam, arguments);
-		
-		// return out
-		return out;
 	}
 	
 	/**

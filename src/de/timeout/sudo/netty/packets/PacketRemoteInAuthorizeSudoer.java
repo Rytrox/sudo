@@ -38,7 +38,7 @@ public class PacketRemoteInAuthorizeSudoer extends Packet<PacketRemoteInAuthoriz
 	@Override
 	public void decode(ByteBuf input) throws IOException {
 		// read sudoer
-		sudoer = UUID.fromString(readString(input));
+		sudoer = readUUID(input);
 		// read success
 		authorized = AuthorizationResult.getResultByID(input.readInt());
 	}
@@ -70,7 +70,7 @@ public class PacketRemoteInAuthorizeSudoer extends Packet<PacketRemoteInAuthoriz
 	 * 
 	 * @return the uuid of the sudoer. Cannot be null
 	 */
-	@Nonnull
+	@Nullable
 	public UUID getUniqueID() {
 		return sudoer;
 	}

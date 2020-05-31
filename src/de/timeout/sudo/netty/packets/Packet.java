@@ -2,14 +2,18 @@ package de.timeout.sudo.netty.packets;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.apache.commons.lang.Validate;
 
 import io.netty.buffer.ByteBuf;
 
 public abstract class Packet<T> {
+	
+	private static final String UUID_REGEX = "/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i";
 
 	protected Class<T> type;
 	
@@ -41,6 +45,14 @@ public abstract class Packet<T> {
 		writeString(output, type.getSimpleName());
 	}
 	
+	/**
+	 * Writes a String with UTF-8 Charset into the current ByteBuf
+	 * @author Timeout
+	 * 
+	 * @param data the bytebuf where the string should be written in
+	 * @param input the string you want to write
+	 * @throws IOException if the data is not writable
+	 */
 	public static void writeString(@Nonnull ByteBuf data, @Nonnull String input) throws IOException {
 		// Validate
 		Validate.notNull(data, "ByteBuf cannot be null");
@@ -54,6 +66,15 @@ public abstract class Packet<T> {
 		} else throw new IOException("ByteBuf is not writable");
 	}
 	
+	/**
+	 * Reads a String with UTF-8 Charset of a ByteBuf
+	 * @author Timeout
+	 * 
+	 * @param data the bytebuf where the string is located
+	 * @return the string itself
+	 * @throws IOException if the bytebuf is not readable
+	 */
+	@Nonnull
 	public static String readString(@Nonnull ByteBuf data) throws IOException {
 		// Validate
 		Validate.notNull(data, "ByteBuf cannot be null");
@@ -65,4 +86,21 @@ public abstract class Packet<T> {
 			return data.readCharSequence(length, StandardCharsets.UTF_8).toString();
 		} else throw new IOException("ByteBuf is not readable");
 	}	
+	
+	/**
+	 * Reads a UUID of a ByteBuf
+	 * @author Timeout
+	 * 
+	 * @param data the bytebuf you want to read
+	 * @return the uuid or null if the string is not a uuid
+	 * @throws IOException if the bytebuf is not readable
+	 */
+	@Nullable
+	public static UUID readUUID(@Nonnull ByteBuf data) throws IOException {
+		// get String
+		String uuidString = readString(data);
+		
+		// return uuid if id is valid. Otherwise null
+		return uuidString.matches(UUID_REGEX) ? UUID.fromString(uuidString) : null;
+	}
 }

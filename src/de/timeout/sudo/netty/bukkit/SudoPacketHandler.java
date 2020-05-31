@@ -2,6 +2,7 @@ package de.timeout.sudo.netty.bukkit;
 
 import java.lang.reflect.Field;
 import java.util.Set;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -39,34 +40,44 @@ class SudoPacketHandler extends SimpleChannelInboundHandler<Packet<?>> implement
 		if(raw instanceof PacketRemoteInSudoUsage) {
 			// get Packet
 			PacketRemoteInSudoUsage packet = (PacketRemoteInSudoUsage) raw;
-			// get User
-			User user = main.getUserManager().getUser(packet.getUniqueID());
-			// await sudo authentification
-			main.getSudoHandler().awaitAuthentification(user, packet.getCommand());
+			
+			// validate UUID 
+			UUID uuid = packet.getUniqueID();
+			if(uuid != null) {
+				// get User
+				User user = main.getUserManager().getUser(uuid);
+				// await sudo authentification
+				main.getSudoHandler().awaitAuthentification(user, packet.getCommand());
+			}
 		} else if(raw instanceof PacketRemoteInAuthorizeSudoer) {
 			// get Packet
 			PacketRemoteInAuthorizeSudoer packet = (PacketRemoteInAuthorizeSudoer) raw;
 			// get User and result
-			User user = main.getUserManager().getUser(Bukkit.getOfflinePlayer(packet.getUniqueID()));
-			AuthorizationResult result = packet.getAuthResult();
+			UUID uuid = packet.getUniqueID();
 			
-			// upgrade to sudoer if the result id success
-			if(result == AuthorizationResult.SUCCESS) {
-				// upgrade sudoer
-				BukkitSudoer sudoer = user instanceof Sudoer ? (BukkitSudoer) user : 
-					BukkitSudoer.upgradeUserToSudoer((BukkitUser) user, this);
-				// set authorized to true
-				Reflections.setField(authorizedField, sudoer, true);
-				// enables root access
-				sudoer.enableRoot();
-				// call sudo handler
-				main.getSudoHandler().finishAuthorization(sudoer, false);
-			} else if(result == AuthorizationResult.NO_SUDOER) {
-				// send message to player
-				Bukkit.getPlayer(user.getUniqueID()).sendMessage(ChatColor.translateAlternateColorCodes('&', "&8[&6Sudo&8] &cUnable to aquire sudo access service. Are you root?"));
-			} else if(result == AuthorizationResult.BLOCKED) {
-				// block user
-				main.getSudoHandler().blockUser(packet.getUniqueID());
+			// validate uuid 
+			if(uuid != null) {
+				User user = main.getUserManager().getUser(Bukkit.getOfflinePlayer(uuid));
+				AuthorizationResult result = packet.getAuthResult();
+				
+				// upgrade to sudoer if the result id success
+				if(result == AuthorizationResult.SUCCESS) {
+					// upgrade sudoer
+					BukkitSudoer sudoer = user instanceof Sudoer ? (BukkitSudoer) user : 
+						BukkitSudoer.upgradeUserToSudoer((BukkitUser) user, this);
+					// set authorized to true
+					Reflections.setField(authorizedField, sudoer, true);
+					// enables root access
+					sudoer.enableRoot();
+					// call sudo handler
+					main.getSudoHandler().finishAuthorization(sudoer, false);
+				} else if(result == AuthorizationResult.NO_SUDOER) {
+					// send message to player
+					Bukkit.getPlayer(user.getUniqueID()).sendMessage(ChatColor.translateAlternateColorCodes('&', "&8[&6Sudo&8] &cUnable to aquire sudo access service. Are you root?"));
+				} else if(result == AuthorizationResult.BLOCKED) {
+					// block user
+					main.getSudoHandler().blockUser(packet.getUniqueID());
+				}
 			}
 		} else if(raw instanceof PacketRemoteInInitializeSudoGroup) {
 			// get Permission

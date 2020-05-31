@@ -9,7 +9,6 @@ import javax.annotation.Nullable;
 
 import de.timeout.libs.config.ColoredLogger;
 import de.timeout.libs.config.ConfigCreator;
-import de.timeout.sudo.bungee.commands.GroupaddCommand;
 import de.timeout.sudo.bungee.commands.SudoCommand;
 import de.timeout.sudo.bungee.permissions.ProxyGroupManager;
 import de.timeout.sudo.bungee.security.ProxySudoHandler;
@@ -132,7 +131,6 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 	
 	private void registerCommands() {
 		this.getProxy().getPluginManager().registerCommand(instance, new SudoCommand());
-		this.getProxy().getPluginManager().registerCommand(instance, new GroupaddCommand());
 	}
 
 	@Override

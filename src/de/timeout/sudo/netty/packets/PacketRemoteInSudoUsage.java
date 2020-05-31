@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.apache.commons.lang.Validate;
 
@@ -49,7 +50,7 @@ public class PacketRemoteInSudoUsage extends Packet<PacketRemoteInSudoUsage> {
 
 	@Override
 	public void decode(ByteBuf input) throws IOException {
-		this.uuid = UUID.fromString(readString(input));
+		this.uuid = readUUID(input);
 		this.command = readString(input);
 	}
 	
@@ -63,12 +64,13 @@ public class PacketRemoteInSudoUsage extends Packet<PacketRemoteInSudoUsage> {
 	}
 
 	/**
-	 * Returns the uuid of the executor. Cannot be null
+	 * Returns the uuid of the executor.
+	 * Returns null if the uuid could not be read
 	 * @author Timeout
 	 * 
-	 * @return the uuid of the executor. Cannot be null
+	 * @return the uuid of the executor.
 	 */
-	@Nonnull
+	@Nullable
 	public UUID getUniqueID() {
 		return uuid;
 	}

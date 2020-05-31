@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.apache.commons.lang.Validate;
 
@@ -45,6 +46,8 @@ public class PacketProxyInAuthorizeSudoer extends Packet<PacketProxyInAuthorizeS
 
 	@Override
 	public void decode(ByteBuf input) throws IOException {
+		// decode bytebuf
+		this.uuid = readUUID(input);
 		this.password = readString(input);
 	}
 
@@ -64,7 +67,7 @@ public class PacketProxyInAuthorizeSudoer extends Packet<PacketProxyInAuthorizeS
 	 * 
 	 * @return the sudoers uuid. Cannot be null
 	 */
-	@Nonnull
+	@Nullable
 	public UUID getUniqueID() {
 		return uuid;
 	}

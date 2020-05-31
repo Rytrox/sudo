@@ -11,3 +11,52 @@ commands:
   sudo:
     description: Executes a command as a super user
     usage: /sudo <command>
+  customize:
+    description: Customizes your Prefix and Suffix
+    usage: /customize
+    
+permissions:
+  sudo.*:
+    default: op
+    description: Allows the usage of all relevant sudo actions
+    children:
+      sudo.command.*: true
+  
+  sudo.command.*:
+    default: op
+    description: Allows the usage of all relevant sudo commands
+    children:
+      sudo.command.customize.*: true
+      
+  sudo.command.customize.*:
+    default: op
+    description: Allows full access of command /customize
+    children:
+      sudo.command.customize.prefix.*: true
+      sudo.command.customize.suffix.*: true
+    
+  sudo.command.customize.prefix.*:
+    default: op
+    description: Allows full modification of prefixes for everyone
+    children:
+      sudo.command.customize.prefix.self: true
+      sudo.command.customize.prefix.other: true
+  sudo.command.customize.prefix.self:
+    default: true
+    description: Allows you to change your own prefix
+  sudo.command.customize.prefix.other:
+    default: op
+    description: Allows to change other's prefix
+    
+  sudo.command.customize.suffix.*:
+    default: op
+    description: Allows full modification of suffixes for everyone
+    children:
+      sudo.command.customize.suffix.self: true
+      sudo.command.customize.suffix.other: true
+  sudo.command.customize.suffix.self:
+    default: true
+    description: Allows you to change your own suffix
+  sudo.command.customize.suffix.other:
+    default: op
+    description: Allows to change other's suffix
