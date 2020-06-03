@@ -1,8 +1,10 @@
 package de.timeout.sudo.bukkit.permissions;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
@@ -16,6 +18,8 @@ import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.groups.GroupManager;
 import de.timeout.sudo.groups.UserGroup;
 import de.timeout.sudo.groups.exception.CircularInheritanceException;
+
+import net.md_5.bungee.api.ChatColor;
 
 public class BukkitGroupManager extends GroupManager {
 	
@@ -117,5 +121,96 @@ public class BukkitGroupManager extends GroupManager {
 		}
 		// return group
 		return (UserGroup) group;
+	}
+
+	@Override
+	public boolean deleteGroup(Group group) {
+		// check if group is not sudo group
+		if(group instanceof UserGroup) {
+			// remove from graph
+			groups.removeNode(group);
+			
+			// delete from file system if bukkit mode is enabled
+			if(!main.bungeecordEnabled()) {
+				main.getGroupConfig().set(group.getName(), null);
+				main.saveGroupConfig();
+			}
+			
+			// kick all users from the group
+			group.getMembers().forEach(((UserGroup)group)::kick);
+			
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Returns null if bungeecord mode is enabled, too. 
+	 */
+	@Override
+	public UserGroup createGroup(String name, List<Group> parents) {
+		// Validate
+		Validate.notEmpty(name, "Name can neither be null nor empty");
+		
+		// if bungeecord is disabled and no group with that name exists
+		if(main.bungeecordEnabled() && getGroupByName(name) == null) {
+			// create group
+			UserGroup group = new BukkitGroup(name);
+			groups.addNode(group);
+			
+			// add parents
+			if(parents != null) parents.forEach(parent -> {
+				// check if parent is not the sudo group
+				if(parent instanceof UserGroup) {
+					try {
+						// bind inheritance
+						bindInheritance(group, (UserGroup) parent);
+					} catch (CircularInheritanceException e) {
+						Sudo.log().log(Level.WARNING, String.format("&cUnable to bind parent %s to new group %s", parent.getName(), name), e);
+					}
+				}
+			});
+			
+			// save to config
+			saveToConfig(group);
+			
+			// return usergroup
+			return group;
+		}
+		
+		return null;
+	}
+
+	/**
+	 * Does nothing if Bungeecord is enabled
+	 */
+	@Override
+	public void saveToConfig(UserGroup group) {
+		// Validate
+		Validate.notNull(group, "Group cannot be null");
+		
+		// check if bungeecord is disabled
+		if(!main.bungeecordEnabled()) {
+			// create section if section does not exists
+			ConfigurationSection section = main.getGroupConfig().createSection(group.getName());
+			
+			// write option fields
+			section.set("options.default", group.isDefault());
+			section.set("options.prefix", Optional.ofNullable(group.getPrefix()).orElse("").replace(ChatColor.COLOR_CHAR, '&'));
+			section.set("options.suffix", Optional.ofNullable(group.getSuffix()).orElse("").replace(ChatColor.COLOR_CHAR, '&'));
+			
+			// write permissions
+			section.set("permissions", new ArrayList<>(group.getPermissions()));
+			
+			// write inheritances
+			section.set("extends", group.getExtendedGroups()
+					.stream()
+					.map(UserGroup::getName)
+					.collect(Collectors.toList())
+			);
+			
+			// save config
+			main.saveGroupConfig();
+		}
 	}
 }

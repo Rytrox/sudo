@@ -29,6 +29,16 @@ public class BukkitGroup extends UserGroup {
 	}
 	
 	/**
+	 * Creates a new BukkitGroup
+	 * @author Timeout
+	 *
+	 * @param name the name of the group. Can neither be null nor empty
+	 */
+	public BukkitGroup(@Nonnull String name) {
+		super(name, null, null, false);
+	}
+	
+	/**
 	 * Creates a new BukkitGroup from the bukkit groups.yml
 	 * @author Timeout
 	 *

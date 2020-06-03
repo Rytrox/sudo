@@ -1,7 +1,9 @@
 package de.timeout.sudo.netty.bukkit;
 
 import de.timeout.sudo.bukkit.Sudo;
+import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.netty.packets.Packet;
+import de.timeout.sudo.netty.packets.PacketRemoteInDeleteGroup;
 import de.timeout.sudo.netty.packets.PacketRemoteInGroupInheritance;
 import de.timeout.sudo.netty.packets.PacketRemoteInInitializeGroup;
 import de.timeout.sudo.netty.packets.PacketRemoteInLoadUser;
@@ -32,6 +34,12 @@ public class GroupInitializationHandler extends SimpleChannelInboundHandler<Pack
 		} else if(packet instanceof PacketRemoteInLoadUser) {
 			// get Packet
 			main.getUserManager().loadUserFromBungeecord(((PacketRemoteInLoadUser) packet).getUserData());
+		} else if(packet instanceof PacketRemoteInDeleteGroup) {
+			// get group
+			Group group = main.getGroupManager().getGroupByName(((PacketRemoteInDeleteGroup) packet).getGroupName());
+			
+			// delete group
+			if(group != null) main.getGroupManager().deleteGroup(group);
 		}
 	}
 

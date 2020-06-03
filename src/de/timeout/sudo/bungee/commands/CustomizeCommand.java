@@ -1,9 +1,11 @@
 package de.timeout.sudo.bungee.commands;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -14,11 +16,11 @@ import javax.annotation.Nullable;
 import org.apache.commons.lang.ArrayUtils;
 
 import de.timeout.sudo.bungee.Sudo;
-import de.timeout.sudo.bungee.permissions.ProxyUser;
 import de.timeout.sudo.utils.Customizable;
 
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ChatEvent;
 import net.md_5.bungee.api.plugin.Command;
@@ -40,6 +42,14 @@ import net.md_5.bungee.event.EventHandler;
 public class CustomizeCommand extends Command implements TabExecutor {
 
 	private static final String USER = "user";
+	
+	private static final String NO_PERMISSION = ChatColor.translateAlternateColorCodes('&', "&8[&6Sudo&8] &cDu hast nicht die benötigte Berechtigung, diesen Befehl auszuführen!");
+	private static final String NOT_ONLINE = ChatColor.translateAlternateColorCodes('&', "&8[&6Sudo&8] &cDer angegebene Spieler ist nicht online"); 
+	private static final String NO_PLAYER = ChatColor.translateAlternateColorCodes('&', "&8[&cSudo&8] &cNur ein Spieler kann diesen Befehl ausführen!");
+	private static final String ALREADY_REQUEST = ChatColor.translateAlternateColorCodes('&', "&8[&6Sudo&8] &cDu bist bereits in einem Registrationsprozess!");
+	private static final String REQUEST_PREFIX = ChatColor.translateAlternateColorCodes('&', "&8[&6Sudo&8] &aBitte gebe jetzt einen neuen Prefix ein. Farbcodes werden mit '&' notiert.");
+	private static final String REQUEST_SUFFIX = ChatColor.translateAlternateColorCodes('&', "&8[&6Sudo&8] &aBitte gebe jetzt einen neuen Suffix ein. Farbcodes werden mit '&' notiert.");
+	private static final String REQUEST_FINISHED = ChatColor.translateAlternateColorCodes('&', "&8[&6Sudo&8] &aRegistrationsprozess vollendet!");
 	
 	private static final Sudo main = Sudo.getInstance();
 	
@@ -97,40 +107,47 @@ public class CustomizeCommand extends Command implements TabExecutor {
 
 	@Override
 	public void execute(CommandSender sender, String[] args) {
-		// send help if the command is empty
-		if(args.length > 0) {
-			// get Customizable
-			Customizable user = getCustomizeable(sender, args);
-			
-			// validate user (is not null if console changes a user or player changes a user or player changes himself)
-			if(user != null) {
-				boolean other = true;
+		// only players can perform this command
+		if(sender instanceof ProxiedPlayer) {
+			ProxiedPlayer player = (ProxiedPlayer) sender; 
+			// send help if the command is empty
+			if(args.length > 0) {
+				// get Customizable
+				Customizable user = getCustomizeable(player, args);
 				
-				// check if user modifies its own profile
-				if(sender instanceof ProxiedPlayer) other = !user.equals((Customizable) main.getUserManager().getUser((ProxiedPlayer) sender));
-				
-
-				if(ArrayUtils.contains(args, "prefix")) {
-					// check for permissions
-					if(sender.hasPermission(String.format("sudo.command.customize.prefix.%s", other ? "other" : "self"))) {
-						// request customization requests
-						helper.requestPrefixChange(user);
-					}
-				}
-				
-				if(ArrayUtils.contains(args, "suffix")) {
-					// check for permissions
-					if(sender.hasPermission(String.format("sudo.command.customize.suffix.%s", other ? "other" : "self"))) {
-						// request customization request
-						helper.requestSuffixChange(user);
-					}
-				}
-			}
-		}
+				// validate user (is not null if user is not online)
+				if(user != null) {
+					// check if user is not in process
+					if(!helper.isInRegistrationProcess(player)) {
+						boolean other = !user.equals((Customizable) main.getUserManager().getUser((ProxiedPlayer) sender));
+						boolean prefix = ArrayUtils.contains(args, "prefix");				
+		
+						if(prefix) {
+							// check for permissions
+							if(sender.hasPermission(String.format("sudo.command.customize.prefix.%s", other ? "other" : "self"))) {
+								// request customization requests
+								helper.requestPrefixChange(player, user);
+								sender.sendMessage(new TextComponent(REQUEST_PREFIX));
+							} else sender.sendMessage(new TextComponent(NO_PERMISSION));
+						}
+						
+						if(ArrayUtils.contains(args, "suffix")) {
+							// check for permissions
+							if(sender.hasPermission(String.format("sudo.command.customize.suffix.%s", other ? "other" : "self"))) {
+								// request customization request
+								helper.requestSuffixChange(player, user);
+								// send message if message is not already sent
+								if(!prefix) sender.sendMessage(new TextComponent(REQUEST_SUFFIX));
+							} else sender.sendMessage(new TextComponent(NO_PERMISSION));
+						}
+					} else sender.sendMessage(new TextComponent(ALREADY_REQUEST));
+				} else sender.sendMessage(new TextComponent(NOT_ONLINE));
+			} else sendHelp(player);
+		} else sender.sendMessage(new TextComponent(NO_PLAYER));
 	}
 	
 	@Nullable
-	private Customizable getCustomizeable(CommandSender sender, String[] args) {
+	private Customizable getCustomizeable(ProxiedPlayer sender, String[] args) {
 		// check if args are using param user
 		int index = ArrayUtils.indexOf(args, USER);
 		if(index != -1) {
@@ -138,8 +155,11 @@ public class CustomizeCommand extends Command implements TabExecutor {
 			return (Customizable) main.getUserManager().getUser(args.length > index ? main.getProxy().getPlayer(args[index + 1]) : null);
 		}
 		
-		// return sender's user if sender is a player. Otherwise null
-		return sender instanceof ProxiedPlayer ? (Customizable) main.getUserManager().getUser((ProxiedPlayer) sender) : null;
+		return (Customizable) main.getUserManager().getUser(sender);
+	}
+	
+	private void sendHelp(@Nonnull CommandSender sender) {
+		// TODO: Hilfe schreiben
 	}
 	
 	@Override
@@ -164,41 +184,64 @@ public class CustomizeCommand extends Command implements TabExecutor {
 
 	private static class CustomizeHelper implements Listener {
 		
-		private final Set<Customizable> prefixChange = new HashSet<>();
-		private final Set<Customizable> suffixChange = new HashSet<>();
+		private final Map<ProxiedPlayer, Customizable> cache = new HashMap<>();
+		
+		private final Set<ProxiedPlayer> prefixChange = new HashSet<>();
+		private final Set<ProxiedPlayer> suffixChange = new HashSet<>();
 		
 		@EventHandler
 		public void onChat(ChatEvent event) {
 			// check if sender is a player
 			if(event.getSender() instanceof ProxiedPlayer) {
+				// get Sender
+				ProxiedPlayer sender = (ProxiedPlayer) event.getSender();
 				// get User
-				ProxyUser user = (ProxyUser) main.getUserManager().getUser((ProxiedPlayer) event.getSender());
-				
-				// check if user has required prefix change
-				if(prefixChange.contains(user)) {
+				Customizable user = cache.get(sender);
+						
+				// only continue if player is in cache
+				if(user != null) {		
 					// cancel event
 					event.setCancelled(true);
 					
 					// check if message is valid
-					if(event.getMessage().length() > 16) {
-						// apply prefix
-						user.setPrefix(ChatColor.translateAlternateColorCodes('&', event.getMessage()));
-						// remove from prefix change
-						prefixChange.remove(user);
-					}
-				} else if(suffixChange.contains(user)) {
-					// cancel event
-					event.setCancelled(true);
-					
-					// check for length of message
-					if(event.getMessage().length() > 16) {
-						// apply suffix
-						user.setSuffix(ChatColor.translateAlternateColorCodes('&', event.getMessage()));
-						// remove from suffix change
-						suffixChange.remove(user);
+					if(event.getMessage().length() <= 16) {
+						String fix = ChatColor.translateAlternateColorCodes('&', event.getMessage());
+						
+						// check if sender has required prefix change
+						if(prefixChange.contains(sender)) {					
+							// apply prefix
+							user.setPrefix(fix);
+							// remove from prefix change
+							prefixChange.remove(sender);
+							
+							// finish registration
+							if(!suffixChange.contains(sender)) {
+								// finish registration
+								finishRegistrationProcess(sender);
+							}
+						} else if(suffixChange.contains(sender)) {						
+							// apply suffix
+							user.setSuffix(fix);
+							// remove from suffix change
+							suffixChange.remove(sender);
+							
+							// finish registration process
+							finishRegistrationProcess(sender);
+						}
 					}
 				}
 			}
+		}
+		
+		/**
+		 * Checks if the player is currently in registration process
+		 * @author timeout
+		 * 
+		 * @param player the player you want to check
+		 * @return true if he is in RegistrationProcess, false otherwise
+		 */
+		public boolean isInRegistrationProcess(@Nonnull ProxiedPlayer player) {
+			return cache.containsKey(player);
 		}
 		
 		/**
@@ -208,8 +251,29 @@ public class CustomizeCommand extends Command implements TabExecutor {
 		 * @param customizable the user itself
 		 * @return true if the request succeed, false if the user has currently an open request
 		 */
-		public boolean requestPrefixChange(@Nonnull Customizable customizable) {
-			return prefixChange.add(customizable);
+		public boolean requestPrefixChange(@Nonnull ProxiedPlayer sender, @Nonnull Customizable customizable) {
+			// return false if it is in registration process
+			if(!isInRegistrationProcess(sender)) {
+				// add to cache
+				cache.put(sender, customizable);
+				return prefixChange.add(sender);
+			}
+			
+			return false;
+		}
+		
+		/**
+		 * Finishes the registration process
+		 * @author timeout
+		 * 
+		 * @param player the player who finish
+		 */
+		public void finishRegistrationProcess(@Nonnull ProxiedPlayer player) {
+			cache.remove(player);
+			prefixChange.remove(player);
+			suffixChange.remove(player);
+			
+			player.sendMessage(new TextComponent(REQUEST_FINISHED));
 		}
 		
 		/**
@@ -219,8 +283,14 @@ public class CustomizeCommand extends Command implements TabExecutor {
 		 * @param customizable the user itself
 		 * @return true if the request succeed, false if the user has currently an open request
 		 */
-		public boolean requestSuffixChange(@Nonnull Customizable customizable) {
-			return suffixChange.add(customizable);
+		public boolean requestSuffixChange(@Nonnull ProxiedPlayer sender, @Nonnull Customizable customizable) {
+			// return false if sender is in registration process
+			if(!isInRegistrationProcess(sender)) {
+				cache.put(sender, customizable);
+				return suffixChange.add(sender);
+			}
+			
+			return false;
 		}
 	}
 	

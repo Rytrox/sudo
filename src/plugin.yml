@@ -1,7 +1,7 @@
 name: sudo
 author: Timeout
 version: 0.1
-description: A Permission System for BungeeCord / Bukkit which is inspired by Linux sudo system
+description: A Permission System for BungeeCord / Bukkit which is inspired by Linux sudo system and PermissionsEx
 api-version: 1.15
 load: STARTUP
 

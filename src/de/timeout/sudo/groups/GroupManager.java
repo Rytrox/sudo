@@ -68,14 +68,47 @@ public abstract class GroupManager {
 	 */
 	@Nullable
 	public Group getGroupByName(String name) {
-		// for each group in graph
-		for(Group group : groups.nodes()) {
-			// return group if group is found
-			if(group.getName().equalsIgnoreCase(name)) return group;
+		// return null if name is null or empty
+		if(name != null && name.trim().isEmpty()) {
+			return groups.nodes()
+					.stream()
+					.filter(group -> group.getName().equalsIgnoreCase(name))
+					.findAny()
+					.orElse(null);
 		}
+		
 		// return null for not found
 		return null;
 	}
+	
+	/**
+	 * Deletes a group from the system
+	 * @author Timeout
+	 * 
+	 * @param group the group you want to delete
+	 * @return whether the group could be deleted or not
+	 */
+	public abstract boolean deleteGroup(@Nonnull Group group); 
+	
+	/**
+	 * Saves a usergroup in the groups.yml
+	 * @author Timeout
+	 * 
+	 * @param group the group you want to save. Cannot be null
+	 * @throws IllegalArgumentException if the group is null
+	 */
+	public abstract void saveToConfig(@Nonnull UserGroup group);
+	
+	/**
+	 * Creates a new group 
+	 * @author Timeout
+	 * 
+	 * @param name the name of the new group
+	 * @param parents the parents of the new group
+	 * @return the group or null if the group could not be created 
+	 */
+	@Nullable
+	public abstract UserGroup createGroup(String name, List<Group> parents);
 	
 	/**
 	 * loads a Group by its name from the default configuration file
@@ -110,19 +143,5 @@ public abstract class GroupManager {
 			// add extension to group
 			group.extend(extend);
 		}
-	}
-	
-	/**
-	 * Adds a new Group to Graph
-	 * @author Timeout
-	 * 
-	 * @param group the group you want to add. Cannot be null
-	 * @return if the group could be added
-	 */
-	public boolean addGroup(@Nonnull UserGroup group) {
-		// Validate
-		Validate.notNull(group, "Group cannot be null");
-		// adds to graph
-		return groups.addNode(group);
 	}
 }
