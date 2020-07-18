@@ -5,7 +5,6 @@ import java.util.logging.Level;
 import de.timeout.sudo.bukkit.Sudo;
 import de.timeout.sudo.netty.packets.PacketProxyInLogin;
 import de.timeout.sudo.netty.packets.PacketRemoteInAuthorize;
-
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 

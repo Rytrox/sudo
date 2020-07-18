@@ -4,9 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import de.timeout.libs.config.ColoredLogger;
 import de.timeout.libs.config.ConfigCreator;
 import de.timeout.sudo.bungee.commands.CustomizeCommand;
@@ -61,7 +58,7 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 	 * 
 	 * @return the colored logger of the plugin
 	 */
-	@Nonnull
+	@NotNull
 	public static ColoredLogger log() {
 		return LOG;
 	}
@@ -73,7 +70,7 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 	 * 
 	 * @return the group manager. Cannot be null
 	 */
-	@Nonnull
+	@NotNull
 	public ProxyGroupManager getGroupManager() {
 		return groupManager;
 	}
@@ -84,7 +81,7 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 	 * 
 	 * @return the user manager. Cannot be null
 	 */
-	@Nonnull
+	@NotNull
 	public ProxyUserManager getUserManager() {
 		return userManager;
 	}
@@ -95,7 +92,7 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 	 * 
 	 * @return the sudo handler. Cannot be null
 	 */
-	@Nonnull
+	@NotNull
 	public ProxySudoHandler getSudoHandler() {
 		return sudoHandler;
 	}
@@ -229,7 +226,7 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 	 * 
 	 * @return the Netty-Server
 	 */
-	@Nonnull
+	@NotNull
 	public BungeeSocketServer getNettyServer() {
 		// load server if the server is null
 		if(netty == null) startSocketServer();

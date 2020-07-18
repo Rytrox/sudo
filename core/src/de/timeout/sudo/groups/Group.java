@@ -6,9 +6,8 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import javax.annotation.Nonnull;
-
 import org.apache.commons.lang.Validate;
+import org.jetbrains.annotations.NotNull;
 
 import com.google.gson.JsonObject;
 
@@ -30,7 +29,7 @@ public abstract class Group implements Comparable<Group>, PermissibleBase, Colle
 	
 	protected String name;
 	
-	public Group(@Nonnull String name) {
+	public Group(@NotNull String name) {
 		// Validate
 		Validate.notEmpty(name, "Groupname can neither be null nor empty");
 		this.name = name;
@@ -52,12 +51,12 @@ public abstract class Group implements Comparable<Group>, PermissibleBase, Colle
 	 * Returns the name of this instance
 	 * @return the name of this instance
 	 */
-	@Nonnull
+	@NotNull
 	public String getName() {
 		return name;
 	}
 	
-	@Nonnull
+	@NotNull
 	public Collection<User> getMembers() {
 		return new ArrayList<>(members);
 	}
@@ -98,6 +97,6 @@ public abstract class Group implements Comparable<Group>, PermissibleBase, Colle
 	 * 
 	 * @return the group as JsonObject
 	 */
-	@Nonnull
+	@NotNull
 	public abstract JsonObject toJson();
 }

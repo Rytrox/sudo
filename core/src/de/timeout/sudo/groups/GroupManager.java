@@ -3,10 +3,9 @@ package de.timeout.sudo.groups;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import org.apache.commons.lang.Validate;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.Graphs;
@@ -21,7 +20,7 @@ public abstract class GroupManager {
 	
 	protected UserGroup defaultGroup;
 	
-	public GroupManager(@Nonnull List<String> sudopermissions) {
+	public GroupManager(@NotNull List<String> sudopermissions) {
 		Validate.notNull(sudopermissions, "Sudopermissions cannot be null");
 		sudoGroup = new SudoGroup(sudopermissions);
 	}
@@ -32,7 +31,7 @@ public abstract class GroupManager {
 	 * 
 	 * @return a list containing all loaded groups
 	 */
-	@Nonnull
+	@NotNull
 	public List<UserGroup> getGroups() {
 		return new ArrayList<>(groups.nodes());
 	}
@@ -43,7 +42,7 @@ public abstract class GroupManager {
 	 * 
 	 * @return the current default group. Cannot be null
 	 */
-	@Nonnull
+	@NotNull
 	public UserGroup getDefaultGroup() {
 		return defaultGroup;
 	}
@@ -54,7 +53,7 @@ public abstract class GroupManager {
 	 * 
 	 * @return the sudo group. Cannot be null
 	 */
-	@Nonnull
+	@NotNull
 	public SudoGroup getSudoGroup() {
 		return sudoGroup;
 	}
@@ -88,7 +87,7 @@ public abstract class GroupManager {
 	 * @param group the group you want to delete
 	 * @return whether the group could be deleted or not
 	 */
-	public abstract boolean deleteGroup(@Nonnull Group group); 
+	public abstract boolean deleteGroup(@NotNull Group group); 
 	
 	/**
 	 * Saves a usergroup in the groups.yml
@@ -97,7 +96,7 @@ public abstract class GroupManager {
 	 * @param group the group you want to save. Cannot be null
 	 * @throws IllegalArgumentException if the group is null
 	 */
-	public abstract void saveToConfig(@Nonnull UserGroup group);
+	public abstract void saveToConfig(@NotNull UserGroup group);
 	
 	/**
 	 * Creates a new group 
@@ -127,7 +126,7 @@ public abstract class GroupManager {
 	 * @throws CircularInheritanceException if the group has a circular dependency
 	 * @throws IllegalArgumentException if any group is null
 	 */
-	protected void bindInheritance(@Nonnull UserGroup group, @Nonnull UserGroup extend) throws CircularInheritanceException {
+	protected void bindInheritance(@NotNull UserGroup group, @NotNull UserGroup extend) throws CircularInheritanceException {
 		// Validate
 		Validate.notNull(group, "Group cannot be null");
 		Validate.notNull(extend, "Extends group cannot be null");
