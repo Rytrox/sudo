@@ -3,11 +3,9 @@ package de.timeout.sudo.netty.packets;
 import java.io.IOException;
 import java.util.UUID;
 
-import javax.annotation.Nonnegative;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import org.bukkit.craftbukkit.libs.org.apache.commons.lang3.Validate;
+import org.apache.commons.lang.Validate;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import net.jafama.FastMath;
 
@@ -29,10 +27,11 @@ public class PacketProxyInAuthorize extends Packet<PacketProxyInAuthorize> {
 	 *
 	 * @param proxyID the uuid you are going to send
 	 */
-	public PacketProxyInAuthorize(@Nonnull UUID proxyID, @Nonnegative int port) {
+	public PacketProxyInAuthorize(@NotNull UUID proxyID, int port) {
 		super(PacketProxyInAuthorize.class);
 		// Validate
 		Validate.notNull(proxyID, "Proxy-UUID cannot be null");
+		Validate.isTrue(port > 0, "Port must be a positive integer");
 		
 		this.proxyID = proxyID;
 		this.remotePort = FastMath.abs(port);
@@ -82,7 +81,6 @@ public class PacketProxyInAuthorize extends Packet<PacketProxyInAuthorize> {
 	 * 
 	 * @return spigot remote port
 	 */
-	@Nonnegative
 	public int getRemotePort() {
 		return remotePort;
 	}

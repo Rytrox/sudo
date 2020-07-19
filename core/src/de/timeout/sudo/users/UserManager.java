@@ -10,23 +10,14 @@ import java.util.UUID;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.apache.commons.lang.Validate;
-
 import de.timeout.sudo.permissions.UserConfigHandler;
 import de.timeout.sudo.security.SudoerConfigurable;
 
 public abstract class UserManager<C> implements SudoerConfigurable, UserConfigHandler<C> {
 
 	protected final Map<UUID, User> profiles = new HashMap<>();
-	protected final Root console;
 	
 	protected C decodedSudoer;
-	
-	public UserManager(@Nonnull Root console) {
-		// Validate
-		Validate.notNull(console, "Console cannot be null");
-		this.console = console;
-	}
 	
 	/**
 	 * Returns all loaded user profiles

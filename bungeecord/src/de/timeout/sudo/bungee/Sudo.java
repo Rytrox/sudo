@@ -4,15 +4,18 @@ import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import de.timeout.libs.config.ColoredLogger;
 import de.timeout.libs.config.ConfigCreator;
 import de.timeout.sudo.bungee.commands.CustomizeCommand;
 import de.timeout.sudo.bungee.commands.GroupCommand;
 import de.timeout.sudo.bungee.commands.SudoCommand;
-import de.timeout.sudo.bungee.permissions.ProxyGroupManager;
+import de.timeout.sudo.bungee.groups.ProxyGroupManager;
+import de.timeout.sudo.bungee.netty.BungeeSocketServer;
+import de.timeout.sudo.bungee.permissions.ProxyUserManager;
 import de.timeout.sudo.bungee.security.ProxySudoHandler;
-import de.timeout.sudo.bungee.security.ProxyUserManager;
-import de.timeout.sudo.netty.bungeecord.BungeeSocketServer;
 import de.timeout.sudo.permissions.GroupConfigurable;
 
 import net.jafama.FastMath;
@@ -32,7 +35,7 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 	private static final String SAVE_ERROR = "&cUnable to save %s";
 
 	private static Sudo instance;
-	
+		
 	private ProxyGroupManager groupManager;
 	private ProxyUserManager userManager;
 	private ProxySudoHandler sudoHandler;
@@ -155,13 +158,9 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 	}
 	
 	private void loadConfigurations() {
-		// load ConfigCreator
-		ConfigCreator creator = new ConfigCreator(getDataFolder(), "/assets/timeout/sudo/bungee");
 		// create configs
 		try {
-			creator.loadRessource(CONFIG_YML);
-			creator.loadRessource(GROUPS_YML);
-			creator.loadRessource("sudoers.out");
+			ConfigCreator.loadRessource("/assets/timeout/sudo/bungee/sudoers.out", new File(getDataFolder(), "sudoers.out"));
 		} catch (IOException e) {
 			LOG.log(Level.WARNING, "&cCannot load configurations from Plugin.", e);
 		}
@@ -172,7 +171,7 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 	 */
 	public void reloadConfig() {
 		try {
-			config = PROVIDER.load(new File(getDataFolder(), CONFIG_YML));
+			config = PROVIDER.load(ConfigCreator.loadRessource("/assets/timeout/sudo/bungee/config.yml", new File(getDataFolder(), CONFIG_YML)));
 		} catch (IOException e) {
 			LOG.log(Level.WARNING, String.format(LOAD_ERROR, CONFIG_YML));
 		}
@@ -200,7 +199,7 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 	@Override
 	public void reloadGroupConfig() {
 		try {
-			groups = PROVIDER.load(new File(getDataFolder(), GROUPS_YML));
+			groups = PROVIDER.load(ConfigCreator.loadRessource("/assets/timeout/sudo/bungee/groups.yml", new File(getDataFolder(), GROUPS_YML)));
 		} catch (IOException e) {
 			LOG.log(Level.WARNING, String.format(LOAD_ERROR, GROUPS_YML), e);
 		}

@@ -1,4 +1,4 @@
-package de.timeout.sudo.netty.bukkit;
+package de.timeout.sudo.bukkit.netty;
 
 import javax.annotation.Nonnull;
 

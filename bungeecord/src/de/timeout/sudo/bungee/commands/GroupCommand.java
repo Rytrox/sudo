@@ -7,7 +7,7 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.bukkit.craftbukkit.libs.org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang.ArrayUtils;
 
 import com.google.common.base.Predicates;
 
@@ -18,7 +18,6 @@ import de.timeout.sudo.users.Root;
 
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
-import net.md_5.bungee.api.chat.TextComponent;
 
 /**
  * PermissionsEx Group Command implementation
@@ -76,7 +75,7 @@ public class GroupCommand extends RootRequiredCommand {
 					if(args.length > 3) {
 						// get groups
 						parents.addAll(Arrays
-							.stream(ArrayUtils.subarray(args, 2, args.length))
+							.stream((String[]) ArrayUtils.subarray(args, 2, args.length))
 							.map(parentname -> main.getGroupManager().getGroupByName(parentname))
 							.filter(Predicates.notNull())
 							.collect(Collectors.toList())
@@ -98,7 +97,7 @@ public class GroupCommand extends RootRequiredCommand {
 					// check if permissions are not null
 					if(args.length > 2) {
 						// get permissions
-						Stream<String> permissions = Arrays.stream(ArrayUtils.subarray(args, 2, args.length));
+						Stream<String> permissions = Arrays.stream((String[]) ArrayUtils.subarray(args, 2, args.length));
 						
 						// add permissions to group
 						if(main.getGroupManager().getSudoGroup().equals(group)) {
@@ -110,7 +109,7 @@ public class GroupCommand extends RootRequiredCommand {
 					// check for args length
 					if(args.length > 2) {
 						// get permissions
-						Stream<String> permissions = Arrays.stream(ArrayUtils.subarray(args, 2, args.length));
+						Stream<String> permissions = Arrays.stream((String[]) ArrayUtils.subarray(args, 2, args.length));
 						
 						// remove permission from group
 						if(main.getGroupManager().getSudoGroup().equals(group)) {

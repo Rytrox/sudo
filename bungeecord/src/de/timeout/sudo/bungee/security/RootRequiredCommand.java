@@ -1,9 +1,7 @@
 package de.timeout.sudo.bungee.security;
 
-import java.util.Objects;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import de.timeout.sudo.bungee.Sudo;
 import de.timeout.sudo.users.Root;
@@ -27,13 +25,11 @@ public abstract class RootRequiredCommand extends Command implements TabExecutor
 	private static final String NO_ROOT = ChatColor.translateAlternateColorCodes('&', "&8[&6Sudo&8] &cUnable to unlock resource. Are you root?");
 	protected static final Sudo main = Sudo.getInstance();
 	
-	private final Root console = new RootConsole();
-
-	public RootRequiredCommand(@Nonnull String name, @Nullable String permission, String... aliases) {
+	public RootRequiredCommand(@NotNull String name, @Nullable String permission, String... aliases) {
 		super(name, permission, aliases);
 	}
 
-	public RootRequiredCommand(@Nonnull String name) {
+	public RootRequiredCommand(@NotNull String name) {
 		super(name);
 	}
 	
@@ -55,7 +51,7 @@ public abstract class RootRequiredCommand extends Command implements TabExecutor
 	 * @param root the profile of the executor
 	 * @param args the arguments of the command
 	 */
-	public abstract void execute(@Nonnull CommandSender sender, @Nonnull Root root, String[] args);
+	public abstract void execute(@NotNull CommandSender sender, @NotNull Root root, String[] args);
 	
 	@Nullable
 	protected Root getSuperUser(CommandSender sender) {
@@ -65,26 +61,6 @@ public abstract class RootRequiredCommand extends Command implements TabExecutor
 			User user = main.getUserManager().getUser((ProxiedPlayer) sender);
 			// return sudoer if the user is a sudoer and authorized. Else return null
 			return user instanceof Sudoer && ((Sudoer) user).isAuthorized() ? (Sudoer) user : null;
-		} return console;
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = super.hashCode();
-		result = prime * result + Objects.hash(console);
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (!super.equals(obj))
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		RootRequiredCommand other = (RootRequiredCommand) obj;
-		return Objects.equals(console, other.console);
+		} return main.getUserManager().getConsoleUser();
 	}
 }

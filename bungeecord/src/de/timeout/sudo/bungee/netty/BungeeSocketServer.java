@@ -1,14 +1,12 @@
-package de.timeout.sudo.netty.bungeecord;
+package de.timeout.sudo.bungee.netty;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 
-import javax.annotation.Nonnegative;
-import javax.annotation.Nonnull;
-
 import org.apache.commons.lang.Validate;
+import org.jetbrains.annotations.NotNull;
 
 import de.timeout.sudo.bungee.Sudo;
 import de.timeout.sudo.netty.ByteToPacketDecoder;
@@ -48,7 +46,7 @@ public class BungeeSocketServer implements Runnable, Closeable {
 	 *
 	 * @param port the port
 	 */
-	public BungeeSocketServer(@Nonnegative int port) {
+	public BungeeSocketServer(int port) {
 		this.port = FastMath.abs(port);
 	}
 	
@@ -101,7 +99,7 @@ public class BungeeSocketServer implements Runnable, Closeable {
 	 * @throws IllegalArgumentException if the connection is null
 	 * @return if the connection could be added
 	 */
-	public boolean authorize(@Nonnegative int port, @Nonnull ChannelHandlerContext ctx) {
+	public boolean authorize(int port, @NotNull ChannelHandlerContext ctx) {
 		// Validate
 		Validate.notNull(ctx, "ChannelHandlerContext cannot be null");
 		// log

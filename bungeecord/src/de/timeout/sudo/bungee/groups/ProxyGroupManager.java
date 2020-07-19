@@ -1,4 +1,4 @@
-package de.timeout.sudo.bungee.permissions;
+package de.timeout.sudo.bungee.groups;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +25,7 @@ public class ProxyGroupManager extends GroupManager {
 	private static final Sudo main = Sudo.getInstance();
 		
 	public ProxyGroupManager() {
-		super(main.getConfig().getStringList("sudo.permissions"));
+		super(new ProxySudoGroup());
 		// load groups.yml
 		main.getGroupConfig().getKeys().forEach(this::loadGroup);
 		// log data
@@ -52,7 +52,7 @@ public class ProxyGroupManager extends GroupManager {
 		Group group = getGroupByName(name);
 		// load group if section is found and group is not loaded yet
 		if((group == null || group instanceof UserGroup) && section != null) {
-			group = new ProxyGroup(name, section);
+			group = new ProxyUserGroup(name, section);
 			// add edge to graph
 			groups.addNode((UserGroup) group);
 			// load inheritances
@@ -83,7 +83,7 @@ public class ProxyGroupManager extends GroupManager {
 		// check if group is a usergroup
 		if(group instanceof UserGroup) {
 			// remove all player from group
-			group.getMembers().forEach(((UserGroup) group)::kick);
+			group.getMembers().forEach(members -> members.remove(group, main.getUserManager().getConsoleUser()));
 			
 			// delete group in graph
 			groups.removeNode(group);
@@ -109,7 +109,7 @@ public class ProxyGroupManager extends GroupManager {
 		// Return null if a group with a similar name exists
 		if(getGroupByName(name) == null) {
 			// create new Group
-			UserGroup group = new ProxyGroup(name);
+			UserGroup group = new ProxyUserGroup(name);
 			groups.addNode(group);
 			
 			// send packets to all subservers

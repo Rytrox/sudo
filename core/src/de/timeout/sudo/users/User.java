@@ -4,10 +4,13 @@ import java.util.UUID;
 
 import javax.annotation.Nonnull;
 
+import org.jetbrains.annotations.NotNull;
+
 import com.google.gson.JsonObject;
 
-import de.timeout.sudo.groups.UserGroup;
+import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.utils.Collectable;
+import de.timeout.sudo.utils.Customizable;
 import de.timeout.sudo.utils.PermissibleBase;
 
 /**
@@ -15,7 +18,7 @@ import de.timeout.sudo.utils.PermissibleBase;
  * @author Timeout
  *
  */
-public interface User extends Comparable<User>, PermissibleBase, Collectable<UserGroup> {
+public interface User extends Comparable<User>, PermissibleBase, Collectable<Group>, Customizable {
 	
 	/**
 	 * Returns the name of this instance
@@ -38,11 +41,9 @@ public interface User extends Comparable<User>, PermissibleBase, Collectable<Use
 	public UUID getUniqueID();
 	
 	/**
-	 * Converts the user into a Json-String
-	 * @author Timeout
-	 * 
-	 * @return the user as JsonObject
+	 * Converts this object into a JSON-Object
+	 * @return a JSON-Object of this object
 	 */
-	@Nonnull
+	@NotNull
 	public JsonObject toJson();
 }

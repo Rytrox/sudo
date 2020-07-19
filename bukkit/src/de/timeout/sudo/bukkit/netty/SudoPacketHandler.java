@@ -1,4 +1,4 @@
-package de.timeout.sudo.netty.bukkit;
+package de.timeout.sudo.bukkit.netty;
 
 import java.lang.reflect.Field;
 import java.util.Set;
@@ -66,7 +66,7 @@ class SudoPacketHandler extends SimpleChannelInboundHandler<Packet<?>> implement
 					BukkitSudoer sudoer = user instanceof Sudoer ? (BukkitSudoer) user : 
 						BukkitSudoer.upgradeUserToSudoer((BukkitUser) user, this);
 					// set authorized to true
-					Reflections.setField(authorizedField, sudoer, true);
+					Reflections.setValue(authorizedField, sudoer, true);
 					// enables root access
 					sudoer.enableRoot();
 					// call sudo handler

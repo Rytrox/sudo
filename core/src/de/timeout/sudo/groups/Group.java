@@ -9,8 +9,7 @@ import java.util.Set;
 import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.NotNull;
 
-import com.google.gson.JsonObject;
-
+import de.timeout.sudo.users.Root;
 import de.timeout.sudo.users.User;
 import de.timeout.sudo.utils.Collectable;
 import de.timeout.sudo.utils.PermissibleBase;
@@ -56,7 +55,44 @@ public abstract class Group implements Comparable<Group>, PermissibleBase, Colle
 		return name;
 	}
 	
-	@NotNull
+	@Override
+	public boolean add(User element, Root executor) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean remove(User element, Root executor) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	
+	@Override
+	public boolean addPermission(String permission, Root executor) {
+		Validate.notEmpty(permission, "Permission can neither be null nor empty");
+		Validate.notNull(executor, "Executor cannot be null");
+		Validate.isTrue(executor.isRoot(), "Executor needs to be root!");
+		
+		return this.permissions.add(permission);
+	}
+
+	/**
+	 * Remove a permission from this group. <br>
+	 * Returns false if the permission is null
+	 * 
+	 * @param permission the permission to remove
+	 * @param executor the executor of the method
+	 * @return if it succeed
+	 */
+	public boolean removePermission(String permission, Root executor) {
+		Validate.notEmpty(permission, "Permission can neither be null nor empty");
+		Validate.notNull(executor, "Executor cannot be null");
+		Validate.isTrue(executor.isRoot(), "Executor needs to be root!");
+		
+		return this.permissions.remove(permission);
+	}
+
+	@Override
 	public Collection<User> getMembers() {
 		return new ArrayList<>(members);
 	}
@@ -90,13 +126,4 @@ public abstract class Group implements Comparable<Group>, PermissibleBase, Colle
 		Group other = (Group) obj;
 		return Objects.equals(name, other.name);
 	}
-
-	/**
-	 * Compiles the group into Json-Objects
-	 * @author Timeout
-	 * 
-	 * @return the group as JsonObject
-	 */
-	@NotNull
-	public abstract JsonObject toJson();
 }

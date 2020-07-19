@@ -18,7 +18,7 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import de.timeout.sudo.bukkit.Sudo;
-import de.timeout.sudo.netty.bukkit.PasswordAttempt;
+import de.timeout.sudo.bukkit.netty.PasswordAttempt;
 import de.timeout.sudo.netty.packets.PacketProxyInAuthorizeSudoer;
 import de.timeout.sudo.users.Sudoer;
 import de.timeout.sudo.users.User;

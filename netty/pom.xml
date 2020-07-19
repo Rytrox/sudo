@@ -19,15 +19,16 @@
   
   <dependencies>
 	<dependency>
-		<groupId>de.timeout.sudo</groupId>
-		<artifactId>bukkit</artifactId>
+		<groupId>io.netty</groupId>
+		<artifactId>netty-all</artifactId>
+		<version>4.1.51.Final</version>
 		<scope>provided</scope>
 	</dependency>
 	
 	<dependency>
-		<groupId>de.timeout.sudo</groupId>
-		<artifactId>bungeecord</artifactId>
-		<scope>provided</scope>
-	</dependency>
+  		<groupId>de.timeout.sudo</groupId>
+  		<artifactId>core</artifactId>
+  		<scope>provided</scope>
+  	</dependency>
   </dependencies>
 </project>

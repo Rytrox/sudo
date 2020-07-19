@@ -1,4 +1,4 @@
-package de.timeout.sudo.bungee.security;
+package de.timeout.sudo.bungee.permissions;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,16 +10,16 @@ import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 
-import javax.annotation.Nonnull;
-
 import org.apache.commons.lang.Validate;
+import org.jetbrains.annotations.NotNull;
 
 import com.google.common.io.Files;
 
 import de.timeout.libs.Reflections;
 import de.timeout.sudo.bungee.Sudo;
-import de.timeout.sudo.bungee.permissions.ProxyUser;
+import de.timeout.sudo.bungee.netty.security.ProxyRootKeyStorage;
 import de.timeout.sudo.netty.packets.PacketRemoteInLoadUser;
+import de.timeout.sudo.users.RemoteRoot;
 import de.timeout.sudo.users.Root;
 import de.timeout.sudo.users.Sudoer;
 import de.timeout.sudo.users.User;
@@ -49,15 +49,15 @@ public class ProxyUserManager extends UserManager<Configuration> implements List
 	
 	private static final Field passwordField = Reflections.getField(ProxySudoer.class, "password");
 	private static final File userFolder = new File(main.getDataFolder(), "users");
+	
+	private final ProxyRootKeyStorage keyStorage = new ProxyRootKeyStorage();
 		
 	/**
 	 * Create a new ProxySudoerManager
 	 * @author Timeout
 	 *
 	 */
-	public ProxyUserManager() {
-		super(new RootConsole());
-		
+	public ProxyUserManager() {	
 		reloadSudoerConfig();
 	}
 	
@@ -132,7 +132,7 @@ public class ProxyUserManager extends UserManager<Configuration> implements List
 		Validate.isTrue(executor.isRoot(), "For promoting a user to a sudoer the executor must be root");
 		
 		// create Sudoer
-		Sudoer sudoer = ProxySudoer.upgradeUserToSudoer((ProxyUser) user, password, executor);
+		Sudoer sudoer = keyStorage.upgradeUser(user, password, executor);
 		
 		// replace user with superuser
 		profiles.replace(sudoer.getUniqueID(), sudoer);
@@ -145,7 +145,7 @@ public class ProxyUserManager extends UserManager<Configuration> implements List
 	}
 	
 	@Override
-	public Configuration getUserConfiguration(@Nonnull UUID uuid) throws IOException {
+	public Configuration getUserConfiguration(@NotNull UUID uuid) throws IOException {
 		// Validate
 		Validate.notNull(uuid, "UUID cannot be null");
 		// get user-file
@@ -211,10 +211,7 @@ public class ProxyUserManager extends UserManager<Configuration> implements List
 		// check if user is not null online
 		if(main.getProxy().getPlayer(user.getUniqueID()) == null) {
 			// remove from all groups
-			user.getMembers().forEach(group -> group.kick(user));
-			
-			// remove from sudogroup if user is a sudoer
-			if(user instanceof Sudoer) main.getGroupManager().getSudoGroup().kick((Sudoer) user, console);
+			user.getMembers().forEach(group -> group.remove(user, keyStorage.getConsoleUser()));
 			
 			// remove from cache
 			profiles.remove(user.getUniqueID());
@@ -226,5 +223,9 @@ public class ProxyUserManager extends UserManager<Configuration> implements List
 				Sudo.log().log(Level.WARNING, "&cUnable to save user.", e);
 			}
 		} else throw new IllegalStateException("Unable to unload a player who is still online!");
+	}
+	
+	public RemoteRoot getConsoleUser() {
+		return keyStorage.getConsoleUser();
 	}
 }

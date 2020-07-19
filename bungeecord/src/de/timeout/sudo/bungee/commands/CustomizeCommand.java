@@ -10,10 +10,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import org.apache.commons.lang.ArrayUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import de.timeout.sudo.bungee.Sudo;
 import de.timeout.sudo.utils.Customizable;
@@ -96,7 +95,7 @@ public class CustomizeCommand extends Command implements TabExecutor {
 	 * @param args the arguments of the command
 	 * @return a list containing all unused parameters
 	 */
-	@Nonnull
+	@NotNull
 	private List<String> getUnusedParams(String[] args) {
 		// return a list 
 		return Arrays.asList(USER, "prefix", "suffix", "group")
@@ -158,7 +157,7 @@ public class CustomizeCommand extends Command implements TabExecutor {
 		return (Customizable) main.getUserManager().getUser(sender);
 	}
 	
-	private void sendHelp(@Nonnull CommandSender sender) {
+	private void sendHelp(@NotNull CommandSender sender) {
 		// TODO: Hilfe schreiben
 	}
 	
@@ -240,7 +239,7 @@ public class CustomizeCommand extends Command implements TabExecutor {
 		 * @param player the player you want to check
 		 * @return true if he is in RegistrationProcess, false otherwise
 		 */
-		public boolean isInRegistrationProcess(@Nonnull ProxiedPlayer player) {
+		public boolean isInRegistrationProcess(@NotNull ProxiedPlayer player) {
 			return cache.containsKey(player);
 		}
 		
@@ -251,7 +250,7 @@ public class CustomizeCommand extends Command implements TabExecutor {
 		 * @param customizable the user itself
 		 * @return true if the request succeed, false if the user has currently an open request
 		 */
-		public boolean requestPrefixChange(@Nonnull ProxiedPlayer sender, @Nonnull Customizable customizable) {
+		public boolean requestPrefixChange(@NotNull ProxiedPlayer sender, @NotNull Customizable customizable) {
 			// return false if it is in registration process
 			if(!isInRegistrationProcess(sender)) {
 				// add to cache
@@ -268,7 +267,7 @@ public class CustomizeCommand extends Command implements TabExecutor {
 		 * 
 		 * @param player the player who finish
 		 */
-		public void finishRegistrationProcess(@Nonnull ProxiedPlayer player) {
+		public void finishRegistrationProcess(@NotNull ProxiedPlayer player) {
 			cache.remove(player);
 			prefixChange.remove(player);
 			suffixChange.remove(player);
@@ -283,7 +282,7 @@ public class CustomizeCommand extends Command implements TabExecutor {
 		 * @param customizable the user itself
 		 * @return true if the request succeed, false if the user has currently an open request
 		 */
-		public boolean requestSuffixChange(@Nonnull ProxiedPlayer sender, @Nonnull Customizable customizable) {
+		public boolean requestSuffixChange(@NotNull ProxiedPlayer sender, @NotNull Customizable customizable) {
 			// return false if sender is in registration process
 			if(!isInRegistrationProcess(sender)) {
 				cache.put(sender, customizable);

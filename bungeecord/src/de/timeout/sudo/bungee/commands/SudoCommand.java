@@ -1,7 +1,7 @@
 package de.timeout.sudo.bungee.commands;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import de.timeout.sudo.bungee.Sudo;
 import de.timeout.sudo.netty.packets.PacketRemoteInSudoUsage;
@@ -68,7 +68,7 @@ public class SudoCommand extends Command {
 		} else sendHelp(sender);
 	}
 	
-	private boolean awaitingAuthorization(@Nonnull Sudoer sudoer, String command) {
+	private boolean awaitingAuthorization(@NotNull Sudoer sudoer, String command) {
 		// return true if the sudoer is authorized
 		if(!sudoer.isAuthorized()) {
 			main.getSudoHandler().awaitAuthorization(sudoer, command);

@@ -2,12 +2,12 @@ package de.timeout.sudo.netty.packets;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import java.util.UUID;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import org.apache.commons.lang.Validate;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import io.netty.buffer.ByteBuf;
 
@@ -17,7 +17,7 @@ public abstract class Packet<T> {
 
 	protected Class<T> type;
 	
-	protected Packet(@Nonnull Class<T> classname) {
+	protected Packet(@NotNull Class<T> classname) {
 		// validate
 		Validate.notNull(classname, "Class cannot be null");
 		// packet names cannot be null
@@ -53,10 +53,13 @@ public abstract class Packet<T> {
 	 * @param input the string you want to write
 	 * @throws IOException if the data is not writable
 	 */
-	public static void writeString(@Nonnull ByteBuf data, @Nonnull String input) throws IOException {
+	public static void writeString(@NotNull ByteBuf data, @Nullable String input) throws IOException {
 		// Validate
 		Validate.notNull(data, "ByteBuf cannot be null");
-		Validate.notNull(input, "Input cannot be null");
+		
+		// set empty string if input is null
+		input = Optional.ofNullable(input).orElse("");
+		
 		// check if bytebuf is writeable
 		if(data.isWritable()) {
 			// write int length
@@ -74,8 +77,8 @@ public abstract class Packet<T> {
 	 * @return the string itself
 	 * @throws IOException if the bytebuf is not readable
 	 */
-	@Nonnull
-	public static String readString(@Nonnull ByteBuf data) throws IOException {
+	@NotNull
+	public static String readString(@NotNull ByteBuf data) throws IOException {
 		// Validate
 		Validate.notNull(data, "ByteBuf cannot be null");
 		// check if data is readable
@@ -96,7 +99,7 @@ public abstract class Packet<T> {
 	 * @throws IOException if the bytebuf is not readable
 	 */
 	@Nullable
-	public static UUID readUUID(@Nonnull ByteBuf data) throws IOException {
+	public static UUID readUUID(@NotNull ByteBuf data) throws IOException {
 		// get String
 		String uuidString = readString(data);
 		

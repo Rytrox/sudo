@@ -1,4 +1,4 @@
-package de.timeout.sudo.netty.bungeecord;
+package de.timeout.sudo.bungee.netty;
 
 import java.util.HashMap;
 import java.util.HashSet;

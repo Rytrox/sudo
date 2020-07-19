@@ -11,10 +11,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import org.apache.commons.lang.Validate;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -23,6 +22,7 @@ import com.google.gson.JsonPrimitive;
 
 import de.timeout.sudo.bungee.Sudo;
 import de.timeout.sudo.groups.UserGroup;
+import de.timeout.sudo.users.Root;
 import de.timeout.sudo.users.User;
 import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.utils.Customizable;
@@ -45,7 +45,7 @@ public class ProxyUser implements User, Storable, Customizable {
 	protected static final Sudo main = Sudo.getInstance();
 	
 	private final PermissionTree permissions = new PermissionTree();
-	private final List<UserGroup> groups = new ArrayList<>();
+	private final List<Group> groups = new ArrayList<>();
 	
 	private UUID playerID;
 	private String name;
@@ -59,7 +59,7 @@ public class ProxyUser implements User, Storable, Customizable {
 	 * @param connection the connection
 	 * @throws IOException if the file cannot be read
 	 */
-	public ProxyUser(@Nonnull PendingConnection connection) throws IOException {
+	public ProxyUser(@NotNull PendingConnection connection) throws IOException {
 		this(connection.getUniqueId());
 		// set attributes to default
 		this.name = connection.getName();
@@ -100,7 +100,7 @@ public class ProxyUser implements User, Storable, Customizable {
 	}
 		
 	@Override
-	public boolean isMember(UserGroup element) {
+	public boolean isMember(Group element) {
 		return groups.contains(element);
 	}
 	
@@ -108,27 +108,6 @@ public class ProxyUser implements User, Storable, Customizable {
 	public int compareTo(User o) {
 		return playerID.compareTo(o.getUniqueID());
 	}
-
-	public boolean join(UserGroup group) {
-		// check if group is not null
-		Validate.notNull(group, "Group cannot be null");
-		// remove from old group
-		
-		// add user to group
-		group.join(this);
-		// add group to list
-		groups.add(group);
-		// return success
-		return true;
-	}
-	
-	
-	public boolean kick(UserGroup element) {
-		// Validate
-		Validate.notNull(element, "Group cannot be null");
-		return false;
-	}
-
 	
 	public boolean addPermission(String permission) {
 		return permissions.add(permission);
@@ -244,7 +223,7 @@ public class ProxyUser implements User, Storable, Customizable {
 			// get group
 			Group group = main.getGroupManager().getGroupByName(groupname);
 			// only join if group can be found
-			if(group instanceof UserGroup) join((UserGroup) group);
+			if(group instanceof UserGroup) add((UserGroup) group, main.getUserManager().getConsoleUser());
 		});
 		// load permissions from configuration
 		config.getStringList(PERMISSIONS_FIELD).forEach(this::addPermission);
@@ -261,7 +240,51 @@ public class ProxyUser implements User, Storable, Customizable {
 	}
 
 	@Override
-	public Collection<UserGroup> getMembers() {
+	public Collection<Group> getMembers() {
 		return new ArrayList<>(groups);
+	}
+
+	@Override
+	public boolean addPermission(String permission, Root executor) {
+		// set console user root
+		boolean root = main.getUserManager().getConsoleUser().enableRoot();
+		boolean result = this.addPermission(permission, main.getUserManager().getConsoleUser());
+		
+		// deactivate root if its enabled by this method
+		if(root) main.getUserManager().getConsoleUser().disableRoot();
+		
+		return result;
+	}
+
+	@Override
+	public boolean removePermission(String permission, Root executor) {
+		// set console user root
+		boolean root = main.getUserManager().getConsoleUser().enableRoot();
+		boolean result = this.removePermission(permission, main.getUserManager().getConsoleUser());
+		
+		// deactivate root if its enabled by this method
+		if(root) main.getUserManager().getConsoleUser().disableRoot();
+		
+		return result;
+	}
+
+	@Override
+	public boolean add(Group element, Root executor) {
+		// Validate
+		Validate.notNull(element, "Group cannot be null");
+		Validate.notNull(executor, "Executor cannot be null");
+		Validate.isTrue(executor.isRoot(), "Executor must be root");
+		
+		return groups.add(element);
+	}
+
+	@Override
+	public boolean remove(Group element, Root executor) {
+		// Validate
+		Validate.notNull(element, "Group cannot be null");
+		Validate.notNull(executor, "Executor cannot be null");
+		Validate.isTrue(executor.isRoot(), "Executor must be root");
+		
+		return groups.remove(element);
 	}
 }

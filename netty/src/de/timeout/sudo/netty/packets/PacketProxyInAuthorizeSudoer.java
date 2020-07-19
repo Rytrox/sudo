@@ -3,10 +3,9 @@ package de.timeout.sudo.netty.packets;
 import java.io.IOException;
 import java.util.UUID;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import org.apache.commons.lang.Validate;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import de.timeout.sudo.users.User;
 import de.timeout.sudo.utils.PasswordCryptor;
@@ -34,7 +33,7 @@ public class PacketProxyInAuthorizeSudoer extends Packet<PacketProxyInAuthorizeS
 	 * @param user the user you want to authorize
 	 * @param password the password uncrypted
 	 */
-	public PacketProxyInAuthorizeSudoer(@Nonnull User user, @Nonnull String password) {
+	public PacketProxyInAuthorizeSudoer(@NotNull User user, @NotNull String password) {
 		super(PacketProxyInAuthorizeSudoer.class);
 		// Validate
 		Validate.notNull(user, "User cannot be null");
@@ -78,7 +77,7 @@ public class PacketProxyInAuthorizeSudoer extends Packet<PacketProxyInAuthorizeS
 	 * 
 	 * @return the encoded password. Cannot be null
 	 */
-	@Nonnull
+	@NotNull
 	public String getEncodedPassword() {
 		return password;
 	}

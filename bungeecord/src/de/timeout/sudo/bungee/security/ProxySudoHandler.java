@@ -8,9 +8,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.annotation.Nonnull;
-
 import org.apache.commons.lang.Validate;
+import org.jetbrains.annotations.NotNull;
 
 import de.timeout.sudo.bungee.Sudo;
 import de.timeout.sudo.users.Sudoer;
@@ -83,7 +82,7 @@ public class ProxySudoHandler implements Listener {
 	 * @param command the command without sudo-process
 	 * @throws IllegalStateException if the user is already in the authorization process.
 	 */
-	public void awaitAuthorization(@Nonnull Sudoer user, @Nonnull String command) {
+	public void awaitAuthorization(@NotNull Sudoer user, @NotNull String command) {
 		// Validate
 		Validate.notNull(user, "User cannot be null");
 		Validate.notEmpty(command, "Command cannot be empty");

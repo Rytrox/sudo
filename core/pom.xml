@@ -17,8 +17,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   
-  <dependencyManagement>
-	  <dependencies>
+  <dependencies>
 	   <dependency>
 	   		<groupId>com.google.code.gson</groupId>
 	   		<artifactId>gson</artifactId>
@@ -32,6 +31,5 @@
 	  		<version>29.0-jre</version>
 	  		<scope>provided</scope>
 	  	</dependency>
-	  </dependencies>
-  </dependencyManagement>
+  </dependencies>
 </project>

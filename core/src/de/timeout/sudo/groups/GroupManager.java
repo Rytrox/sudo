@@ -20,9 +20,10 @@ public abstract class GroupManager {
 	
 	protected UserGroup defaultGroup;
 	
-	public GroupManager(@NotNull List<String> sudopermissions) {
-		Validate.notNull(sudopermissions, "Sudopermissions cannot be null");
-		sudoGroup = new SudoGroup(sudopermissions);
+	public GroupManager(@NotNull SudoGroup sudogroup) {
+		Validate.notNull(sudogroup, "SudoGroup cannot be null");
+		
+		this.sudoGroup = sudogroup;
 	}
 		
 	/**

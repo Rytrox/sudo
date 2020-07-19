@@ -11,14 +11,9 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.lang.Validate;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
-
-import de.timeout.sudo.users.User;
 import de.timeout.sudo.utils.Customizable;
 
-public class UserGroup extends Group implements Customizable, Inheritable<UserGroup> {
+public abstract class UserGroup extends Group implements Customizable, Inheritable<UserGroup> {
 		
 	protected final Set<UserGroup> groups = new HashSet<>();
 	
@@ -51,62 +46,6 @@ public class UserGroup extends Group implements Customizable, Inheritable<UserGr
 			// not found. return false
 			return false;
 		} else return true;
-	}
-	
-	/**
-	 * Adds a permission to this group. <br>
-	 * Returns false if the permission is null
-	 * 
-	 * @param permission the permission to add
-	 * @return if it succeed
-	 */
-	public boolean addPermission(String permission) {
-		// if permission is not null or empty
-		if(permission != null && !permission.isEmpty()) {
-			// add permission to list
-			return permissions.add(permission);
-		}
-		// return false
-		return false;
-	}
-
-	/**
-	 * Remove a permission from this group. <br>
-	 * Returns false if the permission is null
-	 * 
-	 * @param permission the permission to remove
-	 * @return if it succeed
-	 */
-	public boolean removePermission(String permission) {
-		// if permission is not null
-		if(permission != null) {
-			// remove permission from collection
-			return permissions.remove(permission);
-		}
-		// return false
-		return false;
-	}
-
-	/**
-	 * Adds a user to this group. <br>
-	 * Returns false if the user is null
-	 * 
-	 * @param user the user
-	 * @return true if the remove succeed else false
-	 */
-	public boolean join(User user) {
-		return members.add(user);
-	}
-
-	/**
-	 * Removes a user from this group <br>
-	 * Returns false if the user is null
-	 * 
-	 * @param user the user
-	 * @return true if the remove succeed else false
-	 */
-	public boolean kick(User user) {
-		return members.remove(user);
 	}
 	
 	@Override
@@ -148,34 +87,6 @@ public class UserGroup extends Group implements Customizable, Inheritable<UserGr
 			return false;
 		UserGroup other = (UserGroup) obj;
 		return Objects.equals(name, other.name) && Objects.equals(permissions, other.permissions);
-	}
-
-	@Override
-	public JsonObject toJson() {
-		// create JsonObject
-		JsonObject object = new JsonObject();
-		// write primitives in object
-		object.addProperty("name", name);
-		object.addProperty("default", def);
-		object.addProperty("prefix", prefix);
-		object.addProperty("suffix", suffix);
-		
-		// create jsonarray for permissions
-		JsonArray permissionsArray = new JsonArray();
-		// write all permissions into array
-		this.permissions.toSet().forEach(permission -> permissionsArray.add(new JsonPrimitive(permission)));
-		// write array into object
-		object.add("permissions", permissionsArray);
-		
-		// create JsonArray for inheritances
-		JsonArray inheritancesArray = new JsonArray();
-		// write all inheritances into array
-		groups.forEach(group -> inheritancesArray.add(new JsonPrimitive(group.getName())));
-		// write array into object
-		object.add("extends", inheritancesArray);
-		
-		// return object
-		return object;
 	}
 
 	@Override

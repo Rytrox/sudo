@@ -3,10 +3,9 @@ package de.timeout.sudo.netty.packets;
 import java.io.IOException;
 import java.util.UUID;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import org.apache.commons.lang.Validate;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import io.netty.buffer.ByteBuf;
 
@@ -24,7 +23,7 @@ public class PacketRemoteInAuthorizeSudoer extends Packet<PacketRemoteInAuthoriz
 		super(PacketRemoteInAuthorizeSudoer.class);
 	}
 	
-	public PacketRemoteInAuthorizeSudoer(@Nonnull UUID uuid, @Nonnull AuthorizationResult result) {
+	public PacketRemoteInAuthorizeSudoer(@NotNull UUID uuid, @NotNull AuthorizationResult result) {
 		super(PacketRemoteInAuthorizeSudoer.class);
 		
 		// Validate
@@ -59,7 +58,7 @@ public class PacketRemoteInAuthorizeSudoer extends Packet<PacketRemoteInAuthoriz
 	 * 
 	 * @return true if the user could be authorized. false otherwise
 	 */
-	@Nonnull
+	@NotNull
 	public AuthorizationResult getAuthResult() {
 		return authorized; 
 	}

@@ -2,9 +2,8 @@ package de.timeout.sudo.netty.packets;
 
 import java.io.IOException;
 
-import javax.annotation.Nonnull;
-
 import org.apache.commons.lang.Validate;
+import org.jetbrains.annotations.NotNull;
 
 import de.timeout.sudo.groups.UserGroup;
 
@@ -26,7 +25,7 @@ public class PacketRemoteInGroupInheritance extends Packet<PacketRemoteInGroupIn
 	 *
 	 * @param group the group to convert
 	 */
-	public PacketRemoteInGroupInheritance(@Nonnull UserGroup group, @Nonnull String inheritance) {
+	public PacketRemoteInGroupInheritance(@NotNull UserGroup group, @NotNull String inheritance) {
 		super(PacketRemoteInGroupInheritance.class);
 		// Validate
 		Validate.notNull(group, "Group cannot be null");
@@ -64,12 +63,12 @@ public class PacketRemoteInGroupInheritance extends Packet<PacketRemoteInGroupIn
 		writeString(output, inheritance);
 	}
 	
-	@Nonnull
+	@NotNull
 	public String getName() {
 		return name;
 	}
 	
-	@Nonnull
+	@NotNull
 	public String getInheritance() {
 		return inheritance;
 	}

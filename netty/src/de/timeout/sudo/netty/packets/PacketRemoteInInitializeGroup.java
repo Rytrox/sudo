@@ -2,12 +2,8 @@ package de.timeout.sudo.netty.packets;
 
 import java.io.IOException;
 
-import javax.annotation.Nonnull;
-
 import org.apache.commons.lang.Validate;
-
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import org.jetbrains.annotations.NotNull;
 
 import de.timeout.sudo.groups.UserGroup;
 
@@ -20,7 +16,10 @@ import io.netty.buffer.ByteBuf;
  */
 public class PacketRemoteInInitializeGroup extends Packet<PacketRemoteInInitializeGroup> {
 
-	private JsonObject group;
+	private String name;
+	private String prefix;
+	private String suffix;
+	private boolean isDefault;
 	
 	/**
 	 * Constructor for Decoders
@@ -37,17 +36,23 @@ public class PacketRemoteInInitializeGroup extends Packet<PacketRemoteInInitiali
 	 *
 	 * @param group the group you want to compile. Cannot be null
 	 */
-	public PacketRemoteInInitializeGroup(@Nonnull UserGroup group) {
+	public PacketRemoteInInitializeGroup(@NotNull UserGroup group) {
 		super(PacketRemoteInInitializeGroup.class);
 		// Validate
 		Validate.notNull(group, "Group cannot be null");
-		this.group = group.toJson();
+		this.name = group.getName();
+		this.prefix = group.getPrefix();
+		this.suffix = group.getSuffix();
+		this.isDefault = group.isDefault();
 	}
 
 	@Override
 	public void decode(ByteBuf input) throws IOException {
 		// write group
-		group = new JsonParser().parse(readString(input)).getAsJsonObject();
+		this.name = readString(input);
+		this.prefix = readString(input);
+		this.suffix = readString(input);
+		this.isDefault = input.readBoolean();
 	}
 
 	@Override
@@ -55,17 +60,28 @@ public class PacketRemoteInInitializeGroup extends Packet<PacketRemoteInInitiali
 		// do super call
 		super.encode(output);
 		// write data in bytebuf
-		writeString(output, group.toString());
+		writeString(output, name);
+		writeString(output, prefix);
+		writeString(output, suffix);
+		output.writeBoolean(isDefault);
 	}
 	
-	/**
-	 * Receives the group data as a Json-Object. Cannot be null
-	 * @author Timeout
-	 * 
-	 * @return the group data as a Json-Object.
-	 */
-	@Nonnull
-	public JsonObject getGroupData() {
-		return group;
+	@NotNull
+	public String getName() {
+		return name;
+	}
+	
+	public boolean isDefault() {
+		return isDefault;
+	}
+	
+	@NotNull
+	public String getPrefix() {
+		return prefix;
+	}
+	
+	@NotNull
+	public String getSuffix() {
+		return suffix;
 	}
 }

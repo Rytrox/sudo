@@ -3,10 +3,9 @@ package de.timeout.sudo.netty.packets;
 import java.io.IOException;
 import java.util.UUID;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import org.apache.commons.lang.Validate;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import io.netty.buffer.ByteBuf;
 
@@ -38,7 +37,7 @@ public class PacketRemoteInSudoUsage extends Packet<PacketRemoteInSudoUsage> {
 	 * @param uuid the uuid of the executor
 	 * @param command the command without sudo prefix
 	 */
-	public PacketRemoteInSudoUsage(@Nonnull UUID uuid, @Nonnull String command) {
+	public PacketRemoteInSudoUsage(@NotNull UUID uuid, @NotNull String command) {
 		super(PacketRemoteInSudoUsage.class);
 		// Validate
 		Validate.notNull(uuid, "UUID cannot be null");
@@ -81,7 +80,7 @@ public class PacketRemoteInSudoUsage extends Packet<PacketRemoteInSudoUsage> {
 	 * 
 	 * @return the command without sudo prefix. Cannot be null
 	 */
-	@Nonnull
+	@NotNull
 	public String getCommand() {
 		return command;
 	}

@@ -1,4 +1,4 @@
-package de.timeout.sudo.netty.bungeecord;
+package de.timeout.sudo.bungee.netty;
 
 import de.timeout.sudo.bungee.Sudo;
 import de.timeout.sudo.netty.packets.PacketProxyInLogin;

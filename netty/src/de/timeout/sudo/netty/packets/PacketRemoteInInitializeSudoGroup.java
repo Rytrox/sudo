@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 import io.netty.buffer.ByteBuf;
 
@@ -61,7 +61,7 @@ public class PacketRemoteInInitializeSudoGroup extends Packet<PacketRemoteInInit
 	 * 
 	 * @return a set containing all blocked permissions.
 	 */
-	@Nonnull
+	@NotNull
 	public Set<String> getPermissions() {
 		return new HashSet<>(permissions);
 	}

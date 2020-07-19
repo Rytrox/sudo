@@ -16,10 +16,10 @@ import de.timeout.libs.config.UTFConfig;
 import de.timeout.sudo.bukkit.listener.BukkitModeListener;
 import de.timeout.sudo.bukkit.listener.ModifyWorldListener;
 import de.timeout.sudo.bukkit.listener.VanillaPermissionOverrider;
+import de.timeout.sudo.bukkit.netty.BukkitSocket;
 import de.timeout.sudo.bukkit.permissions.BukkitGroupManager;
 import de.timeout.sudo.bukkit.permissions.BukkitUserManager;
 import de.timeout.sudo.bukkit.security.BukkitSudoHandler;
-import de.timeout.sudo.netty.bukkit.BukkitSocket;
 import de.timeout.sudo.permissions.GroupConfigurable;
 
 /**
@@ -134,17 +134,15 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 	}
 	
 	private void createConfiguration() {
-		// create ConfigCreator
-		ConfigCreator creator = new ConfigCreator(getDataFolder(), "assets/rytrox/sudo/bukkit");
 		// create config.yml
 		try {
-			creator.loadRessource(CONFIG_YML);
-			creator.loadRessource(GROUPS_YML);
 			// load sudoers.out if bukkit-mode is enabled
-			if(!bungeecordEnabled()) creator.loadRessource("sudoers.out");
+			if(!bungeecordEnabled())
+				ConfigCreator.loadRessource("/assets/timeout/sudo/bukkit/sudoers.out",
+						new File(getDataFolder(), "sudoers.out"));
 		} catch (IOException e) {
 			// log error
-			LOG.log(Level.WARNING, "Unable to create configurations.", e);
+			LOG.log(Level.WARNING, "Unable to create sudoers.out.", e);
 		}
 	}
 	
@@ -195,7 +193,12 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 	
 	@Override
 	public void reloadConfig() {
-		this.config = new UTFConfig(new File(getDataFolder(), CONFIG_YML));
+		try {
+			this.config = ConfigCreator.loadUTFConfig("/assets/timeout/sudo/bukkit/config.yml", 
+					new File(getDataFolder(), CONFIG_YML));
+		} catch (IOException e) {
+			LOG.log(Level.SEVERE, "&cUnable to read config.yml", e);
+		}
 	}
 
 	@Override
@@ -210,7 +213,12 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 
 	@Override
 	public void reloadGroupConfig() {
-		this.groups = new UTFConfig(new File(getDataFolder(), GROUPS_YML));
+		try {
+			this.groups = ConfigCreator.loadUTFConfig("/assets/timeout/sudo/bukkit/groups.yml", 
+					new File(getDataFolder(), GROUPS_YML));
+		} catch (IOException e) {
+			LOG.log(Level.SEVERE, "&cUnable to load groups.yml", e);
+		}
 	}
 
 	@Override

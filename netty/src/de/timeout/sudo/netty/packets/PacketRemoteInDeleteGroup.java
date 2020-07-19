@@ -2,9 +2,8 @@ package de.timeout.sudo.netty.packets;
 
 import java.io.IOException;
 
-import javax.annotation.Nonnull;
-
 import org.apache.commons.lang.Validate;
+import org.jetbrains.annotations.NotNull;
 
 import io.netty.buffer.ByteBuf;
 
@@ -33,7 +32,7 @@ public class PacketRemoteInDeleteGroup extends Packet<PacketRemoteInDeleteGroup>
 	 * @param groupname the name of the group. Can neither be null nor empty
 	 * @throws IllegalArgumentException if the groupname is null, empty or is sudo.
 	 */
-	public PacketRemoteInDeleteGroup(@Nonnull String groupname) {
+	public PacketRemoteInDeleteGroup(@NotNull String groupname) {
 		super(PacketRemoteInDeleteGroup.class);
 		
 		Validate.notEmpty(groupname, "Group name can neither be null nor empty");
@@ -47,7 +46,7 @@ public class PacketRemoteInDeleteGroup extends Packet<PacketRemoteInDeleteGroup>
 	 * 
 	 * @return the name of the group
 	 */
-	@Nonnull
+	@NotNull
 	public String getGroupName() {
 		return group;
 	}

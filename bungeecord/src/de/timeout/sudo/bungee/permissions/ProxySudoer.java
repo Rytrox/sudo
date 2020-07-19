@@ -1,16 +1,14 @@
-package de.timeout.sudo.bungee.security;
+package de.timeout.sudo.bungee.permissions;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.UUID;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import org.apache.commons.lang.Validate;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import de.timeout.libs.Reflections;
-import de.timeout.sudo.bungee.permissions.ProxyUser;
 import de.timeout.sudo.users.Root;
 import de.timeout.sudo.users.Sudoer;
 import de.timeout.sudo.utils.PasswordCryptor;
@@ -24,6 +22,8 @@ public final class ProxySudoer extends ProxyUser implements Sudoer {
 	private boolean authorized;
 	private boolean root;
 	private String password;
+	
+	private final String securityKey;
 
 	/**
 	 * Upgrades a ProxyUser to a ProxySudoer
@@ -33,11 +33,16 @@ public final class ProxySudoer extends ProxyUser implements Sudoer {
 	 * @param password the password of the user. Can neither be null nor empty
 	 * @throws IOException if there was an unexpected IO-Exception
 	 */
-	private ProxySudoer(ProxyUser user, @Nonnull String password) throws IOException {
+	private ProxySudoer(@NotNull ProxyUser user, @NotNull String password, @NotNull String securityKey) throws IOException {
 		super(user.getUniqueID());
+		
 		// Validate
 		Validate.notEmpty(password, "Password can neither be null nor empty.");
+		Validate.notEmpty(securityKey, "SecurityKey can neither be null nor empty");
+		Validate.isTrue(securityKey.length() == 20, "SecurityKey must be exact 20 characters long");
+		
 		this.password = password;
+		this.securityKey = securityKey;
 	}
 	
 	/**
@@ -51,18 +56,16 @@ public final class ProxySudoer extends ProxyUser implements Sudoer {
 	 * @throws IllegalArgumentException if any argument is null, the password is empty or the executor is not authorized
 	 * @throws IOException if there was an unexpected error while upgrading the ProxyUser
 	 */
-	@Nonnull
-	public static ProxySudoer upgradeUserToSudoer(@Nonnull ProxyUser user, @Nonnull String password, @Nonnull Root executor) throws IOException {
+	@NotNull
+	public static ProxySudoer upgradeUserToSudoer(@NotNull ProxyUser user, @NotNull String password, @NotNull Root executor, @NotNull String securityKey) throws IOException {
 		// Validate
-		Validate.notNull(user, "ProxyUser cannot be null");
-		Validate.notEmpty(password, "Password can neither be null nor empty.");
 		Validate.notNull(executor, "Executor cannot be null");
 		Validate.isTrue(executor.isRoot(), "Executor must be root for creating a new Sudoer");
 		
 		// create a new ProxySudoer
-		ProxySudoer sudoer = new ProxySudoer(user, password);
+		ProxySudoer sudoer = new ProxySudoer(user, password, securityKey);
 		// add sudoer to sudo group
-		main.getGroupManager().getSudoGroup().join(sudoer, executor);
+		main.getGroupManager().getSudoGroup().add(sudoer, executor);
 		
 		// return the new sudoer
 		return sudoer;
@@ -77,7 +80,7 @@ public final class ProxySudoer extends ProxyUser implements Sudoer {
 	 * @throws IOException
 	 */
 	@Nullable
-	public static ProxySudoer loadSudoerFromFile(@Nonnull ProxyUser user, @Nonnull Root executor) throws IOException {
+	public static ProxySudoer loadSudoerFromFile(@NotNull ProxyUser user, @NotNull Root executor, @NotNull String securityKey) throws IOException {
 		// Validate
 		Validate.notNull(user, "ProxyUser cannot be null");
 		Validate.notNull(executor, "Executor cannot be null");
@@ -87,9 +90,9 @@ public final class ProxySudoer extends ProxyUser implements Sudoer {
 		// if it is a sudoer
 		if(config != null) {
 			// create sudoer
-			ProxySudoer sudoer = new ProxySudoer(user, config.getString("password"));
+			ProxySudoer sudoer = new ProxySudoer(user, config.getString("password"), securityKey);
 			// add sudoer to sudo group
-			main.getGroupManager().getSudoGroup().join(sudoer, executor);
+			main.getGroupManager().getSudoGroup().add(sudoer, executor);
 			
 			// return sudoer
 			return sudoer;
@@ -172,5 +175,10 @@ public final class ProxySudoer extends ProxyUser implements Sudoer {
 	@Override
 	public boolean isRoot() {
 		return root && isAuthorized();
+	}
+
+	@Override
+	public String getRootKey() {
+		return securityKey;
 	}
 }

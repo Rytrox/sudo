@@ -37,7 +37,20 @@
   	
   	<dependency>
   		<groupId>de.timeout.sudo</groupId>
+  		<artifactId>core</artifactId>
+  		<scope>provided</scope>
+  	</dependency>
+  	
+  	<dependency>
+  		<groupId>de.timeout.sudo</groupId>
   		<artifactId>netty</artifactId>
+  		<scope>provided</scope>
+  	</dependency>
+  	
+  	<dependency>
+  		<groupId>io.netty</groupId>
+  		<artifactId>netty-all</artifactId>
+  		<version>4.1.51.Final</version>
   		<scope>provided</scope>
   	</dependency>
   </dependencies>

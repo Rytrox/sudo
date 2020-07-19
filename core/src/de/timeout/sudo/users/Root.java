@@ -25,4 +25,10 @@ public interface Root {
 	 * @return true if root is enabled otherwise false
 	 */
 	public boolean isRoot();
+	
+	/**
+	 * Returns the root key
+	 * @return the root key
+	 */
+	public String getRootKey();
 }
