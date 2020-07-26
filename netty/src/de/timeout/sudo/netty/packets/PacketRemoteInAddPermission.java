@@ -7,7 +7,6 @@ import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.NotNull;
 
 import de.timeout.sudo.groups.Group;
-import de.timeout.sudo.users.Root;
 import de.timeout.sudo.users.User;
 import io.netty.buffer.ByteBuf;
 
@@ -18,7 +17,7 @@ import io.netty.buffer.ByteBuf;
  */
 public class PacketRemoteInAddPermission extends Packet<PacketRemoteInAddPermission> {
 
-	private BaseType type;
+	private BaseType basetype;
 	private UUID user;
 	private String group;
 	
@@ -39,15 +38,13 @@ public class PacketRemoteInAddPermission extends Packet<PacketRemoteInAddPermiss
 	 * @param executor root-user who gave him the permission. Cannot be null
 	 * @throws IllegalArgumentException if any argument is null
 	 */
-	public PacketRemoteInAddPermission(@NotNull User user, @NotNull String permission, @NotNull Root executor) {
+	public PacketRemoteInAddPermission(@NotNull User user, @NotNull String permission) {
 		super(PacketRemoteInAddPermission.class);
 		
 		Validate.notNull(user, "User cannot be null");
 		Validate.notEmpty(permission, "Permission can neither be null nor empty");
-		Validate.notNull(executor, "Executor cannot be null");
-		Validate.isTrue(executor.isRoot(), "Unable to look up ressource. Executor is not root!");
 		
-		this.type = BaseType.USER;
+		this.basetype = BaseType.USER;
 		this.user = user.getUniqueID();
 		this.permission = permission;
 	}
@@ -59,15 +56,13 @@ public class PacketRemoteInAddPermission extends Packet<PacketRemoteInAddPermiss
 	 * @param executor the root-user who gave him the permission. Cannot be null
 	 * @throws IllegalArgumentException if any argument is null
 	 */
-	public PacketRemoteInAddPermission(@NotNull Group group, @NotNull String permission, @NotNull Root executor) {
+	public PacketRemoteInAddPermission(@NotNull Group group, @NotNull String permission) {
 		super(PacketRemoteInAddPermission.class);
 		
 		Validate.notNull(group, "Group cannot be null");
 		Validate.notEmpty(permission, "Permission can neither be null nor empty");
-		Validate.notNull(executor, "Executor cannot be null");
-		Validate.isTrue(executor.isRoot(), "Unable to look up ressource. Executor is not root!");
 		
-		this.type = BaseType.GROUP;
+		this.basetype = BaseType.GROUP;
 		this.group = group.getName();
 		this.permission = permission;
 	}
@@ -75,10 +70,10 @@ public class PacketRemoteInAddPermission extends Packet<PacketRemoteInAddPermiss
 	@Override
 	public void decode(ByteBuf input) throws IOException {
 		// read type
-		this.type = BaseType.getTypeByID(input.readInt());
+		this.basetype = BaseType.getTypeByID(input.readInt());
 		
 		// read user or group depending on type
-		if(type == BaseType.USER) {
+		if(basetype == BaseType.USER) {
 			this.user = readUUID(input);
 		} else this.group = readString(input);
 		
@@ -92,9 +87,9 @@ public class PacketRemoteInAddPermission extends Packet<PacketRemoteInAddPermiss
 		super.encode(output);
 		
 		// write type
-		output.writeInt(type.id);
+		output.writeInt(basetype.id);
 		// write group or user
-		writeString(output, type == BaseType.USER ? user.toString() : group);
+		writeString(output, basetype == BaseType.USER ? user.toString() : group);
 		// write permission
 		writeString(output, permission);
 	}

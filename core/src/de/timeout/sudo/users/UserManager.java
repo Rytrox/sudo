@@ -10,14 +10,25 @@ import java.util.UUID;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.apache.commons.lang.Validate;
+import org.jetbrains.annotations.NotNull;
+
 import de.timeout.sudo.permissions.UserConfigHandler;
 import de.timeout.sudo.security.SudoerConfigurable;
 
 public abstract class UserManager<C> implements SudoerConfigurable, UserConfigHandler<C> {
 
 	protected final Map<UUID, User> profiles = new HashMap<>();
+	protected final RemoteUser root;
 	
 	protected C decodedSudoer;
+	
+	public UserManager(@NotNull RemoteUser root) {
+		Validate.notNull(root, "Root cannot be null");
+		
+		this.root = root;
+		reloadSudoerConfig();
+	}
 	
 	/**
 	 * Returns all loaded user profiles
@@ -51,7 +62,7 @@ public abstract class UserManager<C> implements SudoerConfigurable, UserConfigHa
 	 * @param executor the executor of the command
 	 * @throws IOException if an unexpected IO-Error appears
 	 */
-	public abstract Sudoer upgradeUser(@Nonnull User user, @Nonnull String password, @Nonnull Root executor) throws IOException;
+	public abstract void upgradeUser(@Nonnull User user, @Nonnull String password, @Nonnull User executor) throws IOException;
 	
 	/**
 	 * Unloads a user in cache.
@@ -62,4 +73,8 @@ public abstract class UserManager<C> implements SudoerConfigurable, UserConfigHa
 	 * @param user the user you want to remove. Cannot be null
 	 */
 	public abstract void unloadUser(@Nonnull User user);
+	
+	public RemoteUser getRoot() {
+		return root;
+	}
 }

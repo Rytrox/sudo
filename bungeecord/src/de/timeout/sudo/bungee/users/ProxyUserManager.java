@@ -1,8 +1,7 @@
-package de.timeout.sudo.bungee.permissions;
+package de.timeout.sudo.bungee.users;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -15,16 +14,9 @@ import org.jetbrains.annotations.NotNull;
 
 import com.google.common.io.Files;
 
-import de.timeout.libs.Reflections;
 import de.timeout.sudo.bungee.Sudo;
-import de.timeout.sudo.bungee.netty.security.ProxyRootKeyStorage;
-import de.timeout.sudo.netty.packets.PacketRemoteInLoadUser;
-import de.timeout.sudo.users.RemoteRoot;
-import de.timeout.sudo.users.Root;
-import de.timeout.sudo.users.Sudoer;
 import de.timeout.sudo.users.User;
 import de.timeout.sudo.users.UserManager;
-import de.timeout.sudo.utils.PasswordCryptor;
 
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
@@ -47,18 +39,16 @@ public class ProxyUserManager extends UserManager<Configuration> implements List
 	
 	private static final Sudo main = Sudo.getInstance();
 	
-	private static final Field passwordField = Reflections.getField(ProxySudoer.class, "password");
 	private static final File userFolder = new File(main.getDataFolder(), "users");
-	
-	private final ProxyRootKeyStorage keyStorage = new ProxyRootKeyStorage();
-		
+			
 	/**
 	 * Create a new ProxySudoerManager
 	 * @author Timeout
+	 * @throws IOException 
 	 *
 	 */
-	public ProxyUserManager() {	
-		reloadSudoerConfig();
+	public ProxyUserManager() throws IOException {	
+		super(new RootConsole());
 	}
 	
 	@Override
@@ -79,7 +69,7 @@ public class ProxyUserManager extends UserManager<Configuration> implements List
 		// save all new users in sudoers config
 		main.getGroupManager().getSudoGroup().getMembers().forEach(sudoer -> 
 			// create a new Configuration
-			decodedSudoer.set(String.format("%s.password", sudoer.getUniqueID().toString()), Reflections.getValue(passwordField, sudoer))
+			decodedSudoer.set(String.format("%s.password", sudoer.getUniqueID().toString()), sudoer.getEncodedPassword())
 		);
 		
 		// define new file
@@ -127,24 +117,6 @@ public class ProxyUserManager extends UserManager<Configuration> implements List
 	}
 	
 	@Override
-	public Sudoer upgradeUser(User user, String password, Root executor) throws IOException {
-		// only continue if the executor is authrized
-		Validate.isTrue(executor.isRoot(), "For promoting a user to a sudoer the executor must be root");
-		
-		// create Sudoer
-		Sudoer sudoer = keyStorage.upgradeUser(user, password, executor);
-		
-		// replace user with superuser
-		profiles.replace(sudoer.getUniqueID(), sudoer);
-		
-		// write data into sudoers
-		decodedSudoer.set(user.getUniqueID().toString(), PasswordCryptor.encode(password));
-		
-		// return sudoer
-		return sudoer;
-	}
-	
-	@Override
 	public Configuration getUserConfiguration(@NotNull UUID uuid) throws IOException {
 		// Validate
 		Validate.notNull(uuid, "UUID cannot be null");
@@ -168,18 +140,7 @@ public class ProxyUserManager extends UserManager<Configuration> implements List
 	public void onUserLoad(LoginEvent event) {
 		// load permissions if the user is connected
 		if(!event.isCancelled()) {
-			try {
-				// get User 
-				User user = new ProxyUser(event.getConnection());
-				// add user to cache
-				profiles.put(event.getConnection().getUniqueId(), user);
-				// send user to all subserver
-				main.getProxy().getScheduler().runAsync(main, () -> 
-					main.getNettyServer().broadcastPacket(new PacketRemoteInLoadUser(user)));
-			} catch (IOException e) {
-				Sudo.log().log(Level.WARNING, 
-						String.format("&cUnable to access %s.json", event.getConnection().getUniqueId().toString()), e);
-			}
+			// get 
 		}
 	}
 	
@@ -211,7 +172,7 @@ public class ProxyUserManager extends UserManager<Configuration> implements List
 		// check if user is not null online
 		if(main.getProxy().getPlayer(user.getUniqueID()) == null) {
 			// remove from all groups
-			user.getMembers().forEach(group -> group.remove(user, keyStorage.getConsoleUser()));
+			user.getPermissionContainer().getMembers().forEach(user::leaveGroup);
 			
 			// remove from cache
 			profiles.remove(user.getUniqueID());
@@ -224,8 +185,9 @@ public class ProxyUserManager extends UserManager<Configuration> implements List
 			}
 		} else throw new IllegalStateException("Unable to unload a player who is still online!");
 	}
-	
-	public RemoteRoot getConsoleUser() {
-		return keyStorage.getConsoleUser();
+
+	@Override
+	public void upgradeUser(User user, String password, User executor) throws IOException {
+		
 	}
 }

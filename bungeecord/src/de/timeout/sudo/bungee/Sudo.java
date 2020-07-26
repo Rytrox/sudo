@@ -14,8 +14,7 @@ import de.timeout.sudo.bungee.commands.GroupCommand;
 import de.timeout.sudo.bungee.commands.SudoCommand;
 import de.timeout.sudo.bungee.groups.ProxyGroupManager;
 import de.timeout.sudo.bungee.netty.BungeeSocketServer;
-import de.timeout.sudo.bungee.permissions.ProxyUserManager;
-import de.timeout.sudo.bungee.security.ProxySudoHandler;
+import de.timeout.sudo.bungee.users.ProxyUserManager;
 import de.timeout.sudo.permissions.GroupConfigurable;
 
 import net.jafama.FastMath;
@@ -38,7 +37,6 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 		
 	private ProxyGroupManager groupManager;
 	private ProxyUserManager userManager;
-	private ProxySudoHandler sudoHandler;
 	private BungeeSocketServer netty;
 	
 	private Configuration config;
@@ -89,17 +87,6 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 		return userManager;
 	}
 	
-	/**
-	 * Returns the sudo handler. Cannot be null
-	 * @author Timeout
-	 * 
-	 * @return the sudo handler. Cannot be null
-	 */
-	@NotNull
-	public ProxySudoHandler getSudoHandler() {
-		return sudoHandler;
-	}
-	
 	@Override
 	public void onEnable() {
 		LOG.log(Level.INFO, "&7Load &6Sudo &eVersion 0.0.1-SNAPSHOT");
@@ -123,18 +110,18 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 		groupManager = new ProxyGroupManager();
 		
 		// initialize sudoer manager
-		userManager = new ProxyUserManager();
-		this.getProxy().getPluginManager().registerListener(instance, userManager);
-		
-		// initialize sudo handler
-		sudoHandler = new ProxySudoHandler();
-		this.getProxy().getPluginManager().registerListener(this, sudoHandler);
+		try {
+			userManager = new ProxyUserManager();
+			this.getProxy().getPluginManager().registerListener(instance, userManager);
+		} catch (IOException e) {
+			LOG.log(Level.SEVERE, "Unable to start root-user", e);
+		}
 	}
 	
 	private void registerCommands() {
-		this.getProxy().getPluginManager().registerCommand(instance, new SudoCommand());
-		this.getProxy().getPluginManager().registerCommand(instance, new CustomizeCommand());
-		this.getProxy().getPluginManager().registerCommand(instance, new GroupCommand());
+//		this.getProxy().getPluginManager().registerCommand(instance, new SudoCommand());
+//		this.getProxy().getPluginManager().registerCommand(instance, new CustomizeCommand());
+//		this.getProxy().getPluginManager().registerCommand(instance, new GroupCommand());
 	}
 
 	@Override

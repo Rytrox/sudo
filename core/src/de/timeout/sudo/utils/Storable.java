@@ -7,15 +7,8 @@ import java.io.IOException;
  * @author Timeout
  *
  */
+@FunctionalInterface
 public interface Storable {
-
-	/**
-	 * Load the object from data
-	 * @author Timeout
-	 *
-	 * @throws IOException if there was an unexpected IO-Error while reading data
-	 */
-	public void load() throws IOException;
 	
 	/**
 	 * Save the object in data

@@ -196,6 +196,7 @@ public class PermissionTree {
 			Node current = root;
 			// split into subpermissions and erase ".*"
 			String[] subpermissions = (permission.endsWith(".*") ? permission.substring(0, permission.length() -2) : permission).toLowerCase(Locale.ENGLISH).split("\\.");
+			
 			// run through subpermissions
 			for(int i = 0; i < subpermissions.length; i++) {
 				// return false if current does not exists
@@ -207,6 +208,7 @@ public class PermissionTree {
 					} else return true;
 				} else return false;
 			}
+			
 			// return true if the last node is asterisk
 			return current.asterisk;
 		} else return false;

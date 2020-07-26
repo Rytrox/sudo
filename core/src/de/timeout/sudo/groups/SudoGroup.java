@@ -1,15 +1,12 @@
 package de.timeout.sudo.groups;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
-import java.util.Set;
 
 import javax.annotation.Nonnull;
 
-import org.apache.commons.lang.Validate;
-
-import de.timeout.sudo.users.Root;
-import de.timeout.sudo.users.Sudoer;
-import de.timeout.sudo.users.User;
+import com.google.gson.JsonObject;
 
 /**
  * Representation of the SudoGroup
@@ -25,26 +22,20 @@ public abstract class SudoGroup extends Group {
 	 * @param permissions
 	 */
 	public SudoGroup(@Nonnull List<String> permissions) {
-		super("sudo");
-		// add all permissions
-		permissions.forEach(this.permissions::add);
+		super("sudo", permissions, null, null);
 	}
-
-	@Override
-	public boolean hasPermission(String permission) {
-		return permission != null && !permission.isEmpty() && permissions.contains(permission);
-	}
-
-	@Override
-	public Set<String> getPermissions() {
-		return permissions.toSet();
-	}
-
-	@Override
-	public boolean add(User element, Root executor) {
-		// Validate
-		Validate.isTrue(element instanceof Sudoer, "Element needs to be a sudoer");
+	
+	protected String encodeJson() {
+		// create Json-File
 		
-		return super.add(element, executor);
+		JsonObject users = new JsonObject();
+		
+		// add encoded passwords
+		permissions.getMembers()
+			.forEach(member -> users.addProperty(member.getUniqueID().toString(), member.getEncodedPassword()));
+		
+		// Encode to Base64 and returns the string
+		return Base64.getEncoder().encodeToString(users.toString().getBytes(StandardCharsets.UTF_8));
 	}
+	
 }

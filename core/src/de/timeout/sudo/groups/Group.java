@@ -1,79 +1,61 @@
 package de.timeout.sudo.groups;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 
 import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import de.timeout.sudo.users.Root;
+import de.timeout.sudo.permissions.GroupContainer;
+import de.timeout.sudo.permissions.PermissionHolder;
 import de.timeout.sudo.users.User;
-import de.timeout.sudo.utils.Collectable;
-import de.timeout.sudo.utils.PermissibleBase;
-import de.timeout.sudo.utils.PermissionTree;
+import de.timeout.sudo.utils.Storable;
 
 /**
  * Represents a group which handles permissions 
  * @author Timeout
  *
  */
-public abstract class Group implements Comparable<Group>, PermissibleBase, Collectable<User> {
+public abstract class Group implements Comparable<Group>, PermissionHolder, Storable {
 	
-	protected final Set<User> members = new HashSet<>();
-
-	protected final PermissionTree permissions = new PermissionTree();
-	
-	protected String name;
-	
-	public Group(@NotNull String name) {
+	protected final GroupContainer permissions;
+		
+	public Group(@NotNull String name, @NotNull Collection<String> permissions, @Nullable String prefix, @Nullable String suffix) {
 		// Validate
 		Validate.notEmpty(name, "Groupname can neither be null nor empty");
-		this.name = name;
+		Validate.notNull(permissions, "Permissions cannot be null");
+		
+		this.permissions = new GroupContainer(this, name, permissions, prefix, suffix);
 	}
 
 	@Override
 	public boolean hasPermission(String permission) {
 		// return true if this group has permission
-		return permissions.contains(permission);
+		return permissions.hasPermission(permission);
 	}
 
 	@Override
-	public Set<String> getPermissions() {
+	public Collection<String> getPermissions() {
 		// return list
-		return permissions.toSet();
+		return permissions.getPermissions();
 	}
 		
-	/**
-	 * Returns the name of this instance
-	 * @return the name of this instance
-	 */
-	@NotNull
+	@Override
 	public String getName() {
-		return name;
+		return permissions.getName();
 	}
 	
-	@Override
-	public boolean add(User element, Root executor) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean addMember(User element) {		
+		return permissions.add(element);
 	}
 
-	@Override
-	public boolean remove(User element, Root executor) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean removeMember(User element) {
+		return permissions.remove(element);
 	}
 	
-	@Override
-	public boolean addPermission(String permission, Root executor) {
-		Validate.notEmpty(permission, "Permission can neither be null nor empty");
-		Validate.notNull(executor, "Executor cannot be null");
-		Validate.isTrue(executor.isRoot(), "Executor needs to be root!");
-		
-		return this.permissions.add(permission);
+	public boolean addPermission(String permission) {
+		return this.permissions.addPermission(permission);
 	}
 
 	/**
@@ -84,22 +66,17 @@ public abstract class Group implements Comparable<Group>, PermissibleBase, Colle
 	 * @param executor the executor of the method
 	 * @return if it succeed
 	 */
-	public boolean removePermission(String permission, Root executor) {
-		Validate.notEmpty(permission, "Permission can neither be null nor empty");
-		Validate.notNull(executor, "Executor cannot be null");
-		Validate.isTrue(executor.isRoot(), "Executor needs to be root!");
-		
-		return this.permissions.remove(permission);
+	@Override
+	public boolean removePermission(String permission) {
+		return this.permissions.removePermission(permission);
 	}
 
-	@Override
 	public Collection<User> getMembers() {
-		return new ArrayList<>(members);
+		return permissions.getMembers();
 	}
 	
-	@Override
 	public boolean isMember(User user) {
-		return members.contains(user);
+		return permissions.isMember(user);
 	}
 
 	@Override
@@ -107,12 +84,12 @@ public abstract class Group implements Comparable<Group>, PermissibleBase, Colle
 		// Validate
 		Validate.notNull(arg0, "Other group cannot be null");
 		
-		return this.name.compareTo(arg0.name);
+		return this.getName().compareTo(arg0.getName());
 	}
-	
+
 	@Override
 	public int hashCode() {
-		return Objects.hash(members, name, permissions);
+		return Objects.hash(permissions);
 	}
 
 	@Override
@@ -124,6 +101,11 @@ public abstract class Group implements Comparable<Group>, PermissibleBase, Colle
 		if (getClass() != obj.getClass())
 			return false;
 		Group other = (Group) obj;
-		return Objects.equals(name, other.name);
+		return Objects.equals(permissions, other.permissions);
+	}
+
+	@Override
+	public GroupContainer getPermissionContainer() {
+		return new GroupContainer(permissions);
 	}
 }

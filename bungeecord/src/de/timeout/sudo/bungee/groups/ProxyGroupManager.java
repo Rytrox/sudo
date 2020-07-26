@@ -79,26 +79,21 @@ public class ProxyGroupManager extends GroupManager {
 	}
 
 	@Override
-	public boolean deleteGroup(Group group) {
-		// check if group is a usergroup
-		if(group instanceof UserGroup) {
-			// remove all player from group
-			group.getMembers().forEach(members -> members.remove(group, main.getUserManager().getConsoleUser()));
+	public boolean deleteGroup(UserGroup group) {
+		// remove all player from group
+		group.getMembers().forEach(member -> member.leaveGroup(group));
 			
-			// delete group in graph
-			groups.removeNode(group);
+		// delete group in graph
+		groups.removeNode(group);
 			
-			// remove from config and save config
-			main.getGroupConfig().set(group.getName(), null);
-			main.saveGroupConfig();
+		// remove from config and save config
+		main.getGroupConfig().set(group.getName(), null);
+		main.saveGroupConfig();
 			
-			// send delete packet to all subservers
-			main.getNettyServer().broadcastPacket(new PacketRemoteInDeleteGroup(group.getName()));
+		// send delete packet to all subservers
+		main.getNettyServer().broadcastPacket(new PacketRemoteInDeleteGroup(group.getName()));
 			
-			return true;
-		}
-		
-		return false;
+		return true;
 	}
 
 	@Override

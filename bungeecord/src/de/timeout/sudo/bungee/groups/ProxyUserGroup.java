@@ -1,20 +1,19 @@
 package de.timeout.sudo.bungee.groups;
 
-import de.timeout.sudo.bungee.Sudo;
+import java.io.IOException;
+import java.util.ArrayList;
+
 import de.timeout.sudo.groups.UserGroup;
 
 import net.md_5.bungee.config.Configuration;
 
 public class ProxyUserGroup extends UserGroup {
-	
-	private static final Sudo main = Sudo.getInstance();
-		
+			
 	public ProxyUserGroup(String name, Configuration groupConfiguration) {
 		super(name, groupConfiguration.getString("options.prefix"),
 				groupConfiguration.getString("options.suffix"),
-				groupConfiguration.getBoolean("options.default"));
-		// load permissions
-		groupConfiguration.getStringList("permissions").forEach(this::addPermission);
+				groupConfiguration.getBoolean("options.default"),
+				groupConfiguration.getStringList("permissions"));
 	}
 	
 	/**
@@ -25,30 +24,23 @@ public class ProxyUserGroup extends UserGroup {
 	 * @throws IllegalArgumentException if the name equals sudo
 	 */
 	public ProxyUserGroup(String name) {
-		super(name, "", "", false);
+		super(name, "", "", false, new ArrayList<>());
 	}
 
 	@Override
 	public boolean addPermission(String permission) {
-		// set console user root
-		boolean root = main.getUserManager().getConsoleUser().enableRoot();
-		boolean result = this.addPermission(permission, main.getUserManager().getConsoleUser());
-		
-		// deactivate root if its enabled by this method
-		if(root) main.getUserManager().getConsoleUser().disableRoot();
-		
-		return result;
+		return this.addPermission(permission);
 	}
 
 	@Override
 	public boolean removePermission(String permission) {
 		// set console user root
-		boolean root = main.getUserManager().getConsoleUser().enableRoot();
-		boolean result = this.removePermission(permission, main.getUserManager().getConsoleUser());
+		return this.removePermission(permission);
+	}
+
+	@Override
+	public void save() throws IOException {
+		// TODO Auto-generated method stub
 		
-		// deactivate root if its enabled by this method
-		if(root) main.getUserManager().getConsoleUser().disableRoot();
-		
-		return result;
 	}
 }

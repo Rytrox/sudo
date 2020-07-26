@@ -1,5 +1,7 @@
 package de.timeout.sudo.bungee.groups;
 
+import java.io.IOException;
+
 import de.timeout.sudo.bungee.Sudo;
 import de.timeout.sudo.groups.SudoGroup;
 
@@ -20,27 +22,8 @@ public final class ProxySudoGroup extends SudoGroup {
 	}
 
 	@Override
-	public boolean addPermission(String permission) {
-		// set console user root
-		boolean root = main.getUserManager().getConsoleUser().enableRoot();
-		boolean result = this.addPermission(permission, main.getUserManager().getConsoleUser());
-		
-		// deactivate root if its enabled by this method
-		if(root) main.getUserManager().getConsoleUser().disableRoot();
-		
-		return result;
-	}
-
-	@Override
-	public boolean removePermission(String permission) {
-		// set console user root
-		boolean root = main.getUserManager().getConsoleUser().enableRoot();
-		boolean result = this.removePermission(permission, main.getUserManager().getConsoleUser());
-		
-		// deactivate root if its enabled by this method
-		if(root) main.getUserManager().getConsoleUser().disableRoot();
-		
-		return result;
+	public void save() throws IOException {
+		// Save sudoers here!
 	}
 
 }

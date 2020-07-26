@@ -88,7 +88,7 @@ public abstract class GroupManager {
 	 * @param group the group you want to delete
 	 * @return whether the group could be deleted or not
 	 */
-	public abstract boolean deleteGroup(@NotNull Group group); 
+	public abstract boolean deleteGroup(@NotNull UserGroup group); 
 	
 	/**
 	 * Saves a usergroup in the groups.yml
@@ -100,15 +100,14 @@ public abstract class GroupManager {
 	public abstract void saveToConfig(@NotNull UserGroup group);
 	
 	/**
-	 * Creates a new group 
+	 * Creates a new group and sends it to all remotes.
 	 * @author Timeout
 	 * 
 	 * @param name the name of the new group
 	 * @param parents the parents of the new group
 	 * @return the group or null if the group could not be created 
 	 */
-	@Nullable
-	public abstract UserGroup createGroup(String name, List<Group> parents);
+	public abstract @Nullable UserGroup createGroup(String name, List<Group> parents);
 	
 	/**
 	 * loads a Group by its name from the default configuration file

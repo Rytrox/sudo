@@ -75,7 +75,6 @@ public class BungeeSocketServer implements Runnable, Closeable {
 							
 							// link handlers
 							channel.pipeline().addLast("authorize", new AuthorizeHandler());
-							channel.pipeline().addLast("login", new LoginHandler());
 						}
 
 					})

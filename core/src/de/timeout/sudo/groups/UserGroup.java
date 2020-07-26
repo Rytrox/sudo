@@ -10,6 +10,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.apache.commons.lang.Validate;
+import org.jetbrains.annotations.NotNull;
 
 import de.timeout.sudo.utils.Customizable;
 
@@ -24,8 +25,9 @@ public abstract class UserGroup extends Group implements Customizable, Inheritab
 	/**
 	 * Constructor for inheritances
 	 */
-	protected UserGroup(@Nonnull String name, @Nullable String prefix, @Nullable String suffix, boolean isDefault) {
-		super(name);
+	protected UserGroup(@Nonnull String name, @Nullable String prefix, @Nullable String suffix, boolean isDefault, @NotNull Collection<String> permissions) {
+		super(name, permissions, prefix, suffix);
+		
 		// Validate and ban sudo name
 		Validate.isTrue(!"sudo".equalsIgnoreCase(name), "UserGroup cannot be named with sudo");
 		
@@ -68,13 +70,8 @@ public abstract class UserGroup extends Group implements Customizable, Inheritab
 	}
 
 	@Override
-	public int compareTo(Group o) {
-		return this.name.compareTo(o.getName());
-	}
-
-	@Override
 	public int hashCode() {
-		return Objects.hash(members, name, permissions, prefix, suffix);
+		return Objects.hash(permissions, prefix, suffix);
 	}
 
 	@Override
@@ -86,7 +83,7 @@ public abstract class UserGroup extends Group implements Customizable, Inheritab
 		if (getClass() != obj.getClass())
 			return false;
 		UserGroup other = (UserGroup) obj;
-		return Objects.equals(name, other.name) && Objects.equals(permissions, other.permissions);
+		return Objects.equals(permissions, other.permissions);
 	}
 
 	@Override

@@ -4,8 +4,6 @@ import java.util.Collection;
 
 import org.jetbrains.annotations.NotNull;
 
-import de.timeout.sudo.users.Root;
-
 /**
  * Interface to collect data in a datatype
  * @author Timeout
@@ -35,18 +33,16 @@ public interface Collectable<T> {
 	/**
 	 * Adds a data object to this collectable object
 	 * @param element the element you want to add. Cannot be null
-	 * @param executor the executor of this operation. Cannot be null
 	 * @return if the object is added and was not added before
 	 * @throws IllegalArgumentException if any argument is null
 	 */
-	public boolean add(@NotNull T element, @NotNull Root executor);
+	public boolean add(@NotNull T element);
 	
 	/**
 	 * Removes a data object from this collectable object
 	 * @param element the element you want to remove. Cannot be null
-	 * @param executor the executor of this operation. Cannot be null
 	 * @return if the object is removed and was containing this object before
 	 * @throws IllegalArgumentException if any argument is null
 	 */
-	public boolean remove(@NotNull T element, @NotNull Root executor);
+	public boolean remove(@NotNull T element);
 }
