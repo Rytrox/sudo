@@ -13,7 +13,7 @@ import com.google.common.graph.MutableGraph;
 
 import de.timeout.sudo.groups.exception.CircularInheritanceException;
 
-public abstract class GroupManager {
+public abstract class GroupManager<C> {
 	
 	protected final MutableGraph<UserGroup> groups = GraphBuilder.directed().build();
 	protected final SudoGroup sudoGroup;
@@ -115,7 +115,7 @@ public abstract class GroupManager {
 	 * 
 	 * @param name the name of the group
 	 */
-	protected abstract UserGroup loadGroup(String name);
+	protected abstract UserGroup loadGroup(@NotNull String name, @Nullable C configuration);
 	
 	/**
 	 * Binds the group extension to the extended group

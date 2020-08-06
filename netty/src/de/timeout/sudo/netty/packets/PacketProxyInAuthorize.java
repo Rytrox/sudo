@@ -1,6 +1,5 @@
 package de.timeout.sudo.netty.packets;
 
-import java.io.IOException;
 import java.util.UUID;
 
 import org.apache.commons.lang.Validate;
@@ -9,14 +8,14 @@ import org.jetbrains.annotations.Nullable;
 
 import net.jafama.FastMath;
 
-import io.netty.buffer.ByteBuf;
-
 /**
  * Packet which is sent by Spigot-Servers to authorize to their bungeecord
  * @author Timeout
  *
  */
-public class PacketProxyInAuthorize extends Packet<PacketProxyInAuthorize> {
+public class PacketProxyInAuthorize implements Packet {
+	
+	private static final long serialVersionUID = 5678881027664400322L;
 	
 	private UUID proxyID;
 	private int remotePort;
@@ -28,40 +27,11 @@ public class PacketProxyInAuthorize extends Packet<PacketProxyInAuthorize> {
 	 * @param proxyID the uuid you are going to send
 	 */
 	public PacketProxyInAuthorize(@NotNull UUID proxyID, int port) {
-		super(PacketProxyInAuthorize.class);
 		// Validate
 		Validate.notNull(proxyID, "Proxy-UUID cannot be null");
-		Validate.isTrue(port > 0, "Port must be a positive integer");
 		
 		this.proxyID = proxyID;
 		this.remotePort = FastMath.abs(port);
-	}
-	
-	/**
-	 * Constructor for decoders
-	 * @author Timeout
-	 *
-	 */
-	public PacketProxyInAuthorize() {
-		super(PacketProxyInAuthorize.class);
-	}
-	
-	@Override
-	public void decode(ByteBuf input) throws IOException {
-		// read string
-		proxyID = readUUID(input);
-		// read port
-		remotePort = input.readInt();
-	}
-
-	@Override
-	public void encode(ByteBuf output) throws IOException {
-		// call supermethod
-		super.encode(output);
-		// write uuid into packet
-		writeString(output, proxyID.toString());
-		// write port
-		output.writeInt(remotePort);
 	}
 
 	/**

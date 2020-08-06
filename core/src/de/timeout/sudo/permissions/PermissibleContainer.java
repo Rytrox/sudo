@@ -9,29 +9,28 @@ import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-abstract class AbstractContainer {
+public class PermissibleContainer<E> extends CollectableContainer<E> {
 	
 	private static final String PERMISSIONS_NULL = "Permission cannot be null";
 
 	protected final PermissionTree permissions = new PermissionTree();
 	protected final PermissionHolder owner;
-	protected final String name;
 	
 	protected String prefix;
 	protected String suffix;
 	
-	public AbstractContainer(@NotNull PermissionHolder owner, @NotNull String name, @NotNull Collection<String> permissions,
-			@Nullable String prefix, @Nullable String suffix) {
-		// Validate
+	public PermissibleContainer(@NotNull PermissionHolder owner, @NotNull String name, @Nullable String prefix,
+			@Nullable String suffix, @NotNull Collection<E> members, @NotNull Collection<String> permissions) {
+		super(name, members);
+		
 		Validate.notNull(owner, "PermissionHolder cannot be null");
-		Validate.notEmpty(name, "Holder's name can neither be null nor empty");
 		Validate.notNull(permissions, "Permissions cannot be null");
 		
-		permissions.forEach(this.permissions::add);
 		this.owner = owner;
-		this.name = name;
 		setPrefix(prefix);
 		setSuffix(suffix);
+		
+		permissions.forEach(this::addPermission);
 	}
 	
 	/**
@@ -90,16 +89,7 @@ abstract class AbstractContainer {
 	public PermissionHolder getOwner() {
 		return owner;
 	}
-
-	/**
-	 * Returns holder's name
-	 * @return holder's name
-	 */
-	@NotNull
-	public String getName() {
-		return name;
-	}
-
+	
 	/**
 	 * Returns the  prefix of this container
 	 * @return the prefix

@@ -1,5 +1,7 @@
 package de.timeout.sudo.users;
 
+import de.timeout.sudo.security.Authorizable;
+
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -7,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
  * @author Timeout
  *
  */
-public interface RemoteUser extends User {
+public interface RemoteUser extends User, Authorizable {
 
 	/**
 	 * Returns the server ip of the Bukkit-Server

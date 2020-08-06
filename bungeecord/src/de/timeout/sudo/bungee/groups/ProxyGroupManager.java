@@ -11,23 +11,27 @@ import org.apache.commons.lang.Validate;
 import de.timeout.sudo.bungee.Sudo;
 import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.groups.GroupManager;
+import de.timeout.sudo.groups.SudoGroup;
 import de.timeout.sudo.groups.UserGroup;
 import de.timeout.sudo.groups.exception.CircularInheritanceException;
 import de.timeout.sudo.netty.packets.PacketRemoteInDeleteGroup;
 import de.timeout.sudo.netty.packets.PacketRemoteInGroupInheritance;
-import de.timeout.sudo.netty.packets.PacketRemoteInInitializeGroup;
+import de.timeout.sudo.netty.packets.PacketRemoteInAddGroup;
 
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.config.Configuration;
 
-public class ProxyGroupManager extends GroupManager {
+public class ProxyGroupManager extends GroupManager<Configuration> {
 
 	private static final Sudo main = Sudo.getInstance();
 		
 	public ProxyGroupManager() {
-		super(new ProxySudoGroup());
+		super(new SudoGroup());
+		
 		// load groups.yml
-		main.getGroupConfig().getKeys().forEach(this::loadGroup);
+		main.getGroupConfig().getKeys().forEach(groupname -> 
+			loadGroup(groupname, main.getGroupConfig().getSection(groupname)));
+		
 		// log data
 		Sudo.log().log(Level.INFO, "&6groups.yml &asuccessfully loaded&7.");
 	}
@@ -38,7 +42,7 @@ public class ProxyGroupManager extends GroupManager {
 	}
 
 	@Override
-	protected UserGroup loadGroup(String name) {
+	protected UserGroup loadGroup(String name, Configuration configuration) {
 		// ban group name sudo
 		if("sudo".equalsIgnoreCase(name)) {
 			// log
@@ -46,20 +50,18 @@ public class ProxyGroupManager extends GroupManager {
 			return null;
 		}
 		
-		// create new group or get null if the group cannot be found
-		Configuration section = main.getGroupConfig().getSection(name);
 		// check if group is already loaded
 		Group group = getGroupByName(name);
 		// load group if section is found and group is not loaded yet
-		if((group == null || group instanceof UserGroup) && section != null) {
-			group = new ProxyUserGroup(name, section);
+		if((group == null || group instanceof UserGroup) && configuration != null) {
+			group = new ProxyUserGroup(name, configuration);
 			// add edge to graph
 			groups.addNode((UserGroup) group);
 			// load inheritances
-			for(String extendedGroupName : section.getStringList("extends")) {
+			for(String extendedGroupName : configuration.getStringList("extends")) {
 				// load supergroup
 				Group superGroup = Optional.ofNullable(getGroupByName(extendedGroupName))
-								.orElse(loadGroup(extendedGroupName));
+								.orElse(loadGroup(extendedGroupName, main.getGroupConfig().getSection(extendedGroupName)));
 				// only continue if group could be loaded
 				if(superGroup != null && group instanceof UserGroup) {
 					// bind inheritance
@@ -91,7 +93,7 @@ public class ProxyGroupManager extends GroupManager {
 		main.saveGroupConfig();
 			
 		// send delete packet to all subservers
-		main.getNettyServer().broadcastPacket(new PacketRemoteInDeleteGroup(group.getName()));
+		main.getNettyServer().broadcastPacket(new PacketRemoteInDeleteGroup(group));
 			
 		return true;
 	}
@@ -108,7 +110,7 @@ public class ProxyGroupManager extends GroupManager {
 			groups.addNode(group);
 			
 			// send packets to all subservers
-			main.getNettyServer().broadcastPacket(new PacketRemoteInInitializeGroup(group));
+			main.getNettyServer().broadcastPacket(new PacketRemoteInAddGroup(group));
 			
 			// add parents to group
 			if(parents != null) parents.forEach(parent -> {

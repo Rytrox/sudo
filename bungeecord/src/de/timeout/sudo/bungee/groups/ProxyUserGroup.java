@@ -7,9 +7,11 @@ import de.timeout.sudo.groups.UserGroup;
 
 import net.md_5.bungee.config.Configuration;
 
+import org.jetbrains.annotations.NotNull;
+
 public class ProxyUserGroup extends UserGroup {
 			
-	public ProxyUserGroup(String name, Configuration groupConfiguration) {
+	public ProxyUserGroup(@NotNull String name, @NotNull Configuration groupConfiguration) {
 		super(name, groupConfiguration.getString("options.prefix"),
 				groupConfiguration.getString("options.suffix"),
 				groupConfiguration.getBoolean("options.default"),
@@ -23,24 +25,12 @@ public class ProxyUserGroup extends UserGroup {
 	 * @param name the name of the group
 	 * @throws IllegalArgumentException if the name equals sudo
 	 */
-	public ProxyUserGroup(String name) {
+	public ProxyUserGroup(@NotNull String name) {
 		super(name, "", "", false, new ArrayList<>());
 	}
 
 	@Override
-	public boolean addPermission(String permission) {
-		return this.addPermission(permission);
-	}
-
-	@Override
-	public boolean removePermission(String permission) {
-		// set console user root
-		return this.removePermission(permission);
-	}
-
-	@Override
 	public void save() throws IOException {
-		// TODO Auto-generated method stub
 		
 	}
 }

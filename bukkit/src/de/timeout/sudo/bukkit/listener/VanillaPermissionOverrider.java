@@ -17,7 +17,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import de.timeout.libs.BukkitReflections;
 import de.timeout.libs.Reflections;
 import de.timeout.sudo.bukkit.Sudo;
-import de.timeout.sudo.bukkit.permissions.BukkitUser;
+import de.timeout.sudo.bukkit.users.BukkitUser;
 import de.timeout.sudo.users.User;
 
 public class VanillaPermissionOverrider implements Listener {
@@ -79,7 +79,7 @@ public class VanillaPermissionOverrider implements Listener {
 		Validate.notNull(user, "User cannot be null");
 		if(player.getUniqueId().compareTo(user.getUniqueID()) == 0) {
 			// write profile into player
-			Reflections.setField(permField, player, user);
+			Reflections.setValue(permField, player, user);
 		} else throw new IllegalArgumentException("User profile is not for this player");
 	}
 }

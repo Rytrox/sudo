@@ -9,14 +9,7 @@ import org.jetbrains.annotations.NotNull;
  * @author Timeout
  *
  */
-public interface PermissionHolder {
-	
-	/**
-	 * Returns the name of this instance
-	 * @return the name of this instance
-	 */
-	@NotNull
-	public String getName();
+public interface PermissionHolder extends ContainerHolder {
 	
 	/**
 	 * Checks if this group has the permission.
@@ -52,11 +45,4 @@ public interface PermissionHolder {
 	 * @throws IllegalArgumentException if any argument is null
 	 */
 	public boolean removePermission(@NotNull String permission);
-	
-	/**
-	 * Returns the owned permission container
-	 * @return this object's own permission container. Cannot be null
-	 */
-	@NotNull
-	public AbstractContainer getPermissionContainer();
 }

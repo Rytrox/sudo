@@ -1,26 +1,21 @@
 package de.timeout.sudo.netty.packets;
 
-import java.io.IOException;
-import java.util.UUID;
-
 import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.NotNull;
 
 import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.users.User;
-import io.netty.buffer.ByteBuf;
 
-public class PacketRemoteInUserJoinsGroup extends Packet<PacketRemoteInUserJoinsGroup> {
+/**
+ * Packet which will be sent by BungeeCord when a user joins a group
+ * @author Timeout
+ *
+ */
+public class PacketRemoteInUserJoinsGroup extends PacketAbstractUser {
 	
-	private UUID userID;
+	private static final long serialVersionUID = -2497693421169645663L;
+	
 	private String group;
-
-	/**
-	 * Constructor for decoders
-	 */
-	public PacketRemoteInUserJoinsGroup() {
-		super(PacketRemoteInUserJoinsGroup.class);
-	}
 
 	/**
 	 * Creates a new packet
@@ -31,42 +26,15 @@ public class PacketRemoteInUserJoinsGroup extends Packet<PacketRemoteInUserJoins
 	 * @throws IllegalArgumentException if any argument is null
 	 */
 	public PacketRemoteInUserJoinsGroup(@NotNull User user, @NotNull Group group) {
-		super(PacketRemoteInUserJoinsGroup.class);
+		super(user);
 		
-		Validate.notNull(user, "User cannot be null");
 		Validate.notNull(group, "Group cannot be null");
 		
-		this.userID = user.getUniqueID();
 		this.group = group.getName();
 	}
-
-	@Override
-	public void decode(ByteBuf input) throws IOException {
-		this.userID = readUUID(input);
-		this.group = readString(input);
-	}
-
-	@Override
-	public void encode(ByteBuf output) throws IOException {
-		// Do Super call!
-		super.encode(output);
-		
-		writeString(output, userID.toString());
-		writeString(output, group);
-	}
-
 	/**
-	 * Returns the id of the user
-	 * @return the userID
-	 */
-	@NotNull
-	public UUID getUserID() {
-		return userID;
-	}
-
-	/**
-	 * Returns the name of the group
-	 * @return the group
+	 * Returns the group's name
+	 * @return the group's name. Cannot be null
 	 */
 	@NotNull
 	public String getGroup() {

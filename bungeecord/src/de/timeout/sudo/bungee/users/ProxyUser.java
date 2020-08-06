@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -21,8 +20,9 @@ import com.google.gson.JsonPrimitive;
 
 import de.timeout.sudo.bungee.Sudo;
 import de.timeout.sudo.permissions.UserContainer;
+import de.timeout.sudo.users.AuthorizableUser;
 import de.timeout.sudo.users.User;
-import de.timeout.sudo.groups.UserGroup;
+import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.utils.PasswordCryptor;
 
 import net.md_5.bungee.api.ChatColor;
@@ -30,7 +30,7 @@ import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.config.Configuration;
 
-public class ProxyUser implements User {
+public class ProxyUser implements AuthorizableUser {
 		
 	private static final String NAME_FIELD = "name";
 	private static final String PREFIX_FIELD = "prefix";
@@ -40,10 +40,10 @@ public class ProxyUser implements User {
 	
 	protected static final Sudo main = Sudo.getInstance();
 	
-	protected final UserContainer permissions;
+	protected final UserContainer container;
 	
 	protected UUID playerID;
-	protected UserContainer activePermissions;
+	protected UserContainer activeContainer;
 	
 	protected String encodedPassword;
 	private boolean authorized; 
@@ -55,11 +55,13 @@ public class ProxyUser implements User {
 	 * @param connection the connection
 	 * @throws IOException if the file cannot be read
 	 */
-	public ProxyUser(@NotNull PendingConnection connection, @Nullable Configuration configuration) throws IOException {
+	public ProxyUser(@NotNull PendingConnection connection, @Nullable Configuration configuration, @Nullable String encodedPassword) throws IOException {
 		// set attributes to default
 		this.playerID = connection.getUniqueId();
 		
 		Set<String> permissions = new HashSet<>();
+		Set<Group> groups = new HashSet<>();
+		
 		String prefix = null;
 		String suffix = null;
 		
@@ -72,9 +74,18 @@ public class ProxyUser implements User {
 			permissions.addAll(configuration.getStringList(PERMISSIONS_FIELD));
 			
 			// load groups
+			configuration.getStringList(GROUPS_FIELD).forEach(groupname -> {
+				// get Group
+				Group group = main.getGroupManager().getGroupByName(groupname);
+				
+				// join group
+				group.add(this);
+				groups.add(group);
+			});
 		}
-		this.permissions = new UserContainer(this, permissions, new ArrayList<>(), connection.getName(), prefix, suffix);
-		this.activePermissions = this.permissions;
+		this.container = new UserContainer(this, permissions, groups, connection.getName(), prefix, suffix);
+		this.activeContainer = this.container;
+		this.encodedPassword = encodedPassword;
 	}
 			
 	@Override
@@ -84,23 +95,23 @@ public class ProxyUser implements User {
 	
 	@Override
 	public boolean addPermission(String permission) {
-		return permissions.addPermission(permission);
+		return container.addPermission(permission);
 	}
 
 	@Override
 	public boolean removePermission(String permission) {
-		return permissions.removePermission(permission);
+		return container.removePermission(permission);
 	}
 
 	@Override
 	public boolean hasPermission(String permission) {	
 		// permission was not found in groups. Search in personal permissions
-		return activePermissions.hasPermission(permission);
+		return activeContainer.hasPermission(permission);
 	}
 
 	@Override
 	public Collection<String> getPermissions() {
-		return permissions.getPermissions();
+		return container.getPermissions();
 	}
 
 	@Override
@@ -130,19 +141,19 @@ public class ProxyUser implements User {
 		JsonObject object = new JsonObject();
 		// write attributes in object
 		object.addProperty("uuid", this.playerID.toString());
-		object.addProperty(NAME_FIELD, this.permissions.getName());
-		object.addProperty(PREFIX_FIELD, this.permissions.getPrefix());
-		object.addProperty(SUFFIX_FIELD, this.permissions.getSuffix());
+		object.addProperty(NAME_FIELD, this.container.getName());
+		object.addProperty(PREFIX_FIELD, this.container.getPrefix());
+		object.addProperty(SUFFIX_FIELD, this.container.getSuffix());
 		
 		// Create JsonArray for groups
 		JsonArray groupsArray = new JsonArray();
 		// add all elements in groups
-		this.permissions.getMembers().forEach(group -> groupsArray.add(new JsonPrimitive(group.getName())));
+		this.container.getMembers().forEach(group -> groupsArray.add(new JsonPrimitive(group.getName())));
 		
 		// Create JsonArray for permissions
 		JsonArray permissionsArray = new JsonArray();
 		// add all own permissions in permissions array
-		this.permissions.getPermissions().forEach(permission -> permissionsArray.add(new JsonPrimitive(permission)));
+		this.container.getPermissions().forEach(permission -> permissionsArray.add(new JsonPrimitive(permission)));
 		
 		// write both arrays in object
 		object.add(GROUPS_FIELD, groupsArray);
@@ -153,27 +164,27 @@ public class ProxyUser implements User {
 
 	@Override
 	public String getName() {
-		return activePermissions.getName();
+		return activeContainer.getName();
 	}
 
 	@Override
 	public String getPrefix() {
-		return activePermissions.getPrefix();
+		return activeContainer.getPrefix();
 	}
 
 	@Override
 	public String getSuffix() {
-		return activePermissions.getSuffix();
+		return activeContainer.getSuffix();
 	}
 
 	@Override
 	public void setPrefix(String prefix) {
-		this.permissions.setPrefix(prefix);
+		this.container.setPrefix(prefix);
 	}
 
 	@Override
 	public void setSuffix(String suffix) {
-		this.permissions.setSuffix(suffix);
+		this.container.setSuffix(suffix);
 	}
 
 	@Override
@@ -189,12 +200,13 @@ public class ProxyUser implements User {
 	@Override
 	public void applyPermissionContainer(User holder) {
 		// check if holder is null
-		this.activePermissions = holder != null ? holder.getPermissionContainer() : permissions;
+		this.activeContainer = holder != null ? holder.getPermissionContainer() : container;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public UserContainer getPermissionContainer() {
-		return new UserContainer(permissions);
+		return new UserContainer(container);
 	}
 
 	@Override
@@ -220,21 +232,21 @@ public class ProxyUser implements User {
 
 	@Override
 	public boolean isRoot() {
-		return activePermissions.getOwner().equals(main.getUserManager().getRoot());
+		return activeContainer.getOwner().equals(main.getUserManager().getRoot());
 	}
 
 	@Override
-	public boolean joinGroup(UserGroup group) {
-		return permissions.add(group);
+	public boolean joinGroup(Group group) {
+		return container.add(group);
 	}
 
 	@Override
-	public boolean leaveGroup(UserGroup group) {
-		return permissions.remove(group);
+	public boolean leaveGroup(Group group) {
+		return container.remove(group);
 	}
 
 	@Override
-	public boolean isMember(UserGroup group) {
-		return permissions.isMember(group);
+	public boolean isMember(Group group) {
+		return container.isMember(group);
 	}
 }

@@ -4,22 +4,21 @@ import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import de.timeout.libs.config.ColoredLogger;
 import de.timeout.libs.config.ConfigCreator;
 import de.timeout.libs.config.UTFConfig;
+import de.timeout.sudo.bukkit.groups.BukkitGroupManager;
 import de.timeout.sudo.bukkit.listener.BukkitModeListener;
 import de.timeout.sudo.bukkit.listener.ModifyWorldListener;
 import de.timeout.sudo.bukkit.listener.VanillaPermissionOverrider;
 import de.timeout.sudo.bukkit.netty.BukkitSocket;
-import de.timeout.sudo.bukkit.permissions.BukkitGroupManager;
-import de.timeout.sudo.bukkit.permissions.BukkitUserManager;
-import de.timeout.sudo.bukkit.security.BukkitSudoHandler;
+import de.timeout.sudo.bukkit.users.BukkitUserManager;
+import de.timeout.sudo.bukkit.users.StandaloneBukkitUserManager;
 import de.timeout.sudo.permissions.GroupConfigurable;
 
 /**
@@ -41,13 +40,12 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 	private BukkitSocket netty;
 	private BukkitGroupManager groupManager;
 	private BukkitUserManager userManager;
-	private BukkitSudoHandler sudoHandler;
 
 	/**
 	 * This method returns the instance of the plugin
 	 * @return the instance of the plugin
 	 */
-	@Nonnull
+	@NotNull
 	public static Sudo getInstance() {
 		return JavaPlugin.getPlugin(Sudo.class);
 	}
@@ -58,7 +56,7 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 	 * 
 	 * @return the colored logger. Cannot be null
 	 */
-	@Nonnull
+	@NotNull
 	public static ColoredLogger log() {
 		return LOG;
 	}
@@ -92,20 +90,9 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 	 * 
 	 * @return sudo's group manager. Cannot be null
 	 */
-	@Nonnull
+	@NotNull
 	public BukkitGroupManager getGroupManager() {
 		return groupManager;
-	}
-	
-	/**
-	 * Returns the sudo handler. Cannot be null
-	 * @author Timeout
-	 * 
-	 * @return the sudo handler. Cannot be null
-	 */
-	@Nonnull
-	public BukkitSudoHandler getSudoHandler() {
-		return sudoHandler;
 	}
 	
 	/**
@@ -114,7 +101,7 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 	 * 
 	 * @return the user manager. Cannot be null
 	 */
-	@Nonnull
+	@NotNull
 	public BukkitUserManager getUserManager() {
 		return userManager;
 	}
@@ -155,11 +142,7 @@ public class Sudo extends JavaPlugin implements GroupConfigurable<UTFConfig> {
 		Bukkit.getPluginManager().registerEvents(new VanillaPermissionOverrider(), this);
 		
 		// create BukkitSudoerManager
-		userManager = new BukkitUserManager();
-		
-		// create BukkitSudoHandler
-		sudoHandler = new BukkitSudoHandler();
-		Bukkit.getPluginManager().registerEvents(sudoHandler, this);
+		userManager = bungeecordEnabled() ? new BukkitUserManager() : new StandaloneBukkitUserManager();
 		
 		// only register is bukkit mode is enabled
 		if(!bungeecordEnabled()) {

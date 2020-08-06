@@ -1,41 +1,53 @@
 package de.timeout.sudo.groups;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Collection;
 
-import javax.annotation.Nonnull;
-
-import com.google.gson.JsonObject;
+import de.timeout.sudo.permissions.GroupContainer;
+import de.timeout.sudo.users.User;
 
 /**
  * Representation of the SudoGroup
  * @author Timeout
  *
  */
-public abstract class SudoGroup extends Group {
+public class SudoGroup implements Group {
 	
-	/**
-	 * Creates a new SudoGroup
-	 * @author Timeout
-	 *
-	 * @param permissions
-	 */
-	public SudoGroup(@Nonnull List<String> permissions) {
-		super("sudo", permissions, null, null);
+	protected final GroupContainer container;
+	
+	public SudoGroup() {
+		container = new GroupContainer("sudo", new ArrayList<>());
 	}
-	
-	protected String encodeJson() {
-		// create Json-File
-		
-		JsonObject users = new JsonObject();
-		
-		// add encoded passwords
-		permissions.getMembers()
-			.forEach(member -> users.addProperty(member.getUniqueID().toString(), member.getEncodedPassword()));
-		
-		// Encode to Base64 and returns the string
-		return Base64.getEncoder().encodeToString(users.toString().getBytes(StandardCharsets.UTF_8));
+
+	@Override
+	public String getName() {
+		return container.getName();
 	}
-	
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public GroupContainer getPermissionContainer() {
+		return container;
+	}
+
+	@Override
+	public boolean isMember(User element) {
+		return false;
+	}
+
+	@Override
+	public Collection<User> getMembers() {
+		return container.getMembers();
+	}
+
+	@Override
+	public boolean add(User element) {
+		return container.add(element);
+	}
+
+	@Override
+	public boolean remove(User element) {
+		return container.remove(element);
+	}
+
 }

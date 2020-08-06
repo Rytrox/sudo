@@ -17,7 +17,6 @@ import com.google.gson.JsonObject;
 
 import de.timeout.sudo.bungee.Sudo;
 import de.timeout.sudo.groups.Group;
-import de.timeout.sudo.groups.UserGroup;
 import de.timeout.sudo.permissions.UserContainer;
 import de.timeout.sudo.users.RemoteUser;
 import de.timeout.sudo.users.User;
@@ -161,21 +160,21 @@ public class RootConsole implements RemoteUser {
 	}
 
 	@Override
-	public boolean joinGroup(UserGroup element) {
+	public boolean joinGroup(Group element) {
 		// Validate
 		Validate.notNull(element, "Group cannot be null");
 		
 		// add group		
-		element.addMember(this);
+		element.add(this);
 		return groups.add(element);
 	}
 
 	@Override
-	public boolean leaveGroup(UserGroup element) {
+	public boolean leaveGroup(Group element) {
 		// Validate
 		Validate.notNull(element, "Group cannot be null");
 		
-		element.removeMember(this);
+		element.remove(this);
 		return groups.remove(element);
 	}
 
@@ -204,13 +203,14 @@ public class RootConsole implements RemoteUser {
 		// save console here!
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public UserContainer getPermissionContainer() {
 		return new UserContainer(permissions);
 	}
 
 	@Override
-	public boolean isMember(UserGroup group) {
+	public boolean isMember(Group group) {
 		return groups.contains(group);
 	}
 

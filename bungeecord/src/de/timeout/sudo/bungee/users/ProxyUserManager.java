@@ -2,24 +2,24 @@ package de.timeout.sudo.bungee.users;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 
 import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import com.google.common.io.Files;
 
 import de.timeout.sudo.bungee.Sudo;
+import de.timeout.sudo.permissions.UserConfigHandler;
 import de.timeout.sudo.users.User;
 import de.timeout.sudo.users.UserManager;
 
 import net.md_5.bungee.api.CommandSender;
-import net.md_5.bungee.api.connection.ProxiedPlayer;
+import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.event.LoginEvent;
 import net.md_5.bungee.api.event.PermissionCheckEvent;
 import net.md_5.bungee.api.event.PlayerDisconnectEvent;
@@ -35,12 +35,12 @@ import net.md_5.bungee.event.EventPriority;
  * @author Timeout
  *
  */
-public class ProxyUserManager extends UserManager<Configuration> implements Listener {
+public class ProxyUserManager extends UserManager implements Listener, UserConfigHandler<Configuration> {
 	
 	private static final Sudo main = Sudo.getInstance();
 	
 	private static final File userFolder = new File(main.getDataFolder(), "users");
-			
+				
 	/**
 	 * Create a new ProxySudoerManager
 	 * @author Timeout
@@ -49,44 +49,6 @@ public class ProxyUserManager extends UserManager<Configuration> implements List
 	 */
 	public ProxyUserManager() throws IOException {	
 		super(new RootConsole());
-	}
-	
-	@Override
-	public void reloadSudoerConfig() {
-		// load configuration
-		try {
-			decodedSudoer = ConfigurationProvider.getProvider(JsonConfiguration.class).load(new String(
-						Base64.getDecoder().decode(
-								String.join("", Files.readLines(new File(main.getDataFolder(), "sudoers.out"),
-										StandardCharsets.UTF_8)))));
-		} catch (IOException e) {
-			Sudo.log().log(Level.WARNING, "&cUnable to read sudoers.out", e);
-		}
-	}
-
-	@Override
-	public void saveSudoerConfig() {
-		// save all new users in sudoers config
-		main.getGroupManager().getSudoGroup().getMembers().forEach(sudoer -> 
-			// create a new Configuration
-			decodedSudoer.set(String.format("%s.password", sudoer.getUniqueID().toString()), sudoer.getEncodedPassword())
-		);
-		
-		// define new file
-		File file = new File(main.getDataFolder(), "sudoers.out");
-		
-		try {
-			// creates parents dir
-			Files.createParentDirs(file);
-			// create file
-			Files.touch(file);
-			// write data into file
-			ConfigurationProvider.getProvider(JsonConfiguration.class).save(decodedSudoer, file);
-			// encode data
-			Files.write(Base64.getEncoder().encodeToString(Files.toByteArray(file)), file, StandardCharsets.UTF_8);
-		} catch (IOException e) {
-			Sudo.log().log(Level.WARNING, "&cUnable to write sudoers.out");
-		}
 	}
 
 	/**
@@ -109,11 +71,16 @@ public class ProxyUserManager extends UserManager<Configuration> implements List
 	 * Return null if the player is null
 	 * @author Timeout
 	 * 
-	 * @param player the player you want to get. Can be null
+	 * @param player the person you want to get. Can be null
 	 * @return the user or null if the player is null
 	 */
-	public User getUser(ProxiedPlayer player) {
-		return player != null ? profiles.get(player.getUniqueId()) : null;
+	@Nullable
+	public User getUser(@Nullable CommandSender player) {
+		// check if sender is the console when sender is not a player connection. If true return root, else null (not found)
+		if(player instanceof PendingConnection) {
+			// return player's profile
+			return profiles.get(((PendingConnection) player).getUniqueId());
+		} else return main.getProxy().getConsole().equals(player) ? getRoot() : null;
 	}
 	
 	@Override
@@ -138,10 +105,31 @@ public class ProxyUserManager extends UserManager<Configuration> implements List
 	 */
 	@EventHandler
 	public void onUserLoad(LoginEvent event) {
-		// load permissions if the user is connected
-		if(!event.isCancelled()) {
-			// get 
-		}
+//		// load permissions if the user is connected
+//		if(!event.isCancelled()) {
+//			try {
+//				// load user from file
+//				ProxyUser user = new ProxyUser(event.getConnection(),
+//						getUserConfiguration(event.getConnection().getUniqueId()),
+//						decodedSudoer.getString(event.getConnection().getUniqueId().toString()));
+//				
+//				// cache userprofile
+//				profiles.put(event.getConnection().getUniqueId(), user);
+//				
+//				// check if user is a sudoer
+//				if(decodedSudoer.contains(user.getUniqueID().toString())) {
+//					// add to sudoer
+//					main.getGroupManager().getSudoGroup().addMember(user);
+//				}
+//			} catch (IOException e) {
+//				Sudo.log().log(Level.SEVERE, 
+//						String.format("&cUnable to load Configuration %s.json of player %s",
+//								event.getConnection().getUniqueId(),
+//								event.getConnection().getName()
+//						),
+//				e);
+//			}
+//		}
 	}
 	
 	@EventHandler
@@ -153,15 +141,11 @@ public class ProxyUserManager extends UserManager<Configuration> implements List
 
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onPermissionCheck(PermissionCheckEvent event) {
-		// get ProxiedPlayer
-		CommandSender sender = event.getSender();
-		// if sender is a player
-		if(sender instanceof ProxiedPlayer) {
-			// get Player
-			ProxiedPlayer player = (ProxiedPlayer) sender;
-			// override permissions
-			event.setHasPermission(getUser(player.getUniqueId()).hasPermission(event.getPermission()));
-		}
+		// get Player
+		User user = getUser(event.getSender());
+		
+		// override permissions
+		event.setHasPermission(user.hasPermission(event.getPermission()));
 	}
 
 	@Override
@@ -186,8 +170,7 @@ public class ProxyUserManager extends UserManager<Configuration> implements List
 		} else throw new IllegalStateException("Unable to unload a player who is still online!");
 	}
 
-	@Override
-	public void upgradeUser(User user, String password, User executor) throws IOException {
+	public void changePassword(User user, String password) throws IOException {
 		
 	}
 }

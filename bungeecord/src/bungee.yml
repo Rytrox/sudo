@@ -8,3 +8,5 @@ main: de.timeout.sudo.bungee.Sudo
 commands:
   sudo:
     description: Executes a command as a superuser
+  whoami:
+    description: Shows the profile you are logged in right now

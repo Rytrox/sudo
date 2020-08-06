@@ -2,9 +2,14 @@ package de.timeout.sudo.bungee.commands;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import de.timeout.sudo.bungee.Sudo;
-import de.timeout.sudo.bungee.users.SudoExecution;
+import de.timeout.sudo.bungee.permissions.ProxySudoExecution;
+import de.timeout.sudo.bungee.users.ProxyUser;
+import de.timeout.sudo.netty.packets.PacketRemoteInApplyContainer;
+import de.timeout.sudo.security.Authorizable;
+import de.timeout.sudo.users.AuthorizableUser;
 import de.timeout.sudo.users.User;
 
 import net.md_5.bungee.api.ChatColor;
@@ -32,7 +37,7 @@ public class SudoCommand extends Command implements Listener {
 	
 	private static final Sudo main = Sudo.getInstance();
 	
-	private final Map<User, SudoExecution> cache = new HashMap<>();
+	private final Map<AuthorizableUser, ProxySudoExecution> cache = new HashMap<>();
 	
 	public SudoCommand() {
 		super("sudo");
@@ -41,12 +46,12 @@ public class SudoCommand extends Command implements Listener {
 	@Override
 	public void execute(CommandSender sender, String[] args) {
 		// get User
-		User executor = getUserProfle(sender);
+		ProxyUser executor = (ProxyUser) main.getUserManager().getUser(sender);
 		
 		// check if args length is valid
 		if(args.length > 0) {
 			// create sudo attempt
-			SudoExecution attempts = cache.put(executor, new SudoExecution(executor, String.join(" ", args)));
+			ProxySudoExecution attempts = cache.put(executor, new ProxySudoExecution(executor, String.join(" ", args)));
 			
 			// execute command if user is authorized
 			if(!attempts.isAuthorized()) {
@@ -56,38 +61,37 @@ public class SudoCommand extends Command implements Listener {
 		}
 	}
 	
-	private User getUserProfle(CommandSender sender) {
-		// return player profile if user is a player. Otherwise root
-		return sender instanceof ProxiedPlayer ? 
-				main.getUserManager().getUser((ProxiedPlayer) sender) : main.getUserManager().getRoot();
-	}
-	
 	@EventHandler
 	public void onSendingPassword(ChatEvent event) {
 		// check if sender is a player
 		if(event.getSender() instanceof ProxiedPlayer) {
 			ProxiedPlayer player = (ProxiedPlayer) event.getSender();
 			
-			// get Execution
-			SudoExecution execution = cache.get(main.getUserManager().getUser(player));
+			// only continue if user is authrizable
+			User user = main.getUserManager().getUser(player);
+			if(user instanceof Authorizable) {
 			
-			// execute command if 
-			if(!execution.authorize(event.getMessage())) {
-				// check if max is reached
-				if(execution.isMaxReached()) {
-					// send message to player
-					player.sendMessage(new TextComponent(ERROR_MAX_REACHED));
-					
-					// delete execution
-					cache.remove(execution.getUser());
-				} else player.sendMessage(new TextComponent(ENTER_PASSWORD_AGAIN));
-			} else executeCommand(execution.getUser());
+				// get Execution
+				ProxySudoExecution execution = cache.get((Authorizable) user);
+				
+				// execute command if 
+				if(!execution.authorize(event.getMessage())) {
+					// check if max is reached
+					if(execution.isMaxReached()) {
+						// send message to player
+						player.sendMessage(new TextComponent(ERROR_MAX_REACHED));
+						
+						// delete execution
+						cache.remove(execution.getUser());
+					} else player.sendMessage(new TextComponent(ENTER_PASSWORD_AGAIN));
+				} else executeCommand((User) execution.getUser());
+			}
 		}
 	}
 	
 	private void executeCommand(User user) {
 		// delete SudoExecution
-		SudoExecution execution = cache.remove(user);
+		ProxySudoExecution execution = cache.remove(user);
 		
 		if(execution != null) {
 			// report if user is not in sudo group
@@ -104,10 +108,31 @@ public class SudoCommand extends Command implements Listener {
 					// apply old container
 					user.applyPermissionContainer(null);
 				} else {
+					// apply profile for player
+					main.getNettyServer().sendPacket(execution.getPlayer().getServer(),
+							new PacketRemoteInApplyContainer(user, main.getUserManager().getRoot().getPermissionContainer()));
 					// send packet to remote server
-					// main.getNettyServer().sendPacket(execution.getPlayer().getServer(), new PacketRemoteI);
+//					main.getNettyServer().sendPacket(execution.getPlayer().getServer(), 
+//							new PacketRemoteInExecuteSudoCommand(user, execution.getCommand()));
 				}
 			} else execution.getPlayer().sendMessage(new TextComponent(String.format(NO_SUDOER, user.getName())));
 		}
+	}
+
+	@Override
+	public int hashCode() {
+		return 31 * super.hashCode() + Objects.hash(cache);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (!super.equals(obj))
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		SudoCommand other = (SudoCommand) obj;
+		return Objects.equals(cache, other.cache);
 	}
 }

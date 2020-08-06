@@ -13,6 +13,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result;
 
 import de.timeout.sudo.bukkit.Sudo;
+import de.timeout.sudo.bukkit.users.StandaloneBukkitUserManager;
 
 public class BukkitModeListener implements Listener {
 
@@ -48,12 +49,12 @@ public class BukkitModeListener implements Listener {
 		// Validate
 		Validate.notNull(uuid, "UUID cannot be null");
 		// load user
-		main.getUserManager().loadUserFromFile(uuid);
+		((StandaloneBukkitUserManager) main.getUserManager()).loadUserFromFile(uuid);
 	}
 	
 	@EventHandler
 	public void onUserUnload(PlayerQuitEvent event) {
 		// save in file
-		main.getUserManager().unloadUserToFile(event.getPlayer());
+		main.getUserManager().unloadUser(main.getUserManager().getUser(event.getPlayer()));
 	}
 }

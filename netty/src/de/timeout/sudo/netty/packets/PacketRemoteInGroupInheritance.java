@@ -1,22 +1,19 @@
 package de.timeout.sudo.netty.packets;
 
-import java.io.IOException;
-
 import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.NotNull;
 
 import de.timeout.sudo.groups.UserGroup;
-
-import io.netty.buffer.ByteBuf;
 
 /**
  * Packet to transfer inheritances of groups
  * @author Timeout
  *
  */
-public class PacketRemoteInGroupInheritance extends Packet<PacketRemoteInGroupInheritance> {
+public class PacketRemoteInGroupInheritance extends PacketAbstractGroup {
 		
-	private String name;
+	private static final long serialVersionUID = -7870873454099295181L;
+	
 	private String inheritance;
 
 	/**
@@ -26,48 +23,14 @@ public class PacketRemoteInGroupInheritance extends Packet<PacketRemoteInGroupIn
 	 * @param group the group to convert
 	 */
 	public PacketRemoteInGroupInheritance(@NotNull UserGroup group, @NotNull String inheritance) {
-		super(PacketRemoteInGroupInheritance.class);
-		// Validate
-		Validate.notNull(group, "Group cannot be null");
-		Validate.notNull(inheritance, "Inheritance cannot be null");
+		super(group);
 		
-		this.name = group.getName();
+		// Validate
+		Validate.notEmpty(inheritance, "Inheritance can neither be null nor empty");
+		
 		this.inheritance = inheritance;
 	}
-	
-	/**
-	 * Constructor for decoders
-	 * @author Timeout
-	 *
-	 */
-	public PacketRemoteInGroupInheritance() {
-		super(PacketRemoteInGroupInheritance.class);
-	}
 
-	@Override
-	public void decode(ByteBuf input) throws IOException {
-		// read name
-		name = readString(input);
-		// read inheritance
-		inheritance = readString(input);
-	}
-
-	@Override
-	public void encode(ByteBuf output) throws IOException {
-		// do super call
-		super.encode(output);
-		
-		// write group name
-		writeString(output, name);
-		// write inheritance
-		writeString(output, inheritance);
-	}
-	
-	@NotNull
-	public String getName() {
-		return name;
-	}
-	
 	@NotNull
 	public String getInheritance() {
 		return inheritance;

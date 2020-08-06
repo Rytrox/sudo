@@ -1,5 +1,6 @@
 package de.timeout.sudo.bungee.netty;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -9,9 +10,7 @@ import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.NotNull;
 
 import de.timeout.sudo.bungee.Sudo;
-import de.timeout.sudo.netty.ByteToPacketDecoder;
 import de.timeout.sudo.netty.Closeable;
-import de.timeout.sudo.netty.PacketToByteEncoder;
 import de.timeout.sudo.netty.packets.Packet;
 
 import net.jafama.FastMath;
@@ -31,6 +30,9 @@ import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.serialization.ClassResolvers;
+import io.netty.handler.codec.serialization.ObjectDecoder;
+import io.netty.handler.codec.serialization.ObjectEncoder;
 
 public class BungeeSocketServer implements Runnable, Closeable {
 	
@@ -45,8 +47,9 @@ public class BungeeSocketServer implements Runnable, Closeable {
 	 * @author Timeout
 	 *
 	 * @param port the port
+	 * @throws IOException If the Packet is unable to load
 	 */
-	public BungeeSocketServer(int port) {
+	public BungeeSocketServer(int port) throws IOException {
 		this.port = FastMath.abs(port);
 	}
 	
@@ -70,8 +73,9 @@ public class BungeeSocketServer implements Runnable, Closeable {
 						@Override
 						protected void initChannel(SocketChannel channel) throws Exception {							
 							// link decoder and encoder
-							channel.pipeline().addLast("encoder", new PacketToByteEncoder());
-							channel.pipeline().addLast("decoder", new ByteToPacketDecoder());
+							channel.pipeline().addLast("encoder", new ObjectEncoder());
+							channel.pipeline().addLast("decoder", new ObjectDecoder(
+									ClassResolvers.cacheDisabled(this.getClass().getClassLoader())));
 							
 							// link handlers
 							channel.pipeline().addLast("authorize", new AuthorizeHandler());
@@ -132,7 +136,7 @@ public class BungeeSocketServer implements Runnable, Closeable {
 		// add to set
 		return connections.put(FastMath.abs(port), ctx.channel()) != null;
 	}
-	
+
 	/**
 	 * Sends a packet to all connected and authorized Servers.
 	 * This method does nothing if the packet is null
@@ -140,7 +144,7 @@ public class BungeeSocketServer implements Runnable, Closeable {
 	 * 
 	 * @param packet the packet you want to broadcast
 	 */
-	public void broadcastPacket(Packet<?> packet) {
+	public void broadcastPacket(Packet packet) {
 		// do nothing if the packet is null
 		if(packet != null)
 			// for each connection
@@ -157,7 +161,7 @@ public class BungeeSocketServer implements Runnable, Closeable {
 	 * @param packet the packet you want to send
 	 * @throws IllegalStateException if the server is not connected with this SocketServer
 	 */
-	public void sendPacket(Server server, Packet<?> packet) {
+	public void sendPacket(Server server, Packet packet) {
 		// do nothing if any argument is null
 		if(server != null && packet != null) {
 			// get port

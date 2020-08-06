@@ -2,9 +2,7 @@ package de.timeout.sudo.groups;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -12,52 +10,43 @@ import javax.annotation.Nullable;
 import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.NotNull;
 
+import de.timeout.sudo.permissions.PermissionHolder;
+import de.timeout.sudo.permissions.UserGroupContainer;
+import de.timeout.sudo.users.User;
 import de.timeout.sudo.utils.Customizable;
+import de.timeout.sudo.utils.Storable;
 
-public abstract class UserGroup extends Group implements Customizable, Inheritable<UserGroup> {
-		
-	protected final Set<UserGroup> groups = new HashSet<>();
+public abstract class UserGroup implements Group, Customizable, Inheritable<UserGroup>, PermissionHolder, Storable {
+			
+	protected final UserGroupContainer container;
 	
-	protected String prefix;
-	protected String suffix;
 	protected boolean def;
 	
 	/**
 	 * Constructor for inheritances
 	 */
 	protected UserGroup(@Nonnull String name, @Nullable String prefix, @Nullable String suffix, boolean isDefault, @NotNull Collection<String> permissions) {
-		super(name, permissions, prefix, suffix);
-		
 		// Validate and ban sudo name
 		Validate.isTrue(!"sudo".equalsIgnoreCase(name), "UserGroup cannot be named with sudo");
 		
-		this.prefix = prefix;
-		this.suffix = suffix;
 		this.def = isDefault;
+		
+		this.container = new UserGroupContainer(this, name, prefix, suffix, new ArrayList<>(), permissions);
 	}
 	
 	@Override
 	public boolean hasPermission(String permission) {
-		// return true if this group has permission
-		if(!super.hasPermission(permission)) {
-			// search in extended groups
-			for(Group extended : getExtendedGroups()) {
-				// search for permission, return true if found
-				if(extended.hasPermission(permission)) return true;
-			}
-			// not found. return false
-			return false;
-		} else return true;
+		return container.hasPermission(permission);
 	}
 	
 	@Override
 	public String getPrefix() {
-		return prefix;
+		return container.getPrefix();
 	}
 
 	@Override
 	public String getSuffix() {
-		return suffix;
+		return container.getSuffix();
 	}
 
 	public boolean isDefault() {
@@ -66,12 +55,12 @@ public abstract class UserGroup extends Group implements Customizable, Inheritab
 
 	@Override
 	public Collection<UserGroup> getExtendedGroups() {
-		return new ArrayList<>(groups);
+		return container.getExtendedGroups();
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(permissions, prefix, suffix);
+		return Objects.hash(container);
 	}
 
 	@Override
@@ -83,24 +72,69 @@ public abstract class UserGroup extends Group implements Customizable, Inheritab
 		if (getClass() != obj.getClass())
 			return false;
 		UserGroup other = (UserGroup) obj;
-		return Objects.equals(permissions, other.permissions);
+		return Objects.equals(container, other.container);
 	}
 
 	@Override
 	public void setPrefix(String prefix) {
-		this.prefix = prefix;
+		this.container.setPrefix(prefix);
 	}
 
 	@Override
 	public void setSuffix(String suffix) {
-		this.suffix = suffix;
+		this.container.setSuffix(suffix);
 	}
 
 	@Override
 	public void extend(UserGroup other) {
-		// Validate
-		Validate.notNull(other, "Other group cannot be null");
-		// add to set
-		groups.add(other);
+		container.extend(other);
 	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public UserGroupContainer getPermissionContainer() {
+		return container;
+	}
+
+	@Override
+	public String getName() {
+		return container.getName();
+	}
+
+	@Override
+	public Collection<String> getPermissions() {
+		return container.getPermissions();
+	}
+
+	@Override
+	public boolean addPermission(String permission) {
+		return container.addPermission(permission);
+	}
+
+	@Override
+	public boolean removePermission(String permission) {
+		return container.removePermission(permission);
+	}
+
+	@Override
+	public boolean isMember(User element) {
+		return container.add(element);
+	}
+
+	@Override
+	public Collection<User> getMembers() {
+		return container.getMembers();
+	}
+
+	@Override
+	public boolean add(User element) {
+		return container.add(element);
+	}
+
+	@Override
+	public boolean remove(User element) {
+		return container.remove(element);
+	}
+	
+	
 }

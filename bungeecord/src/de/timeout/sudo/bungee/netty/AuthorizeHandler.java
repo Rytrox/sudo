@@ -17,7 +17,7 @@ import net.md_5.bungee.config.YamlConfiguration;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
-public class AuthorizeHandler extends SimpleChannelInboundHandler<Packet<?>> {
+public class AuthorizeHandler extends SimpleChannelInboundHandler<Packet> {
 	
 	private static final Sudo main = Sudo.getInstance();
 	private static final UUID bungeeID = loadProxyUUID();
@@ -25,7 +25,7 @@ public class AuthorizeHandler extends SimpleChannelInboundHandler<Packet<?>> {
 	private boolean authorized;
 	
 	@Override
-	protected void channelRead0(ChannelHandlerContext ctx, Packet<?> packet) throws Exception {
+	protected void channelRead0(ChannelHandlerContext ctx, Packet packet) throws Exception {
 		// send packet to next handler if the client is authorized
 		if(!authorized) {
 			// get IP

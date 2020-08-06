@@ -11,9 +11,7 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 
 import de.timeout.sudo.bukkit.Sudo;
-import de.timeout.sudo.netty.ByteToPacketDecoder;
 import de.timeout.sudo.netty.Closeable;
-import de.timeout.sudo.netty.PacketToByteEncoder;
 import de.timeout.sudo.netty.packets.Packet;
 import de.timeout.sudo.netty.packets.PacketProxyInAuthorize;
 
@@ -31,6 +29,9 @@ import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.serialization.ClassResolvers;
+import io.netty.handler.codec.serialization.ObjectDecoder;
+import io.netty.handler.codec.serialization.ObjectEncoder;
 
 public class BukkitSocket implements Runnable, Closeable {
 	
@@ -80,12 +81,12 @@ public class BukkitSocket implements Runnable, Closeable {
 				channel.config().setRecvByteBufAllocator(new FixedRecvByteBufAllocator(1024));
 				
 				// register decoder and encoder
-				channel.pipeline().addLast("decoder", new ByteToPacketDecoder());
-				channel.pipeline().addLast("encoder", new PacketToByteEncoder());
+				channel.pipeline().addLast("decoder", new ObjectDecoder(
+						ClassResolvers.cacheDisabled(this.getClass().getClassLoader())));
+				channel.pipeline().addLast("encoder", new ObjectEncoder());
 				
 				// define handler
 				channel.pipeline().addLast("authorize", new AuthorizeHandler());
-				channel.pipeline().addLast("initialization", new GroupInitializationHandler());
 			}
 			
 		});
@@ -156,7 +157,7 @@ public class BukkitSocket implements Runnable, Closeable {
 		Sudo.log().log(Level.INFO, "&aConnected to &2BungeeCord! &7Sending &5Authentification");
 	}
 		
-	public void sendPacket(Packet<?> packet) {
+	public void sendPacket(Packet packet) {
 		channel.channel().writeAndFlush(packet, channel.channel().voidPromise());
 	}
 	

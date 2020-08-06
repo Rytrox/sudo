@@ -1,4 +1,4 @@
-package de.timeout.sudo.bukkit.permissions;
+package de.timeout.sudo.bukkit.groups;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,8 +11,6 @@ import javax.annotation.Nonnull;
 import org.apache.commons.lang.Validate;
 import org.bukkit.configuration.ConfigurationSection;
 
-import com.google.gson.JsonObject;
-
 import de.timeout.sudo.bukkit.Sudo;
 import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.groups.GroupManager;
@@ -21,30 +19,18 @@ import de.timeout.sudo.groups.exception.CircularInheritanceException;
 
 import net.md_5.bungee.api.ChatColor;
 
-public class BukkitGroupManager extends GroupManager {
+public class BukkitGroupManager extends GroupManager<ConfigurationSection> {
 	
 	private static final Sudo main = Sudo.getInstance();
 			
 	public BukkitGroupManager(boolean bukkit) {
-		super(main.bungeecordEnabled() ? new ArrayList<>() : main.getConfig().getStringList("sudo.permissions"));
+		super(new BukkitSudoGroup());
+		
 		// register PluginMessageChannel if bungeecord is enabled
 		if(!bukkit) {
 			// info server for using Bungeecord
 			Sudo.log().log(Level.INFO, "&2Bungeecord &7in &6spigot.yml &aenabled&7. Requesting data from &2Bungeecord&7...");
 		} else loadGroupsFromFile();
-	}
-	
-	/**
-	 * Converts the Groups-Array from BungeeCord into BukkitGroups
-	 * @author Timeout
-	 * 
-	 * @param data the groups array from bungeecords message
-	 */
-	public void loadGroupFromBungeecord(@Nonnull JsonObject data) {
-		// create group
-		UserGroup group = new BukkitGroup(data);
-		// add group to cache
-		groups.addNode(group);
 	}
 	
 	/**
@@ -82,11 +68,13 @@ public class BukkitGroupManager extends GroupManager {
 		// log load from bukkit files
 		Sudo.log().log(Level.INFO, "&9Bukkit-Mode &aenabled. Load groups from File");
 		// load all groups
-		main.getGroupConfig().getKeys(false).forEach(this::loadGroup);
+		main.getGroupConfig().getKeys(false).forEach(groupname -> 
+			loadGroup(groupname, main.getGroupConfig().getConfigurationSection(groupname))
+		);
 	}
 	
 	@Override
-	protected UserGroup loadGroup(String name) {
+	protected UserGroup loadGroup(String name, ConfigurationSection configuration) {
 		// ban group name sudo
 		if("sudo".equalsIgnoreCase(name)) {
 			// log
@@ -94,20 +82,20 @@ public class BukkitGroupManager extends GroupManager {
 			return null;
 		}
 		
-		// get ConfigurationSection
-		ConfigurationSection section = main.getGroupConfig().getConfigurationSection(name);
 		// check if group is not loaded
 		Group group = getGroupByName(name);
 		// check if section is valid and group is not already loaded
-		if((group == null || group instanceof UserGroup) && section != null) {
+		if((group == null || group instanceof UserGroup) && configuration != null) {
 			// load Group
-			group = new BukkitGroup(section);
+			group = new BukkitGroup(configuration);
 			// add edge in graph
 			groups.addNode((UserGroup) group);
 			// load inheritances
-			for(String extendName : section.getStringList("extends")) {
+			for(String extendName : configuration.getStringList("extends")) {
 				// try to load group
-				Group extend = Optional.ofNullable(getGroupByName(extendName)).orElse(loadGroup(extendName));
+				Group extend = Optional.ofNullable(getGroupByName(extendName))
+						.orElse(loadGroup(extendName, main.getGroupConfig().getConfigurationSection(extendName)));
+				
 				// only continue if usergroup could be loaded
 				if(extend instanceof UserGroup) {
 					// bind inheritance
@@ -122,28 +110,7 @@ public class BukkitGroupManager extends GroupManager {
 		// return group
 		return (UserGroup) group;
 	}
-
-	@Override
-	public boolean deleteGroup(Group group) {
-		// check if group is not sudo group
-		if(group instanceof UserGroup) {
-			// remove from graph
-			groups.removeNode(group);
-			
-			// delete from file system if bukkit mode is enabled
-			if(!main.bungeecordEnabled()) {
-				main.getGroupConfig().set(group.getName(), null);
-				main.saveGroupConfig();
-			}
-			
-			// kick all users from the group
-			group.getMembers().forEach(((UserGroup)group)::kick);
-			
-			return true;
-		}
-		return false;
-	}
-
+	
 	/**
 	 * Returns null if bungeecord mode is enabled, too. 
 	 */
@@ -212,5 +179,23 @@ public class BukkitGroupManager extends GroupManager {
 			// save config
 			main.saveGroupConfig();
 		}
+	}
+
+	@Override
+	public boolean deleteGroup(UserGroup group) {
+		// remove from graph
+		groups.removeNode(group);
+		
+		// delete from file system if bukkit mode is enabled
+		if(!main.bungeecordEnabled()) {
+			main.getGroupConfig().set(group.getName(), null);
+			main.saveGroupConfig();
+		}
+		
+		// kick all users from the group
+		group.getMembers().forEach(user -> user.leaveGroup(group));
+		
+		return true;
+
 	}
 }

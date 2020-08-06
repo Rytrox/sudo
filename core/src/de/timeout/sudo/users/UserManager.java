@@ -1,33 +1,24 @@
 package de.timeout.sudo.users;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import de.timeout.sudo.permissions.UserConfigHandler;
-import de.timeout.sudo.security.SudoerConfigurable;
-
-public abstract class UserManager<C> implements SudoerConfigurable, UserConfigHandler<C> {
+public abstract class UserManager {
 
 	protected final Map<UUID, User> profiles = new HashMap<>();
 	protected final RemoteUser root;
-	
-	protected C decodedSudoer;
 	
 	public UserManager(@NotNull RemoteUser root) {
 		Validate.notNull(root, "Root cannot be null");
 		
 		this.root = root;
-		reloadSudoerConfig();
 	}
 	
 	/**
@@ -36,7 +27,7 @@ public abstract class UserManager<C> implements SudoerConfigurable, UserConfigHa
 	 * 
 	 * @return a list containing all loaded user profiles
 	 */
-	@Nonnull
+	@NotNull
 	public List<User> getUsers() {
 		return new ArrayList<>(profiles.values());
 	}
@@ -55,16 +46,6 @@ public abstract class UserManager<C> implements SudoerConfigurable, UserConfigHa
 	}
 	
 	/**
-	 * Upgrades a normal User to super-user
-	 * @author Timeout
-	 * 
-	 * @param superUser the new superuser
-	 * @param executor the executor of the command
-	 * @throws IOException if an unexpected IO-Error appears
-	 */
-	public abstract void upgradeUser(@Nonnull User user, @Nonnull String password, @Nonnull User executor) throws IOException;
-	
-	/**
 	 * Unloads a user in cache.
 	 * @author Timeout
 	 * 
@@ -72,7 +53,7 @@ public abstract class UserManager<C> implements SudoerConfigurable, UserConfigHa
 	 * @throws IllegalArgumentException if the user is null
 	 * @param user the user you want to remove. Cannot be null
 	 */
-	public abstract void unloadUser(@Nonnull User user);
+	public abstract void unloadUser(@NotNull User user);
 	
 	public RemoteUser getRoot() {
 		return root;

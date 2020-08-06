@@ -3,7 +3,6 @@ package de.timeout.sudo.bukkit.netty;
 import java.util.logging.Level;
 
 import de.timeout.sudo.bukkit.Sudo;
-import de.timeout.sudo.netty.packets.PacketProxyInLogin;
 import de.timeout.sudo.netty.packets.PacketRemoteInAuthorize;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -27,8 +26,6 @@ public class AuthorizeHandler extends SimpleChannelInboundHandler<PacketRemoteIn
 			if(success) {
 				// log result
 				Sudo.log().log(Level.INFO,"&2Connection &7is &aauthorized&7. Ready to receive information from &2BungeeCord");
-				// send login packet to bungeecord. Ask for data
-				ctx.writeAndFlush(new PacketProxyInLogin(), ctx.voidPromise());
 			} else Sudo.log().log(Level.INFO, "&2Connection &ccannot be authorized&7. &cPlease check your configuration and try again.");
 		}
 	}

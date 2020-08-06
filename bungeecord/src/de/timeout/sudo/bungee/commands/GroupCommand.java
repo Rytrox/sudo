@@ -32,8 +32,7 @@ public class GroupCommand extends Command implements TabExecutor {
 	
 	private static final String NO_PERMISSION = ChatColor.translateAlternateColorCodes('&', "&8[&6Sudo&8] &cDu hast nicht die benötigte Berechtigung, diesen Befehl auszuführen. Fehlende Berechtigung: %s");
 	
-	private static final String ERROR_SUDO_EXTENSION = ChatColor.translateAlternateColorCodes('&', "&8[&6Sudo&8] &cNur benutzerdefinierte Gruppen besitzen einen Prefix / Suffix");
-	private static final String ERROR_SUDO_DELETE_ATTEMPT = ChatColor.translateAlternateColorCodes('&', "&8[&6Sudo&8] &cNur benutzergenerierte Gruppen können gelöscht werden!");
+	private static final String ERROR_SUDO_EXTENSION = ChatColor.translateAlternateColorCodes('&', "&8[&6Sudo&8] &cDieser Befehl ist nur für benutzerdefinierte Gruppen nutzbar!");
 	private static final String ERROR_GROUP_NAME_EMPTY = ChatColor.translateAlternateColorCodes('&', "&8[&6Sudo&8] &cDer Name der Gruppe darf nicht leer sein!");
 	private static final String ERROR_GROUP_EXISTS = ChatColor.translateAlternateColorCodes('&', "&8[&6Sudo&8] &cDie Gruppe %s konnte nicht erstellt werden, da eine andere Gruppe mit demselben Namen bereits existiert!");
 	private static final String ERROR_GROUP_PERMISSIONS_INVALID = ChatColor.translateAlternateColorCodes('&', "&8[&6Sudo&8] &cDie eingegebene Berechtigung ist ungültig.");
@@ -78,45 +77,48 @@ public class GroupCommand extends Command implements TabExecutor {
 				if(!args[1].equalsIgnoreCase("create")) {
 					// check if group could be found
 					if(group != null) {
-						switch(args[1].toLowerCase(Locale.ENGLISH)) {
-						case "prefix":
-							// send help if prefix is empty
-							if(args.length > 2) {
-								updatePrefix(sender, group, ChatColor.translateAlternateColorCodes('&', args[2]));
-							} else sendHelp(sender);
-							
-							break;
-						case "suffix":
-							// send help if suffix is empty
-							if(args.length > 2) {
-								updateSuffix(sender, group, ChatColor.translateAlternateColorCodes('&', args[2]));
-							} else sendHelp(sender);
-							
-							break;
-						case "delete":
-							deleteGroup(sender, group);
-							
-							break;
-						case "parents":
-							
-							break;
-						case "add":
-							if(args.length > 2) {
-								// add permission
-								addPermission(sender, group, args[2]);
-							} else sendHelp(sender);
-							
-							break;
-						case "remove":
-							if(args.length > 2) {
-								// remove permission
-								removePermission(sender, group, args[2]);
-							} else sendHelp(sender);
-							
-							break;
-						default:
-							sendHelp(sender);
-						}
+						// check group
+						if(group instanceof UserGroup) {
+							switch(args[1].toLowerCase(Locale.ENGLISH)) {
+							case "prefix":
+								// send help if prefix is empty
+								if(args.length > 2) {
+									updatePrefix(sender, (UserGroup) group, ChatColor.translateAlternateColorCodes('&', args[2]));
+								} else sendHelp(sender);
+								
+								break;
+							case "suffix":
+								// send help if suffix is empty
+								if(args.length > 2) {
+									updateSuffix(sender, (UserGroup) group, ChatColor.translateAlternateColorCodes('&', args[2]));
+								} else sendHelp(sender);
+								
+								break;
+							case "delete":
+								deleteGroup(sender, (UserGroup) group);
+								
+								break;
+							case "parents":
+								
+								break;
+							case "add":
+								if(args.length > 2) {
+									// add permission
+									addPermission(sender, (UserGroup) group, args[2]);
+								} else sendHelp(sender);
+								
+								break;
+							case "remove":
+								if(args.length > 2) {
+									// remove permission
+									removePermission(sender, (UserGroup) group, args[2]);
+								} else sendHelp(sender);
+								
+								break;
+							default:
+								sendHelp(sender);
+							}
+						} else sender.sendMessage(new TextComponent(ERROR_SUDO_EXTENSION));
 					} else sender.sendMessage(new TextComponent(String.format(GROUP_NOT_EXISTS, args[0])));
 				} else createGroup(sender, args[0]);
 			} else showGroupDetails(sender, group);
@@ -129,40 +131,36 @@ public class GroupCommand extends Command implements TabExecutor {
 	 * @param group the group you want to set
 	 * @param prefix the prefix you want to set
 	 */
-	private void updatePrefix(CommandSender sender, Group group, String prefix) {
+	private void updatePrefix(CommandSender sender, UserGroup group, String prefix) {
 		// create permission
 		String permission = String.format("sudo.groups.%s.prefix", group.getName());
 		
-		if(group instanceof UserGroup) {
-			// send error to sender if sender does not match permission
-			if(sender.hasPermission(permission)) {
-				// set prefix
-				((UserGroup) group).setPrefix(prefix);
+		// send error to sender if sender does not match permission
+		if(sender.hasPermission(permission)) {
+			// set prefix
+			group.setPrefix(prefix);
+			
+			// send message to user
+			sender.sendMessage(new TextComponent(String.format(GROUP_PREFIX_SET, group.getName())));
 				
-				// send message to user
-				sender.sendMessage(new TextComponent(String.format(GROUP_PREFIX_SET, group.getName())));
-				
-				// TODO: send update packet to all remotes
-			} else sender.sendMessage(new TextComponent(String.format(NO_PERMISSION, permission)));
-		} else sender.sendMessage(new TextComponent(ERROR_SUDO_EXTENSION));
+			// TODO: send update packet to all remotes
+		} else sender.sendMessage(new TextComponent(String.format(NO_PERMISSION, permission)));
 	}
 	
-	private void updateSuffix(CommandSender sender, Group group, String suffix) {
+	private void updateSuffix(CommandSender sender, UserGroup group, String suffix) {
 		// create permission
 		String permission = String.format("sudo.groups.%s.suffix", group.getName());
 		
-		if(group instanceof UserGroup) {
-			// send error if sender does not match permission
-			if(sender.hasPermission(permission)) {
-				// set suffix
-				((UserGroup) group).setSuffix(suffix);
+		// send error if sender does not match permission
+		if(sender.hasPermission(permission)) {
+			// set suffix
+			group.setSuffix(suffix);
 				
-				// send message to user
-				sender.sendMessage(new TextComponent(String.format(GROUP_SUFFIX_SET, group.getName())));
+			// send message to user
+			sender.sendMessage(new TextComponent(String.format(GROUP_SUFFIX_SET, group.getName())));
 				
-				// TODO: send update packet to all remotes
-			} else sender.sendMessage(new TextComponent(String.format(NO_PERMISSION, permission)));
-		} else sender.sendMessage(new TextComponent(ERROR_SUDO_EXTENSION));
+			// TODO: send update packet to all remotes
+		} else sender.sendMessage(new TextComponent(String.format(NO_PERMISSION, permission)));
 	}
 	
 	private void createGroup(CommandSender sender, String name) {
@@ -178,24 +176,21 @@ public class GroupCommand extends Command implements TabExecutor {
 		} else sender.sendMessage(new TextComponent(String.format(NO_PERMISSION, "sudo.groups.create")));
 	}
 	
-	private void deleteGroup(CommandSender sender, Group group) {
-		// sudo group cannot be deleted
-		if(group instanceof UserGroup) {
-			// build permission
-			String permission = String.format("sudo.groups.%s.delete", group.getName());
+	private void deleteGroup(CommandSender sender, UserGroup group) {
+		// build permission
+		String permission = String.format("sudo.groups.%s.delete", group.getName());
 			
-			// check permission
-			if(sender.hasPermission(permission)) {
-				// delete group
-				main.getGroupManager().deleteGroup((UserGroup) group);
+		// check permission
+		if(sender.hasPermission(permission)) {
+			// delete group
+			main.getGroupManager().deleteGroup((UserGroup) group);
 				
-				// send success
-				sender.sendMessage(new TextComponent(String.format(GROUP_DELETED, group.getName())));
-			} else sender.sendMessage(new TextComponent(String.format(NO_PERMISSION, permission)));
-		} else sender.sendMessage(new TextComponent(ERROR_SUDO_DELETE_ATTEMPT));
+			// send success
+			sender.sendMessage(new TextComponent(String.format(GROUP_DELETED, group.getName())));
+		} else sender.sendMessage(new TextComponent(String.format(NO_PERMISSION, permission)));
 	}
 	
-	private void addPermission(CommandSender sender, Group group, String permission) {
+	private void addPermission(CommandSender sender, UserGroup group, String permission) {
 		// build add permission
 		String addPermission = String.format("sudo.groups.%s.permissions.add", group.getName());
 		
@@ -212,7 +207,7 @@ public class GroupCommand extends Command implements TabExecutor {
 		} else sender.sendMessage(new TextComponent(String.format(NO_PERMISSION, addPermission)));
 	}
 	
-	private void removePermission(CommandSender sender, Group group, String permission) {
+	private void removePermission(CommandSender sender, UserGroup group, String permission) {
 		// build add permission
 		String removePermission = String.format("sudo.groups.%s.permissions.remove", group.getName());
 		

@@ -1,26 +1,20 @@
 package de.timeout.sudo.permissions;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 
-import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.groups.UserGroup;
-import de.timeout.sudo.utils.Collectable;
 
 /**
  * Container class for permissiontrees of different users
  * @author Timeout
  *
  */
-public class UserContainer extends AbstractContainer implements Collectable<UserGroup> {
-	
-	private final Set<UserGroup> groups = new HashSet<>();
-	
+public class UserContainer extends PermissibleContainer<Group> {
+		
 	/**
 	 * Creates a new Container of a user
 	 * @param owner the owner of the container. Cannot be null
@@ -28,47 +22,31 @@ public class UserContainer extends AbstractContainer implements Collectable<User
 	 * @throws IllegalArgumentException if any argument is null
 	 */
 	public UserContainer(@NotNull PermissionHolder owner, @NotNull Collection<String> permissions,
-			@NotNull Collection<UserGroup> groups, @NotNull String name,
+			@NotNull Collection<Group> groups, @NotNull String name,
 			@Nullable String prefix, @Nullable String suffix) {
-		super(owner, name, permissions, prefix, suffix);
-		
-		Validate.notNull(groups, "Groups cannot be null");
-		
-		groups.forEach(this.groups::add);
+		super(owner, name, prefix, suffix, groups, permissions);
 	}
 	
+	
+	@Override
+	public boolean hasPermission(String permission) {
+		// search in groups for that permission
+		for(Group group : members) {
+			// ignore sudo-group
+			if(group instanceof UserGroup && ((UserGroup) group).hasPermission(permission)) return true;
+		}
+		
+		// search in own container if no other group contains this permission
+		return super.hasPermission(permission);
+	}
+
 	/**
 	 * Creates a copy of the permission container
 	 * @param original the original you want to copy. Cannot be null
 	 * @throws IllegalArgumentException if the original is null
 	 */
 	public UserContainer(@NotNull UserContainer original) {
-		super(original.owner, original.name, original.getPermissions(), original.prefix, original.suffix);		
-		
-		this.groups.addAll(new ArrayList<>(original.groups));
+		super(original.owner, original.name, original.prefix, original.suffix, original.members, original.permissions.toSet());			
 	}
 	
-
-	@Override
-	public boolean isMember(UserGroup element) {
-		return groups.contains(element);
-	}
-
-	@Override
-	public Collection<UserGroup> getMembers() {
-		return new ArrayList<>(groups);
-	}
-
-	@Override
-	public boolean add(UserGroup element) {
-		// Validate
-		Validate.notNull(element, "Group cannot be null");
-		
-		return groups.add(element);
-	}
-
-	@Override
-	public boolean remove(UserGroup element) {
-		return groups.remove(element);
-	}
 }

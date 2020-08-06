@@ -9,8 +9,6 @@ import org.jetbrains.annotations.Nullable;
 
 import de.timeout.libs.config.ColoredLogger;
 import de.timeout.libs.config.ConfigCreator;
-import de.timeout.sudo.bungee.commands.CustomizeCommand;
-import de.timeout.sudo.bungee.commands.GroupCommand;
 import de.timeout.sudo.bungee.commands.SudoCommand;
 import de.timeout.sudo.bungee.groups.ProxyGroupManager;
 import de.timeout.sudo.bungee.netty.BungeeSocketServer;
@@ -97,12 +95,14 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 		// reload configs
 		reloadConfig();
 		reloadGroupConfig();
-		// start netty server
-		startSocketServer();
-		// initialize manager
-		initializeManager();
-		// initialize command
-		registerCommands();
+		
+		// try to start netty server
+		if(startSocketServer()) {
+			// initialize manager
+			initializeManager();
+			// initialize command
+			registerCommands();
+		} Sudo.LOG.log(Level.SEVERE, "&cDisabling Sudo");
 	}
 
 	private void initializeManager() {
@@ -119,7 +119,7 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 	}
 	
 	private void registerCommands() {
-//		this.getProxy().getPluginManager().registerCommand(instance, new SudoCommand());
+		this.getProxy().getPluginManager().registerCommand(instance, new SudoCommand());
 //		this.getProxy().getPluginManager().registerCommand(instance, new CustomizeCommand());
 //		this.getProxy().getPluginManager().registerCommand(instance, new GroupCommand());
 	}
@@ -135,13 +135,22 @@ public class Sudo extends Plugin implements GroupConfigurable<Configuration> {
 	 * @author Timeout
 	 *
 	 */
-	private void startSocketServer() {
+	private boolean startSocketServer() {
 		// create netty server
-		netty = new BungeeSocketServer(FastMath.abs(getConfig().getInt("netty.port", 10020)));
-		// start netty server
-		Thread serverThread = new Thread(netty);
-		serverThread.setName("SudoServer-Thread");
-		serverThread.start();
+		try {
+			netty = new BungeeSocketServer(FastMath.abs(getConfig().getInt("netty.port", 10020)));
+			
+			// start netty server
+			Thread serverThread = new Thread(netty);
+			serverThread.setName("SudoServer-Thread");
+			serverThread.start();
+			
+			return true;
+		} catch (IOException e) {
+			LOG.log(Level.SEVERE, "&cUnable to start standalone Messenger-Service. Plugin will shutdown immediately", e);
+		}
+
+		return false;
 	}
 	
 	private void loadConfigurations() {

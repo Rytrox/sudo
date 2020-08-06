@@ -1,9 +1,6 @@
-package de.timeout.sudo.bungee.users;
+package de.timeout.sudo.permissions;
 
-import de.timeout.sudo.bungee.Sudo;
-import de.timeout.sudo.users.User;
-
-import net.md_5.bungee.api.connection.ProxiedPlayer;
+import de.timeout.sudo.users.AuthorizableUser;
 
 import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.NotNull;
@@ -14,29 +11,29 @@ import org.jetbrains.annotations.NotNull;
  * @author Timeout
  *
  */
-public class SudoExecution {
+public abstract class SudoExecution<P> {
 
-	private static final Sudo main = Sudo.getInstance();
-	private static final int MAX_ATTEMPTS = main.getConfig().getInt("sudo.maxAttempts");
+	protected final int maxAttempts;
 	
-	private User user;
-	private String command;
-	private int attempts;
+	protected AuthorizableUser user;
+	protected String command;
+	protected int attempts;
 	
-	public SudoExecution(@NotNull User user, @NotNull String command) {
+	public SudoExecution(@NotNull AuthorizableUser user, @NotNull String command, int maxAttempts) {
 		// Validate
 		Validate.notNull(user, "User cannot be null");
 		Validate.notEmpty(command, "Command can neither be null nor empty");
 		
 		this.user = user;
 		this.command = command;
+		this.maxAttempts = maxAttempts;
 	}
 
 	/**
 	 * Returns the user of this execution
 	 * @return the user
 	 */
-	public User getUser() {
+	public AuthorizableUser getUser() {
 		return user;
 	}
 
@@ -61,9 +58,7 @@ public class SudoExecution {
 	 * @return the player object of the user. cannot be null
 	 */
 	@NotNull
-	public ProxiedPlayer getPlayer() {
-		return main.getProxy().getPlayer(user.getUniqueID());
-	}
+	public abstract P getPlayer();
 	
 	/**
 	 * Tries am authorization of the user with an entered password 
@@ -72,7 +67,7 @@ public class SudoExecution {
 	 */
 	public boolean authorize(String password) {
 		// increase attempts if attempts should be counted. Return false if clause is true
-		if(MAX_ATTEMPTS > 0 && ++attempts > MAX_ATTEMPTS) {
+		if(maxAttempts > 0 && ++attempts > maxAttempts) {
 			return false;
 		}
 		
@@ -85,7 +80,7 @@ public class SudoExecution {
 	 * @return true if the user took too many attempts. False otherwise
 	 */
 	public boolean isMaxReached() {
-		return attempts > MAX_ATTEMPTS;
+		return attempts > maxAttempts;
 	}
 	
 	/**
