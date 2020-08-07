@@ -7,22 +7,28 @@ import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 
+import com.google.common.io.Files;
+
 import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import com.google.common.io.Files;
-
 import de.timeout.sudo.bungee.Sudo;
+import de.timeout.sudo.netty.packets.PacketRemoteInAddUserPermission;
+import de.timeout.sudo.netty.packets.PacketRemoteInLoadUser;
+import de.timeout.sudo.netty.packets.PacketRemoteInUpdateUserProfile;
+import de.timeout.sudo.netty.packets.PacketRemoteInUserJoinsGroup;
 import de.timeout.sudo.permissions.UserConfigHandler;
 import de.timeout.sudo.users.User;
 import de.timeout.sudo.users.UserManager;
 
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.PendingConnection;
+import net.md_5.bungee.api.connection.Server;
 import net.md_5.bungee.api.event.LoginEvent;
 import net.md_5.bungee.api.event.PermissionCheckEvent;
 import net.md_5.bungee.api.event.PlayerDisconnectEvent;
+import net.md_5.bungee.api.event.ServerConnectedEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
@@ -105,38 +111,34 @@ public class ProxyUserManager extends UserManager implements Listener, UserConfi
 	 */
 	@EventHandler
 	public void onUserLoad(LoginEvent event) {
-//		// load permissions if the user is connected
-//		if(!event.isCancelled()) {
-//			try {
-//				// load user from file
-//				ProxyUser user = new ProxyUser(event.getConnection(),
-//						getUserConfiguration(event.getConnection().getUniqueId()),
-//						decodedSudoer.getString(event.getConnection().getUniqueId().toString()));
-//				
-//				// cache userprofile
-//				profiles.put(event.getConnection().getUniqueId(), user);
-//				
-//				// check if user is a sudoer
-//				if(decodedSudoer.contains(user.getUniqueID().toString())) {
-//					// add to sudoer
-//					main.getGroupManager().getSudoGroup().addMember(user);
-//				}
-//			} catch (IOException e) {
-//				Sudo.log().log(Level.SEVERE, 
-//						String.format("&cUnable to load Configuration %s.json of player %s",
-//								event.getConnection().getUniqueId(),
-//								event.getConnection().getName()
-//						),
-//				e);
-//			}
-//		}
+		// do nothing if the login is cancelled
+		if(!event.isCancelled()) {
+			try {
+				// load user from configuration
+				ProxyUser user = new ProxyUser(event.getConnection(), getUserConfiguration(event.getConnection().getUniqueId()));
+			
+				// cache result in profiles
+				profiles.put(user.getUniqueID(), user);
+			} catch (IOException e) {
+				Sudo.log().log(Level.SEVERE, 
+						String.format("&cUnable to load configuration of player %s.", event.getConnection().getName()), e);
+			}
+		}
 	}
 	
 	@EventHandler
 	public void onUserSave(PlayerDisconnectEvent event) {
 		// removes user from cache
 		unloadUser(getUser(event.getPlayer()));
-
+	}
+	
+	@EventHandler
+	public void onSendUserInformations(ServerConnectedEvent event) {
+		// get User-Profile of the player
+		User user = getUser(event.getPlayer().getUniqueId());
+		
+		// send user to bukkit server
+		sendUserToBukkit(user, event.getServer());
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)
@@ -169,8 +171,29 @@ public class ProxyUserManager extends UserManager implements Listener, UserConfi
 			}
 		} else throw new IllegalStateException("Unable to unload a player who is still online!");
 	}
-
-	public void changePassword(User user, String password) throws IOException {
+	
+	/**
+	 * Method which sends a user profile to a certain server
+	 * @param user the user you want to send. Cannot be null
+	 * @param server the server where the user profile will arrive. Cannot be null
+	 * @throws IllegalArgumentException if any argument is null
+	 */
+	public void sendUserToBukkit(@NotNull User user, @NotNull Server server) {	
+		// Validate
+		Validate.notNull(user, "User cannot be null");
+		Validate.notNull(server, "Server cannot be null");
 		
+		// send profile to bukkit server
+		main.getNettyServer().sendPacket(server, new PacketRemoteInLoadUser(user));
+		main.getNettyServer().sendPacket(server, 
+				new PacketRemoteInUpdateUserProfile(user, user.getPermissionContainer().getPrefix(), user.getPermissionContainer().getSuffix()));
+		
+		// send permissions to bukkit server
+		user.getPermissionContainer().getPermissions().forEach(permission -> 
+				main.getNettyServer().sendPacket(server, new PacketRemoteInAddUserPermission(user, permission)));
+		
+		// send all groups to bukkit server
+		user.getPermissionContainer().getMembers().forEach(group ->
+				main.getNettyServer().sendPacket(server, new PacketRemoteInUserJoinsGroup(user, group)));
 	}
 }

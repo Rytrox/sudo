@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
@@ -20,7 +21,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
 import de.timeout.sudo.bukkit.Sudo;
-import de.timeout.sudo.groups.UserGroup;
+import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.permissions.UserContainer;
 import de.timeout.sudo.users.User;
 import de.timeout.sudo.utils.Storable;
@@ -60,7 +61,7 @@ public class BukkitUser extends PermissibleBase implements User, Storable {
 		this.operator = opable;
 		
 		// try to load configuration
-		final List<UserGroup> groups = new ArrayList<>();
+		final List<Group> groups = new ArrayList<>();
 		final List<String> permissions = new ArrayList<>();
 		String prefix = "";
 		String suffix = "";
@@ -71,13 +72,10 @@ public class BukkitUser extends PermissibleBase implements User, Storable {
 			suffix = ChatColor.translateAlternateColorCodes('&', configuration.getString("suffix", ""));
 			
 			// add all groups to list
-			configuration.getStringList(GROUPS_FIELD)
+			groups.addAll(configuration.getStringList(GROUPS_FIELD)
 				.stream()
 				.map(main.getGroupManager()::getGroupByName)
-				.forEach(group -> {
-					// add to list if group is usergroup
-					if(group instanceof UserGroup) groups.add((UserGroup) group);
-				}
+				.collect(Collectors.toList())
 			);
 			
 			// add all permissions to list
@@ -90,7 +88,7 @@ public class BukkitUser extends PermissibleBase implements User, Storable {
 	@Override
 	public boolean isOp() {
 		// Return always false. Sudo does not allow OP
-		return false;
+		return isRoot();
 	}
 
 	@Override
@@ -133,7 +131,7 @@ public class BukkitUser extends PermissibleBase implements User, Storable {
 	}
 
 	@Override
-	public boolean isMember(@Nonnull UserGroup element) {
+	public boolean isMember(@Nonnull Group element) {
 		return activeContainer.isMember(element);
 	}
 
@@ -209,12 +207,12 @@ public class BukkitUser extends PermissibleBase implements User, Storable {
 	}
 
 	@Override
-	public boolean joinGroup(UserGroup group) {
+	public boolean joinGroup(Group group) {
 		return ownContainer.add(group);
 	}
 
 	@Override
-	public boolean leaveGroup(UserGroup group) {
+	public boolean leaveGroup(Group group) {
 		return ownContainer.remove(group);
 	}
 
@@ -223,6 +221,7 @@ public class BukkitUser extends PermissibleBase implements User, Storable {
 		return main.getUserManager().getRoot().getPermissionContainer().equals(activeContainer);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public UserContainer getPermissionContainer() {
 		return ownContainer;

@@ -1,22 +1,17 @@
 # the name of the group
-owner:
+user:
   # setup options
   options:
     # the prefix of the group (not necessary)
-    prefix: '&4Owner'
+    prefix: '&8[&7User&8] '
     # the suffix of the group (not necessary)
     suffix: ''
     # default group. (Only one group can and must be the default group)
-    default: false
+    default: true
     
   # group inheritation. groups get all permissions from their extended groups
   extends: 
-  - 'user'
-  permissions:
-  - '*'
   
-user:
-  options:
-    default: true
+  # Permissions of the group. User in this group will inherit this permission
   permissions:
-  - 'minecraft.modifyworld'
+  - 'minecraft.modifyworld.*'

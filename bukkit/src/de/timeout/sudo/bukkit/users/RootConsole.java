@@ -17,7 +17,7 @@ import org.bukkit.permissions.Permission;
 import de.timeout.libs.BukkitReflections;
 import de.timeout.libs.Reflections;
 import de.timeout.sudo.bukkit.Sudo;
-import de.timeout.sudo.groups.UserGroup;
+import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.permissions.UserContainer;
 import de.timeout.sudo.users.RemoteUser;
 import de.timeout.sudo.users.User;
@@ -54,7 +54,7 @@ class RootConsole extends PermissibleBase implements RemoteUser {
 		Reflections.setValue(permField, Bukkit.getConsoleSender(), this);		
 		
 		// add to sudogroup
-		main.getGroupManager().getSudoGroup().addMember(this);
+		main.getGroupManager().getSudoGroup().add(this);
 	}
 
 	@Override
@@ -108,17 +108,17 @@ class RootConsole extends PermissibleBase implements RemoteUser {
 	}
 
 	@Override
-	public boolean joinGroup(UserGroup group) {
+	public boolean joinGroup(Group group) {
 		return ownContainer.add(group);
 	}
 
 	@Override
-	public boolean isMember(UserGroup group) {
+	public boolean isMember(Group group) {
 		return activeContainer.isMember(group);
 	}
 
 	@Override
-	public boolean leaveGroup(UserGroup group) {
+	public boolean leaveGroup(Group group) {
 		return ownContainer.remove(group);
 	}
 
@@ -127,9 +127,10 @@ class RootConsole extends PermissibleBase implements RemoteUser {
 		return true;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public UserContainer getPermissionContainer() {
-		return null;
+		return ownContainer;
 	}
 
 	@Override

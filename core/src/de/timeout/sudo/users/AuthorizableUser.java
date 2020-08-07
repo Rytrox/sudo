@@ -7,6 +7,6 @@ import de.timeout.sudo.security.Authorizable;
  * @author Timeout
  *
  */
-public interface AuthorizableUser extends User, Authorizable{
+public interface AuthorizableUser extends User, Authorizable {
 
 }

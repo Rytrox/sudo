@@ -5,13 +5,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
-
-import org.apache.commons.lang.Validate;
 
 import com.google.gson.JsonObject;
 
@@ -21,6 +17,7 @@ import de.timeout.sudo.permissions.UserContainer;
 import de.timeout.sudo.users.RemoteUser;
 import de.timeout.sudo.users.User;
 import de.timeout.sudo.utils.PasswordCryptor;
+
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
@@ -35,17 +32,12 @@ public class RootConsole implements RemoteUser {
 	
 	private static final Sudo main = Sudo.getInstance();
 		
-	private final Set<Group> groups = new HashSet<>();
 	private final UUID proxyID;
 	private final UserContainer permissions;
 	private final String ip;
 	private final int port;
 	
 	private UserContainer activePermissions;
-	
-	private String prefix = ChatColor.translateAlternateColorCodes('&', "&8[&4Console&8] ");
-	private String suffix = "";
-	
 	private boolean authorized;
 	
 	public RootConsole() throws IOException {		
@@ -161,41 +153,32 @@ public class RootConsole implements RemoteUser {
 
 	@Override
 	public boolean joinGroup(Group element) {
-		// Validate
-		Validate.notNull(element, "Group cannot be null");
-		
-		// add group		
-		element.add(this);
-		return groups.add(element);
+		return permissions.add(element);
 	}
 
 	@Override
 	public boolean leaveGroup(Group element) {
-		// Validate
-		Validate.notNull(element, "Group cannot be null");
-		
-		element.remove(this);
-		return groups.remove(element);
+		return permissions.remove(element);
 	}
 
 	@Override
 	public String getPrefix() {
-		return prefix;
+		return activePermissions.getPrefix();
 	}
 
 	@Override
 	public void setPrefix(String prefix) {
-		this.prefix = Optional.ofNullable(prefix).orElse("");
+		permissions.setPrefix(prefix);
 	}
 
 	@Override
 	public String getSuffix() {
-		return suffix;
+		return activePermissions.getSuffix();
 	}
 
 	@Override
 	public void setSuffix(String suffix) {
-		this.suffix = Optional.ofNullable(suffix).orElse("");
+		permissions.setSuffix(suffix);
 	}
 
 	@Override
@@ -211,7 +194,7 @@ public class RootConsole implements RemoteUser {
 
 	@Override
 	public boolean isMember(Group group) {
-		return groups.contains(group);
+		return activePermissions.isMember(group);
 	}
 
 	@Override
@@ -222,6 +205,11 @@ public class RootConsole implements RemoteUser {
 	@Override
 	public boolean isRoot() {
 		return true;
+	}
+
+	@Override
+	public Collection<Group> getGroups() {
+		return activePermissions.getMembers();
 	}
 
 }

@@ -2,18 +2,16 @@ package de.timeout.sudo.bungee.users;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -29,22 +27,27 @@ import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.config.Configuration;
+import net.md_5.bungee.config.ConfigurationProvider;
+import net.md_5.bungee.config.JsonConfiguration;
 
 public class ProxyUser implements AuthorizableUser {
+	
+	protected static final Sudo main = Sudo.getInstance();
+	
+	private static final ConfigurationProvider JSON_PROVIDER = ConfigurationProvider.getProvider(JsonConfiguration.class);
 		
 	private static final String NAME_FIELD = "name";
+	private static final String PASSWORD_FIELD = "password";
 	private static final String PREFIX_FIELD = "prefix";
 	private static final String SUFFIX_FIELD = "suffix";
 	private static final String GROUPS_FIELD = "groups";
 	private static final String PERMISSIONS_FIELD = "permissions";
 	
-	protected static final Sudo main = Sudo.getInstance();
 	
 	protected final UserContainer container;
 	
 	protected UUID playerID;
 	protected UserContainer activeContainer;
-	
 	protected String encodedPassword;
 	private boolean authorized; 
 	
@@ -55,9 +58,13 @@ public class ProxyUser implements AuthorizableUser {
 	 * @param connection the connection
 	 * @throws IOException if the file cannot be read
 	 */
-	public ProxyUser(@NotNull PendingConnection connection, @Nullable Configuration configuration, @Nullable String encodedPassword) throws IOException {
+	public ProxyUser(@NotNull PendingConnection connection, @Nullable Configuration configuration) throws IOException {
+		// Validate
+		Validate.notNull(connection, "Connection cannot be null");
+		
 		// set attributes to default
 		this.playerID = connection.getUniqueId();
+		this.encodedPassword = configuration != null ? configuration.getString(PASSWORD_FIELD, "") : "";
 		
 		Set<String> permissions = new HashSet<>();
 		Set<Group> groups = new HashSet<>();
@@ -85,7 +92,6 @@ public class ProxyUser implements AuthorizableUser {
 		}
 		this.container = new UserContainer(this, permissions, groups, connection.getName(), prefix, suffix);
 		this.activeContainer = this.container;
-		this.encodedPassword = encodedPassword;
 	}
 			
 	@Override
@@ -189,12 +195,30 @@ public class ProxyUser implements AuthorizableUser {
 
 	@Override
 	public void save() throws IOException {
-		// get Path of file
-		Path path = new File(new File(main.getDataFolder(), "users"), String.format("%s.json", playerID.toString())).toPath();
-		// create file if not exists
-		if(Files.notExists(path)) Files.createFile(path);
-		// write data in file
-		Files.write(path, new GsonBuilder().setPrettyPrinting().create().toJson(toJson()).getBytes(StandardCharsets.UTF_8));
+		// get file
+		File file = new File(new File(main.getDataFolder(), "users"), String.format("%s.json", playerID.toString()));
+		
+		// create config on path
+		Configuration config = JSON_PROVIDER.load(file);
+		
+		// write primitives into users
+		config.set(NAME_FIELD, container.getName());
+		config.set(PREFIX_FIELD, container.getPrefix().replace(ChatColor.COLOR_CHAR, '&'));
+		config.set(SUFFIX_FIELD, container.getSuffix().replace(ChatColor.COLOR_CHAR, '&'));
+		config.set(PASSWORD_FIELD, encodedPassword);
+		
+		// write groups into users
+		config.set(GROUPS_FIELD, container.getMembers()
+				.stream()
+				.map(Group::getName)
+				.collect(Collectors.toList())
+		);
+		
+		// write permissions into user
+		config.set(PERMISSIONS_FIELD, container.getPermissions());
+		
+		// save config
+		JSON_PROVIDER.save(config, file);
 	}
 
 	@Override
@@ -248,5 +272,10 @@ public class ProxyUser implements AuthorizableUser {
 	@Override
 	public boolean isMember(Group group) {
 		return container.isMember(group);
+	}
+
+	@Override
+	public Collection<Group> getGroups() {
+		return activeContainer.getMembers();
 	}
 }

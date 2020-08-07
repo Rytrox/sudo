@@ -55,6 +55,6 @@ final class StandaloneBukkitUser extends BukkitUser implements Authorizable {
 						String.format("%s.json", this.operator.getUniqueId().toString())));
 		
 		// write data in configuration
-		configuration.set("groups", arg1);
+//		configuration.set("groups", arg1);
 	}
 }

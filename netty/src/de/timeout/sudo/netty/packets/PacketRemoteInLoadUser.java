@@ -14,6 +14,8 @@ public class PacketRemoteInLoadUser extends PacketAbstractUser {
 		
 	private static final long serialVersionUID = 7556749491098352422L;
 
+	private String name;
+	
 	/**
 	 * Constructor to create a new Packet. BungeeCord only!
 	 * @author Timeout
@@ -22,14 +24,16 @@ public class PacketRemoteInLoadUser extends PacketAbstractUser {
 	 */
 	public PacketRemoteInLoadUser(@NotNull User user) {
 		super(user);
+		
+		this.name = user.getName();
 	}
-	
+
 	/**
-	 * Constructor for Decoders
-	 * @author Timeout
-	 *
+	 * Returns the name of the user
+	 * @return the name of the user
 	 */
-	public PacketRemoteInLoadUser() {
-		super();
+	@NotNull
+	public String getName() {
+		return name;
 	}
 }

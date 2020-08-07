@@ -1,6 +1,6 @@
 package de.timeout.sudo.netty.packets;
 
-import de.timeout.sudo.groups.Group;
+import de.timeout.sudo.groups.UserGroup;
 
 /**
  * Packet which will be sent by BungeeCord when a permission is removed from a group
@@ -11,7 +11,7 @@ public class PacketRemoteInRemoveGroupPermission extends PacketAbstractGroupPerm
 
 	private static final long serialVersionUID = 7486643919033852110L;
 
-	public PacketRemoteInRemoveGroupPermission(Group group, String permission) {
+	public PacketRemoteInRemoveGroupPermission(UserGroup group, String permission) {
 		super(group, permission);
 	}
 	

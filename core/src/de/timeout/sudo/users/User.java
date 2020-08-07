@@ -1,5 +1,6 @@
 package de.timeout.sudo.users;
 
+import java.util.Collection;
 import java.util.UUID;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -63,6 +64,13 @@ public interface User extends Comparable<User>, ChangeablePermissionHolder<User>
 	public boolean leaveGroup(@NotNull Group group);
 	
 	/**
+	 * Returns a collection with all of this users' groups
+	 * @return a collection with all groups which the player joined
+	 */
+	@NotNull
+	public Collection<Group> getGroups();
+	
+	/**
 	 * Checks if this user is a sudoer and can use the /sudo command
 	 * @return true if this object is a sudoer. False otherwise
 	 */
@@ -77,6 +85,7 @@ public interface User extends Comparable<User>, ChangeablePermissionHolder<User>
 	/**
 	 * Override to UserContainer. Users cannot have other instances
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
 	public UserContainer getPermissionContainer();
 }

@@ -14,6 +14,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import de.timeout.sudo.bukkit.Sudo;
 import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.groups.GroupManager;
+import de.timeout.sudo.groups.SudoGroup;
 import de.timeout.sudo.groups.UserGroup;
 import de.timeout.sudo.groups.exception.CircularInheritanceException;
 
@@ -24,7 +25,7 @@ public class BukkitGroupManager extends GroupManager<ConfigurationSection> {
 	private static final Sudo main = Sudo.getInstance();
 			
 	public BukkitGroupManager(boolean bukkit) {
-		super(new BukkitSudoGroup());
+		super(new SudoGroup());
 		
 		// register PluginMessageChannel if bungeecord is enabled
 		if(!bukkit) {

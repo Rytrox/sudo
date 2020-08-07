@@ -80,6 +80,9 @@ public class ProxyGroupManager extends GroupManager<Configuration> {
 		return null;
 	}
 
+	/**
+	 * Deletes a group and sends the change to all remotes
+	 */
 	@Override
 	public boolean deleteGroup(UserGroup group) {
 		// remove all player from group

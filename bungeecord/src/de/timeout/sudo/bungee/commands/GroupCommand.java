@@ -5,10 +5,18 @@ import java.util.Locale;
 import de.timeout.sudo.bungee.Sudo;
 import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.groups.UserGroup;
+import de.timeout.sudo.netty.packets.PacketRemoteInAddGroupPermission;
+import de.timeout.sudo.netty.packets.PacketRemoteInRemoveGroupPermission;
+import de.timeout.sudo.netty.packets.PacketRemoteInUpdateGroupProfile;
 
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ClickEvent.Action;
+import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.chat.hover.content.Text;
 import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.api.plugin.TabExecutor;
 
@@ -143,10 +151,16 @@ public class GroupCommand extends Command implements TabExecutor {
 			// send message to user
 			sender.sendMessage(new TextComponent(String.format(GROUP_PREFIX_SET, group.getName())));
 				
-			// TODO: send update packet to all remotes
+			main.getNettyServer().broadcastPacket(new PacketRemoteInUpdateGroupProfile(group, prefix, group.getSuffix()));
 		} else sender.sendMessage(new TextComponent(String.format(NO_PERMISSION, permission)));
 	}
 	
+	/**
+	 * Method which updates the suffix of a certain group and sends an update packet to all remotes
+	 * @param sender the sender of the command
+	 * @param group the group you want to modify
+	 * @param suffix the new suffix of the group. Cannot be larger than 16 chars due to Minecraft's Suffix limitation
+	 */
 	private void updateSuffix(CommandSender sender, UserGroup group, String suffix) {
 		// create permission
 		String permission = String.format("sudo.groups.%s.suffix", group.getName());
@@ -159,10 +173,16 @@ public class GroupCommand extends Command implements TabExecutor {
 			// send message to user
 			sender.sendMessage(new TextComponent(String.format(GROUP_SUFFIX_SET, group.getName())));
 				
-			// TODO: send update packet to all remotes
+			main.getNettyServer().broadcastPacket(new PacketRemoteInUpdateGroupProfile(group, group.getPrefix(), suffix));
 		} else sender.sendMessage(new TextComponent(String.format(NO_PERMISSION, permission)));
 	}
 	
+	/**
+	 * Creates a new group with a certain name and sends the group to all remotes.
+	 * Does nothing if the group already exists
+	 * @param sender the sender of the command
+	 * @param name the name of the new group
+	 */
 	private void createGroup(CommandSender sender, String name) {
 		// check permission
 		if(sender.hasPermission("sudo.groups.create")) {
@@ -176,6 +196,11 @@ public class GroupCommand extends Command implements TabExecutor {
 		} else sender.sendMessage(new TextComponent(String.format(NO_PERMISSION, "sudo.groups.create")));
 	}
 	
+	/**
+	 * Deletes an user generated group and sends this change to all remotes
+	 * @param sender the sender of the command
+	 * @param group the group you want to delete
+	 */
 	private void deleteGroup(CommandSender sender, UserGroup group) {
 		// build permission
 		String permission = String.format("sudo.groups.%s.delete", group.getName());
@@ -183,13 +208,19 @@ public class GroupCommand extends Command implements TabExecutor {
 		// check permission
 		if(sender.hasPermission(permission)) {
 			// delete group
-			main.getGroupManager().deleteGroup((UserGroup) group);
+			main.getGroupManager().deleteGroup(group);
 				
 			// send success
 			sender.sendMessage(new TextComponent(String.format(GROUP_DELETED, group.getName())));
 		} else sender.sendMessage(new TextComponent(String.format(NO_PERMISSION, permission)));
 	}
 	
+	/**
+	 * Adds a permission to a certain group and sends an update packet to all remotes
+	 * @param sender the sender of the command
+	 * @param group the group which gets a new permission
+	 * @param permission the permission which will be added to the group
+	 */
 	private void addPermission(CommandSender sender, UserGroup group, String permission) {
 		// build add permission
 		String addPermission = String.format("sudo.groups.%s.permissions.add", group.getName());
@@ -200,6 +231,9 @@ public class GroupCommand extends Command implements TabExecutor {
 			if(permission != null && !permission.isEmpty()) {
 				// add permission
 				if(group.addPermission(permission)) {
+					// send update packet to all remotes
+					main.getNettyServer().broadcastPacket(new PacketRemoteInAddGroupPermission(group, addPermission));
+					
 					// send modification
 					sender.sendMessage(new TextComponent(String.format(GROUP_PERMISSIONS_ADD, permission, group.getName())));
 				} else sender.sendMessage(new TextComponent(String.format(GROUP_PERMISSIONS_OWN, group.getName(), permission)));
@@ -207,6 +241,12 @@ public class GroupCommand extends Command implements TabExecutor {
 		} else sender.sendMessage(new TextComponent(String.format(NO_PERMISSION, addPermission)));
 	}
 	
+	/**
+	 * Removes a permission from a certain group
+	 * @param sender the sender of the command
+	 * @param group the group which will lose a permission
+	 * @param permission the permission which will be removed
+	 */
 	private void removePermission(CommandSender sender, UserGroup group, String permission) {
 		// build add permission
 		String removePermission = String.format("sudo.groups.%s.permissions.remove", group.getName());
@@ -215,8 +255,11 @@ public class GroupCommand extends Command implements TabExecutor {
 		if(sender.hasPermission(removePermission)) {
 			// continue if permission is valid
 			if(permission != null && !permission.isEmpty()) {
-				// add permission
+				// remove permission
 				if(group.removePermission(permission)) {
+					// send remove packet to all remotes
+					main.getNettyServer().broadcastPacket(new PacketRemoteInRemoveGroupPermission(group, removePermission));
+					
 					// send modification
 					sender.sendMessage(new TextComponent(String.format(GROUP_PERMISSIONS_REMOVE, permission, group.getName())));
 				} else sender.sendMessage(new TextComponent(String.format(GROUP_PERMISSIONS_MISS, group.getName(), permission)));
@@ -224,20 +267,53 @@ public class GroupCommand extends Command implements TabExecutor {
 		} else sender.sendMessage(new TextComponent(String.format(NO_PERMISSION, removePermission)));
 
 	}
-
+	
+	/**
+	 * Sends the help menu to the player
+	 * @param sender the sender of the command
+	 */
 	private void sendHelp(CommandSender sender) {
-		// TODO: Hilfe schreiben
+		sender.sendMessage(createHelpComponent("/group", ChatColor.translateAlternateColorCodes('&', "&7List all &5groups")));
+		sender.sendMessage(createHelpComponent("/group <group>", ChatColor.translateAlternateColorCodes('&', "&7Show details of a certain &5group")));
+		sender.sendMessage(createHelpComponent("/group <group> prefix <prefix>", ChatColor.translateAlternateColorCodes('&', "&aApplies &7a &2prefix &7to a certain &5group")));
+		sender.sendMessage(createHelpComponent("/group <group> suffix <suffix>", ChatColor.translateAlternateColorCodes('&', "&aApplies &7a &2suffix &7to a certain &5group")));
+		sender.sendMessage(createHelpComponent("/group <group> create <parents>", ChatColor.translateAlternateColorCodes('&', "&aCreates &7a &enew &5group &7which inherits &9other groups")));
+		sender.sendMessage(createHelpComponent("/group <group> delete", ChatColor.translateAlternateColorCodes('&', "&cDeletes &7a certain &5group")));
+		sender.sendMessage(createHelpComponent("/group <group> parents", ChatColor.translateAlternateColorCodes('&', "&7Lists all &9parents &7of a certain &5group")));
+		sender.sendMessage(createHelpComponent("/group <group> parents add <parents>", ChatColor.translateAlternateColorCodes('&', "&aAdd &9parents &7to a certain &5group")));
+		sender.sendMessage(createHelpComponent("/group <group> parents remove <parents>", ChatColor.translateAlternateColorCodes('&', "&cRemoves &9parents &7from a certain &5group")));
+		sender.sendMessage(createHelpComponent("/group <group> parents set <parents>", ChatColor.translateAlternateColorCodes('&', "&eSets &9parents &7of a certain &5group")));
+		sender.sendMessage(createHelpComponent("/group <group> add <permission>", ChatColor.translateAlternateColorCodes('&', "&aAdds &7a &4permission &7to a certain &5group")));
+		sender.sendMessage(createHelpComponent("/group <group> remove <permission>", ChatColor.translateAlternateColorCodes('&', "&cRemoves &7a &4permission &7from a certain &5group")));
 	}
+	
+	/**
+	 * Helper to create modern Components for autocomplete
+	 * @param command the command which will be filled in chat field when the player clicks on it
+	 * @param description the description which appears when the mouse hovers the command
+	 * @return the complete base component
+	 */
+	private BaseComponent createHelpComponent(String command, String description) {
+		BaseComponent component = new TextComponent(command);
+		
+		// set click event
+		component.setClickEvent(new ClickEvent(Action.SUGGEST_COMMAND, command));
+		// set hover event
+		component.setHoverEvent(new HoverEvent(net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT, new Text(description)));
+	
+		return component;
+	}
+	
 	
 	private void listGroups(CommandSender sender) {
 		
 	}
 	
 	private void showGroupDetails(CommandSender sender, Group group) {
-		// TODO: Group senden
+		
 	}
 	
-	private void showGroupInheritances(CommandSender sender, Group group) {
+	private void showGroupInheritances(CommandSender sender, UserGroup group) {
 		
 	}
 }

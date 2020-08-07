@@ -1,7 +1,5 @@
 package de.timeout.sudo.bukkit.users;
 
-import java.io.IOException;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -35,30 +33,6 @@ public class BukkitUserManager extends UserManager {
 		Validate.notNull(player);
 		return getUser(player.getUniqueId());
 	}
-	
-	@Override
-	public void changePassword(User user, String password) throws IOException {
-//		Validate.notNull(user, "User cannot be null");
-//		Validate.notEmpty(password, "Password can neither be null nor empty");
-//		
-//		// create Sudoer
-//		Sudoer sudoer;
-//		
-//		if(!main.bungeecordEnabled()) {
-//			sudoer = BukkitSudoer.upgradeUserToSudoer((BukkitUser) user, password, executor);
-//			
-//			// write data in sudoers
-//			decodedSudoer.set(user.getUniqueID().toString(), PasswordCryptor.encode(password));
-//		} else sudoer = BukkitSudoer.upgradeUserToSudoer((BukkitUser) user, executor);
-//		
-//		// update profile
-//		this.profiles.replace(user.getUniqueID(), sudoer);
-//		
-//		// return sudoer
-//		return sudoer;
-	}
-	
-
 
 
 	@Override
@@ -72,7 +46,7 @@ public class BukkitUserManager extends UserManager {
 			user.getPermissionContainer().getMembers().forEach(user::leaveGroup);
 			
 			// remove from sudogroup if user is a sudoer
-			main.getGroupManager().getSudoGroup().removeMember(user);
+			main.getGroupManager().getSudoGroup().remove(user);
 			
 			// remove from cache
 			profiles.remove(user.getUniqueID());
