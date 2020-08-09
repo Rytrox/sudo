@@ -1,4 +1,4 @@
-package de.timeout.sudo.permissions;
+package de.timeout.sudo.container;
 
 import java.util.ArrayList;
 import java.util.Collection;

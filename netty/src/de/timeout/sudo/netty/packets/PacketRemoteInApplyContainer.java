@@ -1,6 +1,5 @@
 package de.timeout.sudo.netty.packets;
 
-import de.timeout.sudo.permissions.UserContainer;
 import de.timeout.sudo.users.User;
 
 import org.apache.commons.lang.Validate;
@@ -17,11 +16,11 @@ public class PacketRemoteInApplyContainer extends PacketAbstractUser {
 	
 	private String containerOwner;
 
-	public PacketRemoteInApplyContainer(@NotNull User user, @NotNull UserContainer profile) {
+	public PacketRemoteInApplyContainer(@NotNull User user, @NotNull String profile) {
 		super(user);
 		
-		Validate.notNull(profile, "Profile cannot be null");
-		this.containerOwner = profile.getName();
+		Validate.notEmpty(profile, "Profile cannot be null");
+		this.containerOwner = profile;
 	}
 	
 	/**

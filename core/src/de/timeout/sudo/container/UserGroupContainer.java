@@ -1,4 +1,4 @@
-package de.timeout.sudo.permissions;
+package de.timeout.sudo.container;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -7,6 +7,7 @@ import java.util.Set;
 
 import de.timeout.sudo.groups.Inheritable;
 import de.timeout.sudo.groups.UserGroup;
+import de.timeout.sudo.permissions.PermissionHolder;
 import de.timeout.sudo.users.User;
 
 import org.apache.commons.lang.Validate;

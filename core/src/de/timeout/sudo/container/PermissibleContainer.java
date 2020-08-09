@@ -1,8 +1,9 @@
-package de.timeout.sudo.permissions;
+package de.timeout.sudo.container;
 
 import java.util.Collection;
 import java.util.Optional;
 
+import de.timeout.sudo.permissions.PermissionHolder;
 import de.timeout.sudo.utils.PermissionTree;
 
 import org.apache.commons.lang.Validate;

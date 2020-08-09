@@ -10,9 +10,8 @@ import javax.annotation.Nullable;
 import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.NotNull;
 
+import de.timeout.sudo.container.UserGroupContainer;
 import de.timeout.sudo.permissions.PermissionHolder;
-import de.timeout.sudo.permissions.UserGroupContainer;
-import de.timeout.sudo.users.User;
 import de.timeout.sudo.utils.Customizable;
 import de.timeout.sudo.utils.Storable;
 
@@ -115,26 +114,4 @@ public abstract class UserGroup implements Group, Customizable, Inheritable<User
 	public boolean removePermission(String permission) {
 		return container.removePermission(permission);
 	}
-
-	@Override
-	public boolean isMember(User element) {
-		return container.add(element);
-	}
-
-	@Override
-	public Collection<User> getMembers() {
-		return container.getMembers();
-	}
-
-	@Override
-	public boolean add(User element) {
-		return container.add(element);
-	}
-
-	@Override
-	public boolean remove(User element) {
-		return container.remove(element);
-	}
-	
-	
 }

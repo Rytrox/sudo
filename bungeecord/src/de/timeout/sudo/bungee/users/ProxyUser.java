@@ -17,10 +17,11 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
 import de.timeout.sudo.bungee.Sudo;
-import de.timeout.sudo.permissions.UserContainer;
+import de.timeout.sudo.container.UserContainer;
 import de.timeout.sudo.users.AuthorizableUser;
 import de.timeout.sudo.users.User;
 import de.timeout.sudo.groups.Group;
+import de.timeout.sudo.groups.UserGroup;
 import de.timeout.sudo.utils.PasswordCryptor;
 
 import net.md_5.bungee.api.ChatColor;
@@ -86,10 +87,12 @@ public class ProxyUser implements AuthorizableUser {
 				Group group = main.getGroupManager().getGroupByName(groupname);
 				
 				// join group
-				group.add(this);
 				groups.add(group);
 			});
+			// add default group if groups is empty
+			if(groups.isEmpty()) groups.add(main.getGroupManager().getDefaultGroup());
 		}
+		
 		this.container = new UserContainer(this, permissions, groups, connection.getName(), prefix, suffix);
 		this.activeContainer = this.container;
 	}
@@ -251,7 +254,7 @@ public class ProxyUser implements AuthorizableUser {
 
 	@Override
 	public boolean isSudoer() {
-		return main.getGroupManager().getSudoGroup().isMember(this);
+		return container.isMember(main.getGroupManager().getSudoGroup());
 	}
 
 	@Override
@@ -260,12 +263,30 @@ public class ProxyUser implements AuthorizableUser {
 	}
 
 	@Override
-	public boolean joinGroup(Group group) {
+	public boolean joinGroup(Group group) {	
 		return container.add(group);
 	}
 
 	@Override
 	public boolean leaveGroup(Group group) {
+		// copy of current groups without sudo group
+		Collection<Group> groups = container.getMembers()
+				.stream()
+				.filter(g -> (g instanceof UserGroup))
+				.collect(Collectors.toList());
+		
+		// if method tries to remove last group of the collection
+		if(group instanceof UserGroup && groups.remove(group) && groups.isEmpty()) {
+			// add default group if group is not the default group
+			if(((UserGroup) group).isDefault()) {
+				// default group as last element cannot be removed
+				return false;
+			} else {
+				joinGroup(main.getGroupManager().getDefaultGroup());
+			}
+		}
+		
+		// everything is fine. Remove
 		return container.remove(group);
 	}
 

@@ -87,6 +87,8 @@ public class BukkitSocket implements Runnable, Closeable {
 				
 				// define handler
 				channel.pipeline().addLast("authorize", new AuthorizeHandler());
+				channel.pipeline().addLast("groups", new GroupHandler());
+				channel.pipeline().addLast("users", new UserHandler());
 			}
 			
 		});

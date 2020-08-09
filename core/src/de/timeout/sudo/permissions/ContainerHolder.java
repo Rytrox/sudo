@@ -1,5 +1,7 @@
 package de.timeout.sudo.permissions;
 
+import de.timeout.sudo.container.Container;
+
 import org.jetbrains.annotations.NotNull;
 
 /**

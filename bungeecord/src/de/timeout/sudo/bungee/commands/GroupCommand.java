@@ -305,8 +305,34 @@ public class GroupCommand extends Command implements TabExecutor {
 	}
 	
 	
+	/**
+	 * Method which sends a list of all currently active groups
+	 * @param sender the sender of the command
+	 */
 	private void listGroups(CommandSender sender) {
+		// send sudo group infos
+		sender.sendMessage(createDetailsComponent("sudo"));
 		
+		// send each group info
+		main.getGroupManager().getGroups().forEach(group -> createDetailsComponent(group.getName()));
+	}
+	
+	/**
+	 * Method which creates a basecomponent for showing detailed group informations
+	 * @param group
+	 * @return
+	 */
+	private BaseComponent createDetailsComponent(String group) {
+		BaseComponent base = new TextComponent(group + " ");
+		BaseComponent component = new TextComponent(ChatColor.GREEN + "[Details]");
+		
+		// set click event
+		component.setClickEvent(new ClickEvent(Action.RUN_COMMAND, String.format("/group %s", group)));
+		
+		// add component to base
+		base.addExtra(component);
+		
+		return base;
 	}
 	
 	private void showGroupDetails(CommandSender sender, Group group) {

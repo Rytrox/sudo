@@ -184,19 +184,23 @@ public class BukkitGroupManager extends GroupManager<ConfigurationSection> {
 
 	@Override
 	public boolean deleteGroup(UserGroup group) {
-		// remove from graph
-		groups.removeNode(group);
+		// return false if group is default group
+		if(group != null && !group.isDefault()) {
+			// remove from graph
+			groups.removeNode(group);
+			
+			// delete from file system if bukkit mode is enabled
+			if(!main.bungeecordEnabled()) {
+				main.getGroupConfig().set(group.getName(), null);
+				main.saveGroupConfig();
+			}
+			
+			// kick all users from the group
+			main.getUserManager().getUsers().forEach(user -> user.leaveGroup(group));
 		
-		// delete from file system if bukkit mode is enabled
-		if(!main.bungeecordEnabled()) {
-			main.getGroupConfig().set(group.getName(), null);
-			main.saveGroupConfig();
+			return true;
 		}
-		
-		// kick all users from the group
-		group.getMembers().forEach(user -> user.leaveGroup(group));
-		
-		return true;
 
+		return false;
 	}
 }

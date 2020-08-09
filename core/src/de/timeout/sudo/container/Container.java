@@ -1,9 +1,9 @@
-package de.timeout.sudo.permissions;
+package de.timeout.sudo.container;
 
 import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.NotNull;
 
-class Container {
+public abstract class Container {
 	
 	protected final String name;
 	

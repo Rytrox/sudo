@@ -1,4 +1,4 @@
-package de.timeout.sudo.permissions;
+package de.timeout.sudo.container;
 
 import java.util.Collection;
 
@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Nullable;
 
 import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.groups.UserGroup;
+import de.timeout.sudo.permissions.PermissionHolder;
 
 /**
  * Container class for permissiontrees of different users
@@ -48,5 +49,4 @@ public class UserContainer extends PermissibleContainer<Group> {
 	public UserContainer(@NotNull UserContainer original) {
 		super(original.owner, original.name, original.prefix, original.suffix, original.members, original.permissions.toSet());			
 	}
-	
 }

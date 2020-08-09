@@ -12,8 +12,8 @@ import java.util.logging.Level;
 import com.google.gson.JsonObject;
 
 import de.timeout.sudo.bungee.Sudo;
+import de.timeout.sudo.container.UserContainer;
 import de.timeout.sudo.groups.Group;
-import de.timeout.sudo.permissions.UserContainer;
 import de.timeout.sudo.users.RemoteUser;
 import de.timeout.sudo.users.User;
 import de.timeout.sudo.utils.PasswordCryptor;

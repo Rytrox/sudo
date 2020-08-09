@@ -16,6 +16,7 @@ import de.timeout.sudo.groups.UserGroup;
 import de.timeout.sudo.groups.exception.CircularInheritanceException;
 import de.timeout.sudo.netty.packets.PacketRemoteInDeleteGroup;
 import de.timeout.sudo.netty.packets.PacketRemoteInGroupInheritance;
+import de.timeout.sudo.netty.packets.PacketRemoteInUserLeavesGroup;
 import de.timeout.sudo.netty.packets.PacketRemoteInAddGroup;
 
 import net.md_5.bungee.api.ChatColor;
@@ -85,20 +86,33 @@ public class ProxyGroupManager extends GroupManager<Configuration> {
 	 */
 	@Override
 	public boolean deleteGroup(UserGroup group) {
-		// remove all player from group
-		group.getMembers().forEach(member -> member.leaveGroup(group));
-			
-		// delete group in graph
-		groups.removeNode(group);
-			
-		// remove from config and save config
-		main.getGroupConfig().set(group.getName(), null);
-		main.saveGroupConfig();
-			
-		// send delete packet to all subservers
-		main.getNettyServer().broadcastPacket(new PacketRemoteInDeleteGroup(group));
-			
-		return true;
+		// only delete if group is not the default group
+		if(group != null && !group.isDefault()) {
+			// remove all player from group
+			main.getUserManager().getUsers().forEach(user -> {
+				// remove from group
+				if(user.leaveGroup(group)) {
+					// send leave group packet to remotes
+					main.getNettyServer().sendPacket(main.getProxy().getPlayer(user.getUniqueID()).getServer(),
+							new PacketRemoteInUserLeavesGroup(user, group));
+				}
+			});
+				
+			// delete group in graph
+			groups.removeNode(group);
+				
+			// remove from config and save config
+			main.getGroupConfig().set(group.getName(), null);
+			main.saveGroupConfig();
+				
+			// send delete packet to all subservers
+			main.getNettyServer().broadcastPacket(new PacketRemoteInDeleteGroup(group));
+				
+			return true;
+		}
+		
+		// unable to delete group
+		return false;
 	}
 
 	@Override

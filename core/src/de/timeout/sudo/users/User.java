@@ -8,9 +8,9 @@ import org.jetbrains.annotations.NotNull;
 
 import com.google.gson.JsonObject;
 
+import de.timeout.sudo.container.UserContainer;
 import de.timeout.sudo.groups.Group;
 import de.timeout.sudo.permissions.ChangeablePermissionHolder;
-import de.timeout.sudo.permissions.UserContainer;
 import de.timeout.sudo.utils.Customizable;
 import de.timeout.sudo.utils.Storable;
 

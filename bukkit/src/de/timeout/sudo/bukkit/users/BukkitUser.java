@@ -3,26 +3,24 @@ package de.timeout.sudo.bukkit.users;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.permissions.PermissibleBase;
 import org.bukkit.permissions.Permission;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
 import de.timeout.sudo.bukkit.Sudo;
+import de.timeout.sudo.container.UserContainer;
 import de.timeout.sudo.groups.Group;
-import de.timeout.sudo.permissions.UserContainer;
+import de.timeout.sudo.netty.packets.PacketProxyInSaveUser;
 import de.timeout.sudo.users.User;
 import de.timeout.sudo.utils.Storable;
 
@@ -52,37 +50,20 @@ public class BukkitUser extends PermissibleBase implements User, Storable {
 	 * @param opable the offlineplayer you want to load
 	 */
 	public BukkitUser(@NotNull OfflinePlayer opable) {
-		this(opable, null);
+		this(opable.getUniqueId(), opable.getName());
 	}
 	
-	public BukkitUser(@NotNull OfflinePlayer opable, @Nullable ConfigurationSection configuration) {
-		super(opable);
+	/**
+	 * Create a new BukkitUser
+	 * @param uuid the uuid of the player
+	 * @param name the name of the player
+	 */
+	public BukkitUser(@NotNull UUID uuid, @NotNull String name) {
+		super(Bukkit.getOfflinePlayer(uuid));
 		
-		this.operator = opable;
-		
-		// try to load configuration
-		final List<Group> groups = new ArrayList<>();
-		final List<String> permissions = new ArrayList<>();
-		String prefix = "";
-		String suffix = "";
-		
-		if(configuration != null) {
-			// try to load prefix
-			prefix = ChatColor.translateAlternateColorCodes('&', configuration.getString("prefix", ""));
-			suffix = ChatColor.translateAlternateColorCodes('&', configuration.getString("suffix", ""));
-			
-			// add all groups to list
-			groups.addAll(configuration.getStringList(GROUPS_FIELD)
-				.stream()
-				.map(main.getGroupManager()::getGroupByName)
-				.collect(Collectors.toList())
-			);
-			
-			// add all permissions to list
-			permissions.addAll(configuration.getStringList(PERMISSIONS_FIELD));
-		}
-		
-		this.ownContainer = new UserContainer(this, permissions, groups, opable.getName(), prefix, suffix);
+		// load profile
+		this.ownContainer = new UserContainer(this, new ArrayList<>(), new ArrayList<>(), name, "", "");
+		this.activeContainer = ownContainer;
 	}
 	
 	@Override
@@ -127,7 +108,7 @@ public class BukkitUser extends PermissibleBase implements User, Storable {
 	}
 
 	public boolean isSudoer() {
-		return main.getGroupManager().getSudoGroup().isMember(this);
+		return ownContainer.isMember(main.getGroupManager().getSudoGroup());
 	}
 
 	@Override
@@ -229,6 +210,11 @@ public class BukkitUser extends PermissibleBase implements User, Storable {
 
 	@Override
 	public void save() throws IOException {
-		/* Send Packet to proxy */
+		main.getNetty().sendPacket(new PacketProxyInSaveUser(this));
+	}
+
+	@Override
+	public Collection<Group> getGroups() {
+		return activeContainer.getMembers();
 	}
 }

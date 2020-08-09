@@ -1,10 +1,8 @@
 package de.timeout.sudo.groups;
 
 import java.util.ArrayList;
-import java.util.Collection;
 
-import de.timeout.sudo.permissions.GroupContainer;
-import de.timeout.sudo.users.User;
+import de.timeout.sudo.container.GroupContainer;
 
 /**
  * Representation of the SudoGroup
@@ -29,25 +27,4 @@ public class SudoGroup implements Group {
 	public GroupContainer getPermissionContainer() {
 		return container;
 	}
-
-	@Override
-	public boolean isMember(User element) {
-		return false;
-	}
-
-	@Override
-	public Collection<User> getMembers() {
-		return container.getMembers();
-	}
-
-	@Override
-	public boolean add(User element) {
-		return container.add(element);
-	}
-
-	@Override
-	public boolean remove(User element) {
-		return container.remove(element);
-	}
-
 }

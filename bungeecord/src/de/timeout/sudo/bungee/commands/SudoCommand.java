@@ -110,7 +110,7 @@ public class SudoCommand extends Command implements Listener {
 				} else {
 					// apply profile for player
 					main.getNettyServer().sendPacket(execution.getPlayer().getServer(),
-							new PacketRemoteInApplyContainer(user, main.getUserManager().getRoot().getPermissionContainer()));
+							new PacketRemoteInApplyContainer(user, "root"));
 					// send packet to remote server
 //					main.getNettyServer().sendPacket(execution.getPlayer().getServer(), 
 //							new PacketRemoteInExecuteSudoCommand(user, execution.getCommand()));
